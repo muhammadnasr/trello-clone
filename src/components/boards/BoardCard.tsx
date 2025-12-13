@@ -73,7 +73,8 @@ export function BoardCard({ board }: BoardCardProps) {
               e.preventDefault()
               setIsRenaming(true)
             }}
-            className="h-7 w-7"
+            className="h-7 w-7 dark:hover:bg-gray-700 dark:hover:text-gray-200"
+            title="Rename board"
           >
             <Edit2 className="h-4 w-4" />
           </Button>
@@ -85,7 +86,8 @@ export function BoardCard({ board }: BoardCardProps) {
               handleDelete()
             }}
             disabled={isDeleting}
-            className="h-7 w-7 text-destructive hover:text-destructive"
+            className="h-7 w-7 text-destructive"
+            title="Delete board"
           >
             <Trash2 className="h-4 w-4" />
           </Button>
