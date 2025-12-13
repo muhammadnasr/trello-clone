@@ -25,6 +25,10 @@ export async function createDatabase(): Promise<TrelloDatabase> {
   const database = await createRxDatabase<TrelloDatabase>({
     name: 'trello-clone',
     storage: storage,
+    // multiInstance: true (default) enables automatic BroadcastChannel-based synchronization
+    // between browser tabs. Changes made in one tab will automatically appear
+    // in other tabs without any additional replication setup.
+    multiInstance: true,
   })
 
   // Add boards collection
