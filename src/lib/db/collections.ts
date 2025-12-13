@@ -1,5 +1,5 @@
 import type { RxCollection } from 'rxdb'
-import type { BoardDocument } from '../types/board'
+import type { Board } from '../types/board'
 
 // Board collection schema
 export const boardSchema = {
@@ -31,6 +31,6 @@ export const boardSchema = {
 
 // Board collection type
 export type BoardCollection = {
-  boards: RxCollection<BoardDocument>
+  boards: RxCollection<Board>
 }
 

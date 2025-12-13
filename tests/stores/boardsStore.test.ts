@@ -1,6 +1,6 @@
 import { describe, it, expect, beforeEach } from 'vitest'
 import { useBoardsStore } from '../../src/stores/boards'
-import type { BoardDocument } from '../../src/lib/types/board'
+import type { Board } from '../../src/lib/types/board'
 
 describe('Boards Store', () => {
   beforeEach(() => {
@@ -20,7 +20,7 @@ describe('Boards Store', () => {
   })
 
   it('sets boards', () => {
-    const boards: BoardDocument[] = [
+    const boards: Board[] = [
       {
         id: 'board1',
         title: 'Board 1',
@@ -35,7 +35,7 @@ describe('Boards Store', () => {
   })
 
   it('adds a board', () => {
-    const board: BoardDocument = {
+    const board: Board = {
       id: 'board1',
       title: 'New Board',
       createdAt: new Date().toISOString(),
@@ -50,7 +50,7 @@ describe('Boards Store', () => {
   })
 
   it('updates a board', () => {
-    const board: BoardDocument = {
+    const board: Board = {
       id: 'board1',
       title: 'Original Title',
       createdAt: new Date().toISOString(),
@@ -67,14 +67,14 @@ describe('Boards Store', () => {
   })
 
   it('removes a board', () => {
-    const board1: BoardDocument = {
+    const board1: Board = {
       id: 'board1',
       title: 'Board 1',
       createdAt: new Date().toISOString(),
       updatedAt: new Date().toISOString(),
       ownerId: 'user1',
     }
-    const board2: BoardDocument = {
+    const board2: Board = {
       id: 'board2',
       title: 'Board 2',
       createdAt: new Date().toISOString(),

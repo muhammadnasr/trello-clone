@@ -1,18 +1,18 @@
 import { create } from 'zustand'
-import type { BoardDocument } from '@/lib/types/board'
+import type { Board } from '@/lib/types/board'
 
 interface BoardsState {
-  boards: BoardDocument[]
+  boards: Board[]
   isLoading: boolean
   error: string | null
 }
 
 interface BoardsActions {
-  setBoards: (boards: BoardDocument[]) => void
+  setBoards: (boards: Board[]) => void
   setLoading: (isLoading: boolean) => void
   setError: (error: string | null) => void
-  addBoard: (board: BoardDocument) => void
-  updateBoard: (id: string, updates: Partial<BoardDocument>) => void
+  addBoard: (board: Board) => void
+  updateBoard: (id: string, updates: Partial<Board>) => void
   removeBoard: (id: string) => void
 }
 

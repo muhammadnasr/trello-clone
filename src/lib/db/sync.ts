@@ -1,10 +1,11 @@
 import type { TrelloDatabase } from './database'
 import { useBoardsStore } from '@/stores/boards'
-import type { BoardDocument } from '@/lib/types/board'
+import type { Board } from '@/lib/types/board'
 
 /**
  * Syncs RxDB boards collection with Zustand store using reactive queries.
  * This keeps the Zustand store in sync with RxDB changes automatically.
+ * RxDB is the single source of truth for the data.
  */
 export function syncBoardsToStore(database: TrelloDatabase): () => void {
   // Subscribe to all boards using RxDB reactive query
@@ -13,8 +14,8 @@ export function syncBoardsToStore(database: TrelloDatabase): () => void {
       selector: {}, // Get all boards
     })
     .$.subscribe((rxDocuments) => {
-      // Convert RxDocuments to plain BoardDocument objects
-      const boards: BoardDocument[] = rxDocuments.map((doc) => doc.toJSON() as BoardDocument)
+      // Convert RxDocuments to plain Board objects
+      const boards: Board[] = rxDocuments.map((doc) => doc.toJSON() as Board)
       
       // Update Zustand store
       useBoardsStore.getState().setBoards(boards)

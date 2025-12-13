@@ -1,0 +1,52 @@
+import { getDatabase } from '@/lib/db/init'
+import type { Board } from '@/lib/types/board'
+
+/**
+ * Create a new board in RxDB
+ */
+export async function createBoard(title: string, ownerId: string): Promise<Board> {
+  const db = getDatabase()
+  const now = new Date().toISOString()
+  
+  const board = await db.boards.insert({
+    id: `board-${Date.now()}-${Math.random().toString(36).substring(2, 9)}`,
+    title,
+    createdAt: now,
+    updatedAt: now,
+    ownerId,
+  })
+
+  return board.toJSON() as Board
+}
+
+/**
+ * Update a board in RxDB
+ */
+export async function updateBoard(id: string, updates: { title?: string }): Promise<void> {
+  const db = getDatabase()
+  const board = await db.boards.findOne(id).exec()
+  
+  if (!board) {
+    throw new Error(`Board with id ${id} not found`)
+  }
+
+  await board.patch({
+    ...updates,
+    updatedAt: new Date().toISOString(),
+  })
+}
+
+/**
+ * Delete a board from RxDB
+ */
+export async function deleteBoard(id: string): Promise<void> {
+  const db = getDatabase()
+  const board = await db.boards.findOne(id).exec()
+  
+  if (!board) {
+    throw new Error(`Board with id ${id} not found`)
+  }
+
+  await board.remove()
+}
+

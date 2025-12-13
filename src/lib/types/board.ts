@@ -1,5 +1,5 @@
-// Board document type matching the RxDB schema
-export interface BoardDocument {
+// Board type matching the RxDB schema
+export interface Board {
   id: string
   title: string
   createdAt: string // ISO date string
