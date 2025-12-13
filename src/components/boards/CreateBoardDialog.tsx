@@ -74,7 +74,11 @@ export function CreateBoardDialog({ onBoardCreated }: CreateBoardDialogProps) {
           >
             Cancel
           </Button>
-          <Button onClick={handleCreate} disabled={isCreating || !title.trim()}>
+          <Button 
+            variant="default"
+            onClick={handleCreate} 
+            disabled={isCreating || !title.trim()}
+          >
             {isCreating ? 'Creating...' : 'Create'}
           </Button>
         </DialogFooter>
