@@ -1,6 +1,7 @@
 import { describe, it, expect, beforeEach, afterEach } from 'vitest'
 import { initDatabase, getDatabase, cleanupDatabase } from '../../../src/lib/db/init'
 import { useBoardsStore } from '../../../src/stores/boards'
+import { createTestDatabase } from './test-helpers'
 
 describe('Database Initialization', () => {
   beforeEach(async () => {
@@ -18,19 +19,23 @@ describe('Database Initialization', () => {
   })
 
   it('initializes database successfully', async () => {
-    const db = await initDatabase()
+    // Use in-memory test database
+    const testDb = await createTestDatabase()
+    const db = await initDatabase(testDb)
     expect(db).toBeTruthy()
-    expect(db.name).toBe('trello-clone')
+    expect(db.name).toBeTruthy()
   })
 
   it('returns same instance on multiple calls', async () => {
-    const db1 = await initDatabase()
-    const db2 = await initDatabase()
+    const testDb = await createTestDatabase()
+    const db1 = await initDatabase(testDb)
+    const db2 = await initDatabase(testDb)
     expect(db1).toBe(db2)
   })
 
   it('gets database instance after initialization', async () => {
-    await initDatabase()
+    const testDb = await createTestDatabase()
+    await initDatabase(testDb)
     const db = getDatabase()
     expect(db).toBeTruthy()
   })
@@ -40,19 +45,19 @@ describe('Database Initialization', () => {
   })
 
   it('hydrates store with existing boards from RxDB', async () => {
-    // Initialize database
-    const db = await initDatabase()
-
-    // Insert some boards before sync starts (simulating existing data)
+    // Initialize database with in-memory test database
+    const testDb = await createTestDatabase()
+    
+    // Insert some boards BEFORE sync starts (simulating existing data)
     const now = new Date().toISOString()
-    await db.boards.insert({
+    await testDb.boards.insert({
       id: 'board1',
       title: 'Existing Board 1',
       createdAt: now,
       updatedAt: now,
       ownerId: 'user1',
     })
-    await db.boards.insert({
+    await testDb.boards.insert({
       id: 'board2',
       title: 'Existing Board 2',
       createdAt: now,
@@ -60,8 +65,11 @@ describe('Database Initialization', () => {
       ownerId: 'user1',
     })
 
+    // Now initialize database (this starts sync)
+    await initDatabase(testDb)
+
     // Wait for sync to process
-    await new Promise((resolve) => setTimeout(resolve, 200))
+    await new Promise((resolve) => setTimeout(resolve, 300))
 
     // Check that store was hydrated
     const boards = useBoardsStore.getState().boards
@@ -71,7 +79,8 @@ describe('Database Initialization', () => {
   })
 
   it('cleans up database and subscriptions', async () => {
-    await initDatabase()
+    const testDb = await createTestDatabase()
+    await initDatabase(testDb)
     await cleanupDatabase()
 
     // Should throw error after cleanup

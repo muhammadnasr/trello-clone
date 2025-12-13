@@ -10,7 +10,7 @@ import {
   DialogTrigger,
 } from '@/components/ui/dialog'
 import { Input } from '@/components/ui/input'
-import { createBoard } from '@/lib/services/boards'
+import { useBoardsStore } from '@/stores/boards'
 
 interface CreateBoardDialogProps {
   onBoardCreated?: () => void
@@ -20,6 +20,8 @@ export function CreateBoardDialog({ onBoardCreated }: CreateBoardDialogProps) {
   const [open, setOpen] = useState(false)
   const [title, setTitle] = useState('')
   const [isCreating, setIsCreating] = useState(false)
+  const createBoard = useBoardsStore((state) => state.createBoard)
+  const error = useBoardsStore((state) => state.error)
 
   const handleCreate = async () => {
     if (!title.trim()) {
@@ -35,6 +37,7 @@ export function CreateBoardDialog({ onBoardCreated }: CreateBoardDialogProps) {
       setOpen(false)
       onBoardCreated?.()
     } catch (error) {
+      // Error is already set in Zustand store, just log for debugging
       console.error('Failed to create board:', error)
     } finally {
       setIsCreating(false)
@@ -82,6 +85,9 @@ export function CreateBoardDialog({ onBoardCreated }: CreateBoardDialogProps) {
             {isCreating ? 'Creating...' : 'Create'}
           </Button>
         </DialogFooter>
+        {error && (
+          <p className="text-sm text-destructive mt-2">{error}</p>
+        )}
       </DialogContent>
     </Dialog>
   )

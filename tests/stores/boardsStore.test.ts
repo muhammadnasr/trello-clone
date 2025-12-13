@@ -1,6 +1,14 @@
-import { describe, it, expect, beforeEach } from 'vitest'
+import { describe, it, expect, beforeEach, vi } from 'vitest'
 import { useBoardsStore } from '../../src/stores/boards'
 import type { Board } from '../../src/lib/types/board'
+import * as boardsService from '../../src/lib/services/boards'
+
+// Mock the boards service
+vi.mock('../../src/lib/services/boards', () => ({
+  createBoard: vi.fn(),
+  updateBoard: vi.fn(),
+  deleteBoard: vi.fn(),
+}))
 
 describe('Boards Store', () => {
   beforeEach(() => {
@@ -34,61 +42,93 @@ describe('Boards Store', () => {
     expect(useBoardsStore.getState().boards).toEqual(boards)
   })
 
-  it('adds a board', () => {
-    const board: Board = {
-      id: 'board1',
-      title: 'New Board',
-      createdAt: new Date().toISOString(),
-      updatedAt: new Date().toISOString(),
-      ownerId: 'user1',
-    }
+  describe('Async actions', () => {
+    beforeEach(() => {
+      vi.clearAllMocks()
+    })
 
-    useBoardsStore.getState().addBoard(board)
-    const state = useBoardsStore.getState()
-    expect(state.boards).toHaveLength(1)
-    expect(state.boards[0]).toEqual(board)
-  })
+    it('createBoard calls service and clears error on success', async () => {
+      const mockCreateBoard = vi.mocked(boardsService.createBoard)
+      const newBoard: Board = {
+        id: 'board-new',
+        title: 'New Board',
+        createdAt: new Date().toISOString(),
+        updatedAt: new Date().toISOString(),
+        ownerId: 'user1',
+      }
+      mockCreateBoard.mockResolvedValue(newBoard)
 
-  it('updates a board', () => {
-    const board: Board = {
-      id: 'board1',
-      title: 'Original Title',
-      createdAt: new Date().toISOString(),
-      updatedAt: new Date().toISOString(),
-      ownerId: 'user1',
-    }
+      // Set an error first
+      useBoardsStore.getState().setError('Previous error')
+      
+      const createBoard = useBoardsStore.getState().createBoard
+      const result = await createBoard('New Board', 'user1')
 
-    useBoardsStore.getState().addBoard(board)
-    useBoardsStore.getState().updateBoard('board1', { title: 'Updated Title' })
+      expect(mockCreateBoard).toHaveBeenCalledWith('New Board', 'user1')
+      expect(result).toEqual(newBoard)
+      // Error should be cleared on success
+      expect(useBoardsStore.getState().error).toBeNull()
+    })
 
-    const state = useBoardsStore.getState()
-    expect(state.boards[0].title).toBe('Updated Title')
-    expect(state.boards[0].id).toBe('board1')
-  })
+    it('createBoard sets error on failure', async () => {
+      const mockCreateBoard = vi.mocked(boardsService.createBoard)
+      mockCreateBoard.mockRejectedValue(new Error('Service error'))
 
-  it('removes a board', () => {
-    const board1: Board = {
-      id: 'board1',
-      title: 'Board 1',
-      createdAt: new Date().toISOString(),
-      updatedAt: new Date().toISOString(),
-      ownerId: 'user1',
-    }
-    const board2: Board = {
-      id: 'board2',
-      title: 'Board 2',
-      createdAt: new Date().toISOString(),
-      updatedAt: new Date().toISOString(),
-      ownerId: 'user1',
-    }
+      const createBoard = useBoardsStore.getState().createBoard
 
-    useBoardsStore.getState().addBoard(board1)
-    useBoardsStore.getState().addBoard(board2)
-    useBoardsStore.getState().removeBoard('board1')
+      await expect(createBoard('New Board', 'user1')).rejects.toThrow('Service error')
+      expect(useBoardsStore.getState().error).toBe('Service error')
+    })
 
-    const state = useBoardsStore.getState()
-    expect(state.boards).toHaveLength(1)
-    expect(state.boards[0].id).toBe('board2')
+    it('updateBoard calls service and clears error on success', async () => {
+      const mockUpdateBoard = vi.mocked(boardsService.updateBoard)
+      mockUpdateBoard.mockResolvedValue(undefined)
+
+      // Set an error first
+      useBoardsStore.getState().setError('Previous error')
+
+      const updateBoard = useBoardsStore.getState().updateBoard
+      await updateBoard('board1', { title: 'Updated Title' })
+
+      expect(mockUpdateBoard).toHaveBeenCalledWith('board1', { title: 'Updated Title' })
+      // Error should be cleared on success
+      expect(useBoardsStore.getState().error).toBeNull()
+    })
+
+    it('updateBoard sets error on failure', async () => {
+      const mockUpdateBoard = vi.mocked(boardsService.updateBoard)
+      mockUpdateBoard.mockRejectedValue(new Error('Service error'))
+
+      const updateBoard = useBoardsStore.getState().updateBoard
+
+      await expect(updateBoard('board1', { title: 'Updated Title' })).rejects.toThrow('Service error')
+      expect(useBoardsStore.getState().error).toBe('Service error')
+    })
+
+    it('deleteBoard calls service and clears error on success', async () => {
+      const mockDeleteBoard = vi.mocked(boardsService.deleteBoard)
+      mockDeleteBoard.mockResolvedValue(undefined)
+
+      // Set an error first
+      useBoardsStore.getState().setError('Previous error')
+
+      const deleteBoard = useBoardsStore.getState().deleteBoard
+      await deleteBoard('board1')
+
+      expect(mockDeleteBoard).toHaveBeenCalledWith('board1')
+      // Error should be cleared on success
+      expect(useBoardsStore.getState().error).toBeNull()
+    })
+
+    it('deleteBoard sets error on failure', async () => {
+      const mockDeleteBoard = vi.mocked(boardsService.deleteBoard)
+      mockDeleteBoard.mockRejectedValue(new Error('Service error'))
+
+      const deleteBoard = useBoardsStore.getState().deleteBoard
+
+      await expect(deleteBoard('board1')).rejects.toThrow('Service error')
+      expect(useBoardsStore.getState().error).toBe('Service error')
+    })
   })
 
   it('sets loading state', () => {

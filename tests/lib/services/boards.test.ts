@@ -1,41 +1,14 @@
 import { describe, it, expect, beforeEach, afterEach } from 'vitest'
-import { createRxDatabase } from 'rxdb/plugins/core'
-import { getRxStorageDexie } from 'rxdb/plugins/storage-dexie'
-import { wrappedValidateAjvStorage } from 'rxdb/plugins/validate-ajv'
-import { addRxPlugin } from 'rxdb/plugins/core'
-import { RxDBDevModePlugin } from 'rxdb/plugins/dev-mode'
-import type { TrelloDatabase } from '../../../src/lib/db/database'
-import { boardSchema } from '../../../src/lib/db/collections'
 import { createBoard, updateBoard, deleteBoard } from '../../../src/lib/services/boards'
-import { getDatabase, initDatabase, cleanupDatabase } from '../../../src/lib/db/init'
-
-// Enable dev-mode
-addRxPlugin(RxDBDevModePlugin)
+import { initDatabase, cleanupDatabase, getDatabase } from '../../../src/lib/db/init'
+import { createTestDatabase } from '../db/test-helpers'
 
 describe('Board Service Functions', () => {
   beforeEach(async () => {
     await cleanupDatabase()
-    // Create a test database instance
-    const storage = wrappedValidateAjvStorage({
-      storage: getRxStorageDexie(),
-    })
-    
-    const db = await createRxDatabase<TrelloDatabase>({
-      name: `test-boards-service-${Date.now()}`,
-      storage: storage,
-      ignoreDuplicate: true,
-    })
-
-    await db.addCollections({
-      boards: {
-        schema: boardSchema,
-      },
-    })
-
-    // Mock getDatabase to return our test database
-    // We'll need to set up the database instance manually
-    // For now, let's use initDatabase but with a unique name
-    await initDatabase()
+    // Create in-memory test database and inject it
+    const testDb = await createTestDatabase()
+    await initDatabase(testDb)
   })
 
   afterEach(async () => {
@@ -55,13 +28,20 @@ describe('Board Service Functions', () => {
 
   it('updates a board title', async () => {
     const board = await createBoard('Original Title', 'user1')
+    const originalUpdatedAt = board.updatedAt
+    
+    // Add a small delay to ensure updatedAt will be different
+    await new Promise((resolve) => setTimeout(resolve, 10))
+    
     await updateBoard(board.id, { title: 'Updated Title' })
 
     const db = getDatabase()
     const updatedBoard = await db.boards.findOne(board.id).exec()
     
     expect(updatedBoard?.title).toBe('Updated Title')
-    expect(updatedBoard?.updatedAt).not.toBe(board.updatedAt)
+    expect(updatedBoard?.updatedAt).not.toBe(originalUpdatedAt)
+    // Verify updatedAt is actually newer
+    expect(new Date(updatedBoard!.updatedAt).getTime()).toBeGreaterThan(new Date(originalUpdatedAt).getTime())
   })
 
   it('throws error when updating non-existent board', async () => {

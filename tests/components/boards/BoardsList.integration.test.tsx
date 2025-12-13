@@ -5,8 +5,8 @@ import userEvent from '@testing-library/user-event'
 import { RouterProvider, createRouter } from '@tanstack/react-router'
 import { routeTree } from '../../../src/routeTree.gen'
 import { useBoardsStore } from '../../../src/stores/boards'
-import * as boardsService from '../../../src/lib/services/boards'
-import type { Board } from '../../../src/lib/types/board'
+import { initDatabase, cleanupDatabase } from '../../../src/lib/db/init'
+import { createTestDatabase } from '../../lib/db/test-helpers'
 
 const router = createRouter({ routeTree })
 
@@ -16,16 +16,12 @@ declare module '@tanstack/react-router' {
   }
 }
 
-// Mock the boards service
-vi.mock('../../../src/lib/services/boards', () => ({
-  createBoard: vi.fn(),
-  updateBoard: vi.fn(),
-  deleteBoard: vi.fn(),
-}))
-
 describe('BoardsList Integration - Create Board', () => {
-  beforeEach(() => {
-    vi.clearAllMocks()
+  beforeEach(async () => {
+    await cleanupDatabase()
+    // Create in-memory test database and inject it
+    const testDb = await createTestDatabase()
+    await initDatabase(testDb)
     // Reset store
     useBoardsStore.setState({
       boards: [],
@@ -34,19 +30,12 @@ describe('BoardsList Integration - Create Board', () => {
     })
   })
 
+  afterEach(async () => {
+    await cleanupDatabase()
+  })
+
   it('displays newly created board in the list', async () => {
     const user = userEvent.setup()
-    const mockCreateBoard = vi.mocked(boardsService.createBoard)
-    
-    const newBoard: Board = {
-      id: 'board-new',
-      title: 'My New Board',
-      createdAt: new Date().toISOString(),
-      updatedAt: new Date().toISOString(),
-      ownerId: 'user1',
-    }
-
-    mockCreateBoard.mockResolvedValue(newBoard)
 
     router.history.push('/')
     render(<RouterProvider router={router} />)
@@ -71,33 +60,14 @@ describe('BoardsList Integration - Create Board', () => {
     // Click create
     await user.click(screen.getByText('Create'))
 
-    // Wait for board to be created
-    await waitFor(() => {
-      expect(mockCreateBoard).toHaveBeenCalledWith('My New Board', 'user1')
-    })
-
-    // Simulate the board being added to the store (this happens via RxDB sync in real app)
-    useBoardsStore.getState().addBoard(newBoard)
-
-    // Verify the board name appears in the list
+    // Wait for board to appear via reactive sync (real RxDB + real service)
     await waitFor(() => {
       expect(screen.getByText('My New Board')).toBeTruthy()
-    })
+    }, { timeout: 2000 })
   })
 
   it('shows board name in the list after creation', async () => {
     const user = userEvent.setup()
-    const mockCreateBoard = vi.mocked(boardsService.createBoard)
-    
-    const newBoard: Board = {
-      id: 'board-test',
-      title: 'Test Board Name',
-      createdAt: new Date().toISOString(),
-      updatedAt: new Date().toISOString(),
-      ownerId: 'user1',
-    }
-
-    mockCreateBoard.mockResolvedValue(newBoard)
 
     router.history.push('/')
     render(<RouterProvider router={router} />)
@@ -115,22 +85,22 @@ describe('BoardsList Integration - Create Board', () => {
     await user.type(screen.getByPlaceholderText('Board name'), 'Test Board Name')
     await user.click(screen.getByText('Create'))
 
-    // Add board to store (simulating RxDB sync)
-    useBoardsStore.getState().addBoard(newBoard)
-
-    // Verify board name is visible in the list
+    // Wait for board to appear via reactive sync (real RxDB + real service)
     await waitFor(() => {
       const boardName = screen.getByText('Test Board Name')
       expect(boardName).toBeTruthy()
       // Verify it's in a heading (h2) as per BoardCard structure
       expect(boardName.tagName).toBe('H2')
-    })
+    }, { timeout: 2000 })
   })
 })
 
 describe('BoardsList Integration - Update Board', () => {
-  beforeEach(() => {
-    vi.clearAllMocks()
+  beforeEach(async () => {
+    await cleanupDatabase()
+    // Create in-memory test database and inject it
+    const testDb = await createTestDatabase()
+    await initDatabase(testDb)
     // Reset store
     useBoardsStore.setState({
       boards: [],
@@ -139,34 +109,24 @@ describe('BoardsList Integration - Update Board', () => {
     })
   })
 
+  afterEach(async () => {
+    await cleanupDatabase()
+  })
+
   it('updates board title when renamed', async () => {
     const user = userEvent.setup()
-    const mockUpdateBoard = vi.mocked(boardsService.updateBoard)
     
-    const existingBoard: Board = {
-      id: 'board-existing',
-      title: 'Original Title',
-      createdAt: new Date().toISOString(),
-      updatedAt: new Date().toISOString(),
-      ownerId: 'user1',
-    }
-
-    // Set up initial board in store
-    useBoardsStore.setState({
-      boards: [existingBoard],
-      isLoading: false,
-      error: null,
-    })
-
-    mockUpdateBoard.mockResolvedValue(undefined)
+    // Create a board first using the real service
+    const { createBoard } = await import('../../../src/lib/services/boards')
+    await createBoard('Original Title', 'user1')
 
     router.history.push('/')
     render(<RouterProvider router={router} />)
 
-    // Wait for board to appear
+    // Wait for board to appear via reactive sync
     await waitFor(() => {
       expect(screen.getByText('Original Title')).toBeInTheDocument()
-    })
+    }, { timeout: 2000 })
 
     // Find the board card and hover over it to reveal the buttons
     const boardCard = screen.getByText('Original Title').closest('div.group')
@@ -194,47 +154,27 @@ describe('BoardsList Integration - Update Board', () => {
     // Click Save button
     await user.click(screen.getByRole('button', { name: 'Save' }))
 
-    // Verify updateBoard was called with correct parameters
-    await waitFor(() => {
-      expect(mockUpdateBoard).toHaveBeenCalledWith('board-existing', { title: 'Updated Title' })
-    })
-
-    // Simulate the board being updated in the store (this happens via RxDB sync in real app)
-    useBoardsStore.getState().updateBoard('board-existing', { title: 'Updated Title' })
-
-    // Verify the updated title appears in the list
+    // Wait for reactive sync to update the UI (real RxDB + real service)
     await waitFor(() => {
       expect(screen.getByText('Updated Title')).toBeInTheDocument()
       expect(screen.queryByText('Original Title')).not.toBeInTheDocument()
-    })
+    }, { timeout: 2000 })
   })
 
   it('cancels rename when Cancel button is clicked', async () => {
     const user = userEvent.setup()
-    const mockUpdateBoard = vi.mocked(boardsService.updateBoard)
     
-    const existingBoard: Board = {
-      id: 'board-existing',
-      title: 'Original Title',
-      createdAt: new Date().toISOString(),
-      updatedAt: new Date().toISOString(),
-      ownerId: 'user1',
-    }
-
-    // Set up initial board in store
-    useBoardsStore.setState({
-      boards: [existingBoard],
-      isLoading: false,
-      error: null,
-    })
+    // Create a board first using the real service
+    const { createBoard } = await import('../../../src/lib/services/boards')
+    await createBoard('Original Title', 'user1')
 
     router.history.push('/')
     render(<RouterProvider router={router} />)
 
-    // Wait for board to appear
+    // Wait for board to appear via reactive sync
     await waitFor(() => {
       expect(screen.getByText('Original Title')).toBeInTheDocument()
-    })
+    }, { timeout: 2000 })
 
     // Find the board card and hover over it
     const boardCard = screen.getByText('Original Title').closest('div.group')
@@ -257,18 +197,18 @@ describe('BoardsList Integration - Update Board', () => {
     // Click Cancel button
     await user.click(screen.getByRole('button', { name: 'Cancel' }))
 
-    // Verify updateBoard was NOT called
-    expect(mockUpdateBoard).not.toHaveBeenCalled()
-
-    // Verify the original title is still displayed
+    // Verify the original title is still displayed (no update happened)
     expect(screen.getByText('Original Title')).toBeInTheDocument()
     expect(screen.queryByText('New Title')).not.toBeInTheDocument()
   })
 })
 
 describe('BoardsList Integration - Delete Board', () => {
-  beforeEach(() => {
-    vi.clearAllMocks()
+  beforeEach(async () => {
+    await cleanupDatabase()
+    // Create in-memory test database and inject it
+    const testDb = await createTestDatabase()
+    await initDatabase(testDb)
     // Reset store
     useBoardsStore.setState({
       boards: [],
@@ -279,39 +219,26 @@ describe('BoardsList Integration - Delete Board', () => {
     window.confirm = vi.fn(() => true)
   })
 
-  afterEach(() => {
+  afterEach(async () => {
+    await cleanupDatabase()
     // Restore original confirm
     window.confirm = window.confirm as typeof confirm
   })
 
   it('deletes board when delete button is clicked and confirmed', async () => {
     const user = userEvent.setup()
-    const mockDeleteBoard = vi.mocked(boardsService.deleteBoard)
     
-    const boardToDelete: Board = {
-      id: 'board-to-delete',
-      title: 'Board to Delete',
-      createdAt: new Date().toISOString(),
-      updatedAt: new Date().toISOString(),
-      ownerId: 'user1',
-    }
-
-    // Set up initial board in store
-    useBoardsStore.setState({
-      boards: [boardToDelete],
-      isLoading: false,
-      error: null,
-    })
-
-    mockDeleteBoard.mockResolvedValue(undefined)
+    // Create a board first using the real service
+    const { createBoard } = await import('../../../src/lib/services/boards')
+    await createBoard('Board to Delete', 'user1')
 
     router.history.push('/')
     render(<RouterProvider router={router} />)
 
-    // Wait for board to appear
+    // Wait for board to appear via reactive sync
     await waitFor(() => {
       expect(screen.getByText('Board to Delete')).toBeInTheDocument()
-    })
+    }, { timeout: 2000 })
 
     // Find the board card and hover over it to reveal the buttons
     const boardCard = screen.getByText('Board to Delete').closest('div.group')
@@ -331,49 +258,29 @@ describe('BoardsList Integration - Delete Board', () => {
       expect.stringContaining('Board to Delete')
     )
 
-    // Verify deleteBoard service was called
-    await waitFor(() => {
-      expect(mockDeleteBoard).toHaveBeenCalledWith('board-to-delete')
-    })
-
-    // Simulate the board being removed from the store (this happens via RxDB sync in real app)
-    useBoardsStore.getState().removeBoard('board-to-delete')
-
-    // Verify the board is removed from the list
+    // Wait for reactive sync to remove the board from UI (real RxDB + real service)
     await waitFor(() => {
       expect(screen.queryByText('Board to Delete')).not.toBeInTheDocument()
-    })
+    }, { timeout: 2000 })
   })
 
   it('does not delete board when confirmation is cancelled', async () => {
     const user = userEvent.setup()
-    const mockDeleteBoard = vi.mocked(boardsService.deleteBoard)
     
     // Mock confirm to return false (cancelled)
     window.confirm = vi.fn(() => false)
     
-    const boardToKeep: Board = {
-      id: 'board-to-keep',
-      title: 'Board to Keep',
-      createdAt: new Date().toISOString(),
-      updatedAt: new Date().toISOString(),
-      ownerId: 'user1',
-    }
-
-    // Set up initial board in store
-    useBoardsStore.setState({
-      boards: [boardToKeep],
-      isLoading: false,
-      error: null,
-    })
+    // Create a board first using the real service
+    const { createBoard } = await import('../../../src/lib/services/boards')
+    await createBoard('Board to Keep', 'user1')
 
     router.history.push('/')
     render(<RouterProvider router={router} />)
 
-    // Wait for board to appear
+    // Wait for board to appear via reactive sync
     await waitFor(() => {
       expect(screen.getByText('Board to Keep')).toBeInTheDocument()
-    })
+    }, { timeout: 2000 })
 
     // Find the board card and hover over it to reveal the buttons
     const boardCard = screen.getByText('Board to Keep').closest('div.group')
@@ -391,10 +298,7 @@ describe('BoardsList Integration - Delete Board', () => {
     // Verify confirm was called
     expect(window.confirm).toHaveBeenCalled()
 
-    // Verify deleteBoard was NOT called
-    expect(mockDeleteBoard).not.toHaveBeenCalled()
-
-    // Verify the board is still in the list
+    // Verify the board is still in the list (not deleted)
     expect(screen.getByText('Board to Keep')).toBeInTheDocument()
   })
 })

@@ -8,14 +8,16 @@ let unsubscribeSync: (() => void) | null = null
 /**
  * Initialize the database and sync with Zustand store.
  * Call this once when the app starts.
+ * 
+ * @param testDatabase - Optional test database to inject (for testing only)
  */
-export async function initDatabase(): Promise<TrelloDatabase> {
+export async function initDatabase(testDatabase?: TrelloDatabase): Promise<TrelloDatabase> {
   if (databaseInstance) {
     return databaseInstance
   }
 
-  // Create database
-  const db = await createDatabase()
+  // Use test database if provided, otherwise create production database
+  const db = testDatabase || await createDatabase()
   databaseInstance = db
 
   // Sync RxDB to Zustand store

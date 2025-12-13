@@ -11,7 +11,7 @@ import {
   DialogTitle,
 } from '@/components/ui/dialog'
 import { Input } from '@/components/ui/input'
-import { updateBoard, deleteBoard } from '@/lib/services/boards'
+import { useBoardsStore } from '@/stores/boards'
 import type { Board } from '@/lib/types/board'
 
 interface BoardCardProps {
@@ -22,6 +22,8 @@ export function BoardCard({ board }: BoardCardProps) {
   const [isRenaming, setIsRenaming] = useState(false)
   const [newTitle, setNewTitle] = useState(board.title)
   const [isDeleting, setIsDeleting] = useState(false)
+  const updateBoard = useBoardsStore((state) => state.updateBoard)
+  const deleteBoard = useBoardsStore((state) => state.deleteBoard)
 
   const handleRename = async () => {
     if (!newTitle.trim() || newTitle.trim() === board.title) {
@@ -33,6 +35,7 @@ export function BoardCard({ board }: BoardCardProps) {
       await updateBoard(board.id, { title: newTitle.trim() })
       setIsRenaming(false)
     } catch (error) {
+      // Error is already set in Zustand store, just log for debugging
       console.error('Failed to rename board:', error)
     }
   }
@@ -46,6 +49,7 @@ export function BoardCard({ board }: BoardCardProps) {
     try {
       await deleteBoard(board.id)
     } catch (error) {
+      // Error is already set in Zustand store, just log for debugging
       console.error('Failed to delete board:', error)
       setIsDeleting(false)
     }
