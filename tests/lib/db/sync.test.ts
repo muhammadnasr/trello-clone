@@ -4,10 +4,10 @@ import { getRxStorageDexie } from 'rxdb/plugins/storage-dexie'
 import { wrappedValidateAjvStorage } from 'rxdb/plugins/validate-ajv'
 import { addRxPlugin } from 'rxdb/plugins/core'
 import { RxDBDevModePlugin } from 'rxdb/plugins/dev-mode'
-import type { TrelloDatabase } from '../src/lib/db/database'
-import { boardSchema } from '../src/lib/db/collections'
-import { syncBoardsToStore } from '../src/lib/db/sync'
-import { useBoardsStore } from '../src/stores/boards'
+import type { TrelloDatabase } from '../../../src/lib/db/database'
+import { boardSchema } from '../../../src/lib/db/collections'
+import { syncBoardsToStore } from '../../../src/lib/db/sync'
+import { useBoardsStore } from '../../../src/stores/boards'
 
 // Enable dev-mode
 addRxPlugin(RxDBDevModePlugin)

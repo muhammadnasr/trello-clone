@@ -1,6 +1,6 @@
 import { describe, it, expect, beforeEach } from 'vitest'
-import { useBoardsStore } from '../src/stores/boards'
-import type { BoardDocument } from '../src/lib/types/board'
+import { useBoardsStore } from '../../src/stores/boards'
+import type { BoardDocument } from '../../src/lib/types/board'
 
 describe('Boards Store', () => {
   beforeEach(() => {

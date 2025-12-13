@@ -1,6 +1,6 @@
 import { describe, it, expect, beforeEach, afterEach } from 'vitest'
-import { initDatabase, getDatabase, cleanupDatabase } from '../src/lib/db/init'
-import { useBoardsStore } from '../src/stores/boards'
+import { initDatabase, getDatabase, cleanupDatabase } from '../../../src/lib/db/init'
+import { useBoardsStore } from '../../../src/stores/boards'
 
 describe('Database Initialization', () => {
   beforeEach(async () => {

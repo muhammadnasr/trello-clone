@@ -2,7 +2,7 @@ import { describe, it, expect } from 'vitest'
 import React from 'react'
 import { render, screen, waitFor } from '@testing-library/react'
 import { RouterProvider, createRouter } from '@tanstack/react-router'
-import { routeTree } from '../src/routeTree.gen'
+import { routeTree } from '../../src/routeTree.gen'
 
 const router = createRouter({ 
   routeTree,

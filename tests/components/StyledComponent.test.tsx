@@ -1,7 +1,7 @@
 import { describe, it, expect } from 'vitest'
 import React from 'react'
 import { render, screen } from '@testing-library/react'
-import { StyledComponent } from '../src/components/StyledComponent'
+import { StyledComponent } from '../../src/components/StyledComponent'
 
 describe('StyledComponent', () => {
   it('renders with Tailwind classes applied', () => {
