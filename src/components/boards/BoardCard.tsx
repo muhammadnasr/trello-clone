@@ -73,7 +73,7 @@ export function BoardCard({ board }: BoardCardProps) {
               e.preventDefault()
               setIsRenaming(true)
             }}
-            className="h-7 w-7 dark:hover:bg-gray-700 dark:hover:text-gray-200"
+            className="h-7 w-7"
             title="Rename board"
           >
             <Edit2 className="h-4 w-4" />
