@@ -1,7 +1,6 @@
 import type { RxCollection } from 'rxdb'
 import type { Board } from '../types/board'
 
-// Board collection schema
 export const boardSchema = {
   version: 0,
   primaryKey: 'id',
@@ -9,7 +8,7 @@ export const boardSchema = {
   properties: {
     id: {
       type: 'string',
-      maxLength: 100, // primary key must have maxLength
+      maxLength: 100,
     },
     title: {
       type: 'string',
@@ -29,7 +28,6 @@ export const boardSchema = {
   required: ['id', 'title', 'createdAt', 'updatedAt', 'ownerId'],
 }
 
-// Board collection type
 export type BoardCollection = {
   boards: RxCollection<Board>
 }

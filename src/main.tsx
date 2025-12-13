@@ -3,26 +3,20 @@ import { createRoot } from 'react-dom/client'
 import { RouterProvider, createRouter } from '@tanstack/react-router'
 import { initDatabase } from './lib/db/init'
 import './index.css'
-
-// Import the generated route tree
 import { routeTree } from './routeTree.gen'
 
-// Create a new router instance
 const router = createRouter({ routeTree })
 
-// Register the router instance for type safety
 declare module '@tanstack/react-router' {
   interface Register {
     router: typeof router
   }
 }
 
-// Initialize database before rendering the app
 async function bootstrap() {
   try {
     await initDatabase()
     
-    // Database initialized, now render the app
     createRoot(document.getElementById('root')!).render(
       <StrictMode>
         <RouterProvider router={router} />
@@ -30,7 +24,6 @@ async function bootstrap() {
     )
   } catch (error) {
     console.error('Failed to initialize database:', error)
-    // Render error state
     const root = document.getElementById('root')!
     root.innerHTML = `
       <div style="display: flex; align-items: center; justify-content: center; min-height: 100vh; flex-direction: column; gap: 1rem;">
@@ -42,5 +35,4 @@ async function bootstrap() {
   }
 }
 
-// Start the app
 bootstrap()

@@ -1,9 +1,6 @@
 import { getDatabase } from '@/lib/db/init'
 import type { Board } from '@/lib/types/board'
 
-/**
- * Create a new board in RxDB
- */
 export async function createBoard(title: string, ownerId: string): Promise<Board> {
   const db = getDatabase()
   const now = new Date().toISOString()
@@ -19,9 +16,6 @@ export async function createBoard(title: string, ownerId: string): Promise<Board
   return board.toJSON() as Board
 }
 
-/**
- * Update a board in RxDB
- */
 export async function updateBoard(id: string, updates: { title?: string }): Promise<void> {
   const db = getDatabase()
   const board = await db.boards.findOne(id).exec()
@@ -36,9 +30,6 @@ export async function updateBoard(id: string, updates: { title?: string }): Prom
   })
 }
 
-/**
- * Delete a board from RxDB
- */
 export async function deleteBoard(id: string): Promise<void> {
   const db = getDatabase()
   const board = await db.boards.findOne(id).exec()

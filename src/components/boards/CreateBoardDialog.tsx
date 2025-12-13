@@ -30,14 +30,12 @@ export function CreateBoardDialog({ onBoardCreated }: CreateBoardDialogProps) {
 
     setIsCreating(true)
     try {
-      // For now, use a placeholder ownerId. Later we'll get it from auth
       const ownerId = 'user1'
       await createBoard(title.trim(), ownerId)
       setTitle('')
       setOpen(false)
       onBoardCreated?.()
     } catch (error) {
-      // Error is already set in Zustand store, just log for debugging
       console.error('Failed to create board:', error)
     } finally {
       setIsCreating(false)

@@ -35,7 +35,6 @@ export function BoardCard({ board }: BoardCardProps) {
       await updateBoard(board.id, { title: newTitle.trim() })
       setIsRenaming(false)
     } catch (error) {
-      // Error is already set in Zustand store, just log for debugging
       console.error('Failed to rename board:', error)
     }
   }
@@ -49,7 +48,6 @@ export function BoardCard({ board }: BoardCardProps) {
     try {
       await deleteBoard(board.id)
     } catch (error) {
-      // Error is already set in Zustand store, just log for debugging
       console.error('Failed to delete board:', error)
       setIsDeleting(false)
     }

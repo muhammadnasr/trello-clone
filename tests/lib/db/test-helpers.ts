@@ -6,14 +6,8 @@ import { RxDBDevModePlugin } from 'rxdb/plugins/dev-mode'
 import type { TrelloDatabase } from '../../../src/lib/db/database'
 import { boardSchema } from '../../../src/lib/db/collections'
 
-// Enable dev-mode
 addRxPlugin(RxDBDevModePlugin)
 
-/**
- * Create an in-memory RxDB database for testing.
- * This avoids IndexedDB issues in Node test environment and allows
- * real reactive sync to work automatically.
- */
 export async function createTestDatabase(name?: string): Promise<TrelloDatabase> {
   const storage = wrappedValidateAjvStorage({
     storage: getRxStorageMemory(),
