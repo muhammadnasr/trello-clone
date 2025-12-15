@@ -5,7 +5,6 @@ import { createTestDatabase } from './test-helpers'
 
 describe('Database Initialization', () => {
   beforeEach(async () => {
-    // Cleanup before each test
     await cleanupDatabase()
     useBoardsStore.setState({
       boards: [],
@@ -19,7 +18,6 @@ describe('Database Initialization', () => {
   })
 
   it('initializes database successfully', async () => {
-    // Use in-memory test database
     const testDb = await createTestDatabase()
     const db = await initDatabase(testDb)
     expect(db).toBeTruthy()
@@ -45,10 +43,8 @@ describe('Database Initialization', () => {
   })
 
   it('hydrates store with existing boards from RxDB', async () => {
-    // Initialize database with in-memory test database
     const testDb = await createTestDatabase()
     
-    // Insert some boards BEFORE sync starts (simulating existing data)
     const now = new Date().toISOString()
     await testDb.boards.insert({
       id: 'board1',
@@ -65,13 +61,10 @@ describe('Database Initialization', () => {
       ownerId: 'user1',
     })
 
-    // Now initialize database (this starts sync)
     await initDatabase(testDb)
 
-    // Wait for sync to process
     await new Promise((resolve) => setTimeout(resolve, 300))
 
-    // Check that store was hydrated
     const boards = useBoardsStore.getState().boards
     expect(boards.length).toBeGreaterThanOrEqual(2)
     expect(boards.some((b) => b.id === 'board1')).toBe(true)
@@ -83,7 +76,6 @@ describe('Database Initialization', () => {
     await initDatabase(testDb)
     await cleanupDatabase()
 
-    // Should throw error after cleanup
     expect(() => getDatabase()).toThrow('Database not initialized')
   })
 })

@@ -6,7 +6,6 @@ import { createTestDatabase } from '../db/test-helpers'
 describe('Board Service Functions', () => {
   beforeEach(async () => {
     await cleanupDatabase()
-    // Create in-memory test database and inject it
     const testDb = await createTestDatabase()
     await initDatabase(testDb)
   })
@@ -30,7 +29,6 @@ describe('Board Service Functions', () => {
     const board = await createBoard('Original Title', 'user1')
     const originalUpdatedAt = board.updatedAt
     
-    // Add a small delay to ensure updatedAt will be different
     await new Promise((resolve) => setTimeout(resolve, 10))
     
     await updateBoard(board.id, { title: 'Updated Title' })
@@ -40,7 +38,6 @@ describe('Board Service Functions', () => {
     
     expect(updatedBoard?.title).toBe('Updated Title')
     expect(updatedBoard?.updatedAt).not.toBe(originalUpdatedAt)
-    // Verify updatedAt is actually newer
     expect(new Date(updatedBoard!.updatedAt).getTime()).toBeGreaterThan(new Date(originalUpdatedAt).getTime())
   })
 
