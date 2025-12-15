@@ -30,13 +30,7 @@ export function syncBoardsToStore(database: TrelloDatabase): () => void {
       })
       .$.subscribe((rxDocuments) => {
         const boards: Board[] = rxDocuments
-          .map((doc) => doc.toJSON() as Board & { _deleted?: boolean })
-          .filter((board) => !board._deleted)
-          .map((board) => {
-            // eslint-disable-next-line @typescript-eslint/no-unused-vars
-            const { _deleted, ...boardWithoutDeleted } = board
-            return boardWithoutDeleted as Board
-          })
+          .map((doc) => doc.toJSON() as Board)
         useBoardsStore.getState().setBoards(boards)
       })
 
@@ -104,16 +98,8 @@ export function syncColumnsToStore(database: TrelloDatabase): () => void {
       .exec()
       .then((rxDocuments) => {
         const columns: Column[] = rxDocuments
-          .map((doc) => doc.toJSON() as Column & { _deleted?: boolean })
-          .filter((column) => 
-            !column._deleted && 
-            userBoardIds.includes(column.boardId)
-          )
-          .map((column) => {
-            // eslint-disable-next-line @typescript-eslint/no-unused-vars
-            const { _deleted, ...columnWithoutDeleted } = column
-            return columnWithoutDeleted as Column
-          })
+          .map((doc) => doc.toJSON() as Column)
+          .filter((column) => userBoardIds.includes(column.boardId))
         useColumnsStore.getState().setColumns(columns)
       })
   }
