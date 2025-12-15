@@ -2,7 +2,7 @@
 
 ## 📊 Progress Summary
 
-**Completed Phases: 6/11**
+**Completed Phases: 6.5/11**
 - ✅ Phase 1: Foundation
 - ✅ Phase 2: RxDB Setup & Data Models (Boards & Columns schemas)
 - ✅ Phase 3: Zustand Store Integration
@@ -10,8 +10,8 @@
 - ✅ Phase 5: Basic UI - Boards List
 - ✅ Phase 6: Board Detail & Columns
 
-**Remaining Phases: 5/11**
-- ⏳ Phase 7: Firebase Integration (Auth + Firestore Replication)
+**Remaining Phases: 4.5/11**
+- ✅ Phase 7: Firebase Integration (Firestore Replication ✅ Complete, Auth ⏳ Pending)
 - ⏳ Phase 8: Cards (Display + CRUD + Firestore Sync)
 - ⏳ Phase 9: Drag & Drop (Column & Card Reordering)
 - ⏳ Phase 10: Multi-User & Sharing (Sharing UI + Logic + Security Rules)
@@ -21,16 +21,17 @@
 - ✅ Boards CRUD (Create, Read, Update, Delete)
 - ✅ Columns CRUD (Create, Read, Update, Delete)
 - ⏳ Cards (Not started)
-- ⏳ Firebase Sync (Not started)
+- ✅ Firebase Sync (Firestore Replication ✅ Complete)
 - ⏳ Drag & Drop (Not started)
 - ⏳ Multi-User & Sharing (Not started)
 
-**Estimated Progress: ~35%**
+**Estimated Progress: ~45%**
 - Foundation & Infrastructure: ✅ Complete
 - Core Features (Boards/Columns): ✅ Complete
-- Remaining Features: ⏳ Not started (Cards, Firebase, Drag & Drop, Multi-User, Polish)
+- Firebase Sync: ✅ Complete (Firestore Replication)
+- Remaining Features: ⏳ Not started (Cards, Auth, Drag & Drop, Multi-User, Polish)
 
-**Next Phase: Phase 7 - Firebase Integration**
+**Next Phase: Phase 7 - Firebase Auth (remaining) / Phase 8 - Cards**
 
 **Test Coverage**: 85 tests passing (unit + integration)
 
@@ -198,12 +199,12 @@ Using RxDB is acceptable, as long as the solution clearly demonstrates:
 
 **Note**: Moved before Cards to test Firebase sync early and minimize surprises before adding more complexity.
 
-#### Step 7.1: Firebase Setup
+#### ✅ Step 7.1: Firebase Setup (COMPLETED)
 
-- Install Firebase SDK
-- Configure Firebase (Firestore, not Realtime DB - RxDB uses Firestore)
-- Set up Firebase config
-- **Test**: Verify Firebase connection works
+- [x] Install Firebase SDK
+- [x] Configure Firebase (Firestore, not Realtime DB - RxDB uses Firestore)
+- [x] Set up Firebase config
+- [x] **Test**: Verify Firebase connection works
 
 #### Step 7.2: Firebase Auth
 
@@ -212,18 +213,19 @@ Using RxDB is acceptable, as long as the solution clearly demonstrates:
 - Protect routes (require auth for boards)
 - **Test**: Verify authentication flow works
 
-#### Step 7.3: RxDB Firestore Replication - Setup
+#### ✅ Step 7.3: RxDB Firestore Replication - Setup (COMPLETED)
 
-- Configure RxDB Firestore replication plugin
-- Set up replication for boards collection
-- Configure conflict resolution (LWW - handled by RxDB)
-- **Test**: Verify Firestore replication initializes
+- [x] Configure RxDB Firestore replication plugin
+- [x] Set up replication for boards collection
+- [x] Configure conflict resolution (LWW - handled by RxDB)
+- [x] **Note**: Must use `firebase@11.10.0` (not v12+) - RxDB's replication plugin expects Firebase v11. Version mismatch causes "different Firestore SDK" error. Also configure Vite deduplication for Firebase modules.
+- [x] **Test**: Verify Firestore replication initializes
 
-#### Step 7.4: RxDB Firestore Replication - Columns Collection
+#### ✅ Step 7.4: RxDB Firestore Replication - Columns Collection (COMPLETED)
 
-- Extend Firestore replication for columns collection
-- Test sync with existing boards and columns data
-- **Test**: Verify columns sync to Firestore
+- [x] Extend Firestore replication for columns collection
+- [x] Test sync with existing boards and columns data
+- [x] **Test**: Verify columns sync to Firestore
 
 #### Step 7.5: Offline Support (RxDB Built-in)
 
