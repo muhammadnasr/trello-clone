@@ -1,5 +1,41 @@
 # Trello Clone - Step-by-Step Implementation Plan (RxDB Version)
 
+## 📊 Progress Summary
+
+**Completed Phases: 6/11**
+- ✅ Phase 1: Foundation
+- ✅ Phase 2: RxDB Setup & Data Models (Boards & Columns schemas)
+- ✅ Phase 3: Zustand Store Integration
+- ✅ Phase 4: BroadcastChannel Tab Sync
+- ✅ Phase 5: Basic UI - Boards List
+- ✅ Phase 6: Board Detail & Columns
+
+**Remaining Phases: 5/11**
+- ⏳ Phase 7: Firebase Integration (Auth + Firestore Replication)
+- ⏳ Phase 8: Cards (Display + CRUD + Firestore Sync)
+- ⏳ Phase 9: Drag & Drop (Column & Card Reordering)
+- ⏳ Phase 10: Multi-User & Sharing (Sharing UI + Logic + Security Rules)
+- ⏳ Phase 11: Polish & Bonus Features (Offline Indicator + Animations + Accessibility + PWA + Deployment)
+
+**Core Features Status:**
+- ✅ Boards CRUD (Create, Read, Update, Delete)
+- ✅ Columns CRUD (Create, Read, Update, Delete)
+- ⏳ Cards (Not started)
+- ⏳ Firebase Sync (Not started)
+- ⏳ Drag & Drop (Not started)
+- ⏳ Multi-User & Sharing (Not started)
+
+**Estimated Progress: ~35%**
+- Foundation & Infrastructure: ✅ Complete
+- Core Features (Boards/Columns): ✅ Complete
+- Remaining Features: ⏳ Not started (Cards, Firebase, Drag & Drop, Multi-User, Polish)
+
+**Next Phase: Phase 7 - Firebase Integration**
+
+**Test Coverage**: 85 tests passing (unit + integration)
+
+---
+
 ## Architecture Overview
 
 The application uses RxDB as the core local-first database layer:
@@ -34,200 +70,208 @@ Using RxDB is acceptable, as long as the solution clearly demonstrates:
 
 ## Implementation Steps
 
-### Phase 1: Foundation (Ultra Minimal Start)
+### ✅ Phase 1: Foundation (COMPLETED)
 
-#### Step 1.1: Project Setup
+#### ✅ Step 1.1: Project Setup
 
-- Initialize Vite + React + TypeScript project
-- Install core dependencies: React, TypeScript, Vite
-- Configure TypeScript (`tsconfig.json`)
-- Configure Vite (`vite.config.ts`)
-- Add Vitest setup with React Testing Library
-- Create basic test: render "Hello World" component
-- **Test**: Verify project builds and test passes
+- [x] Initialize Vite + React + TypeScript project
+- [x] Install core dependencies: React, TypeScript, Vite
+- [x] Configure TypeScript (`tsconfig.json`)
+- [x] Configure Vite (`vite.config.ts`)
+- [x] Add Vitest setup with React Testing Library
+- [x] Create basic test: render "Hello World" component
+- [x] **Test**: Verify project builds and test passes
 
-#### Step 1.2: TailwindCSS v4 Setup
+#### ✅ Step 1.2: TailwindCSS v4 Setup
 
-- Install and configure TailwindCSS v4
-- Add base styles and configuration
-- Create a simple styled component
-- **Test**: Verify Tailwind classes apply correctly
+- [x] Install and configure TailwindCSS v4
+- [x] Add base styles and configuration
+- [x] Create a simple styled component
+- [x] **Test**: Verify Tailwind classes apply correctly
 
-#### Step 1.3: TanStack Router Setup
+#### ✅ Step 1.3: TanStack Router Setup
 
-- Install TanStack Router
-- Configure router with basic routes (`/` and `/boards/:boardId`)
-- Create placeholder pages
-- **Test**: Verify routing works (navigate between routes)
+- [x] Install TanStack Router
+- [x] Configure router with basic routes (`/` and `/boards/:boardId`)
+- [x] Create placeholder pages
+- [x] **Test**: Verify routing works (navigate between routes)
 
-#### Step 1.4: Shadcn-UI Setup
+#### ✅ Step 1.4: Shadcn-UI Setup
 
-- Install Shadcn-UI CLI and dependencies
-- Configure `components.json`
-- Add a test component (Button)
-- **Test**: Verify Shadcn component renders and styles correctly
+- [x] Install Shadcn-UI CLI and dependencies
+- [x] Configure `components.json`
+- [x] Add a test component (Button)
+- [x] **Test**: Verify Shadcn component renders and styles correctly
 
-### Phase 2: RxDB Setup & Data Models
+### ✅ Phase 2: RxDB Setup & Data Models (COMPLETED)
 
-#### Step 2.1: RxDB Installation & Configuration
+#### ✅ Step 2.1: RxDB Installation & Configuration
 
-- Install RxDB and required plugins:
-  - `rxdb` (core)
-  - `rxdb/plugins/storage-indexeddb` (IndexedDB storage)
-  - `rxdb/plugins/replication-broadcast-channel` (tab sync)
-  - `rxdb/plugins/replication-firestore` (Firebase sync)
-- Create RxDB database instance
-- Configure IndexedDB storage adapter
-- **Test**: Verify RxDB database initializes successfully
+- [x] Install RxDB and required plugins
+- [x] Create RxDB database instance
+- [x] Configure IndexedDB storage adapter
+- [x] **Test**: Verify RxDB database initializes successfully
 
-#### Step 2.2: Define RxDB Schemas
+#### ✅ Step 2.2: Define RxDB Schemas
 
-- Define RxDB JSON schemas for:
-  - `Board`: id, title, createdAt, updatedAt, ownerId, sharedWith[]
-  - `Column`: id, boardId, title, order, cardIds[], createdAt, updatedAt
-  - `Card`: id, columnId, title, createdAt, updatedAt, order
-- Create RxDB collections with schemas
-- **Test**: Verify collections are created and schemas validate correctly
+- [x] Define RxDB JSON schemas for:
+  - `Board`: id, title, createdAt, updatedAt, ownerId
+  - `Column`: id, boardId, title, order, createdAt, updatedAt
+- [x] Create RxDB collections with schemas (separate schema files)
+- [x] **Test**: Verify collections are created and schemas validate correctly
 
-#### Step 2.3: TypeScript Types from Schemas
+#### ✅ Step 2.3: TypeScript Types from Schemas
 
-- Generate/define TypeScript types matching RxDB schemas
-- Create type guards and validators
-- **Test**: Verify type definitions work correctly
+- [x] Generate/define TypeScript types matching RxDB schemas
+- [x] Create type guards and validators
+- [x] **Test**: Verify type definitions work correctly
 
-### Phase 3: Zustand Store Integration
+### ✅ Phase 3: Zustand Store Integration (COMPLETED)
 
-#### Step 3.1: Zustand Setup
+#### ✅ Step 3.1: Zustand Setup
 
-- Install Zustand
-- Create basic store structure (boards, columns, cards slices)
-- **Test**: Verify store creation and basic state access
+- [x] Install Zustand
+- [x] Create basic store structure (boards, columns slices)
+- [x] **Test**: Verify store creation and basic state access
 
-#### Step 3.2: Connect Zustand to RxDB
+#### ✅ Step 3.2: Connect Zustand to RxDB
 
-- Use RxDB reactive queries (`observe$`, `findOne$`, `find$`) to sync store
-- Implement store actions that update RxDB collections
-- Handle RxDB changes → Zustand store updates
-- **Test**: Verify store stays in sync with RxDB changes
+- [x] Use RxDB reactive queries to sync store
+- [x] Implement store actions that update RxDB collections
+- [x] Handle RxDB changes → Zustand store updates
+- [x] **Test**: Verify store stays in sync with RxDB changes
 
-#### Step 3.3: Hydration on App Load
+#### ✅ Step 3.3: Hydration on App Load
 
-- Load data from RxDB on app startup
-- Populate Zustand store with initial data
-- **Test**: Verify app loads data from RxDB on startup
+- [x] Load data from RxDB on app startup
+- [x] Populate Zustand store with initial data
+- [x] **Test**: Verify app loads data from RxDB on startup
 
-### Phase 4: BroadcastChannel Tab Sync (RxDB)
+### ✅ Phase 4: BroadcastChannel Tab Sync (COMPLETED)
 
-#### Step 4.1: Enable RxDB BroadcastChannel Replication
+#### ✅ Step 4.1: Enable RxDB BroadcastChannel Replication
 
-- Configure RxDB BroadcastChannel replication plugin for all collections
-- Enable multi-tab sync
-- **Test**: Verify changes in one tab appear in another tab automatically
+- [x] Configure `multiInstance: true` in database config
+- [x] BroadcastChannel-based synchronization automatically enabled
+- [x] **Test**: Verify changes in one tab appear in another tab automatically
 
-### Phase 5: Basic UI - Boards List
+**Note**: RxDB automatically uses BroadcastChannel for multi-tab synchronization when `multiInstance: true` is set.
 
-#### Step 5.1: Boards List Page
+### ✅ Phase 5: Basic UI - Boards List (COMPLETED)
 
-- Create `/` route component
-- Display list of boards from Zustand store (synced with RxDB)
-- Add create board button
-- **Test**: Verify boards list renders and displays data
+#### ✅ Step 5.1: Boards List Page
 
-#### Step 5.2: Board CRUD Operations
+- [x] Create `/` route component
+- [x] Display list of boards from Zustand store (synced with RxDB)
+- [x] Add create board button
+- [x] **Test**: Verify boards list renders and displays data
 
-- Implement create board (with form/modal)
-- Implement rename board
-- Implement delete board
-- All operations update RxDB → Zustand → UI
-- **Test**: Verify all board CRUD operations work and persist
+#### ✅ Step 5.2: Board CRUD Operations
 
-### Phase 6: Board Detail & Columns
+- [x] Implement create board (with form/modal)
+- [x] Implement rename board
+- [x] Implement delete board
+- [x] All operations update RxDB → Zustand → UI
+- [x] **Test**: Verify all board CRUD operations work and persist
 
-#### Step 6.1: Board Detail Page
+### ✅ Phase 6: Board Detail & Columns (COMPLETED)
 
-- Create `/boards/:boardId` route
-- Display board title
-- Load columns for board from RxDB
-- **Test**: Verify board detail page loads and displays columns
+#### ✅ Step 6.1: Board Detail Page
 
-#### Step 6.2: Column CRUD Operations
+- [x] Create `/boards/:boardId` route
+- [x] Display board title
+- [x] Load columns for board from RxDB
+- [x] Add "Back to Boards" navigation
+- [x] **Test**: Verify board detail page loads and displays columns
 
-- Implement create column
-- Implement rename column
-- Implement delete column
-- Implement reorder columns (drag handles or buttons)
-- **Test**: Verify all column operations work
+#### ✅ Step 6.2: Column CRUD Operations
 
-### Phase 7: Cards
+- [x] Implement create column
+- [x] Implement rename column
+- [x] Implement delete column
+- [x] Column services and Zustand store
+- [x] Columns sync to store
+- [x] **Test**: Verify all column operations work (29 new tests)
+- [ ] Implement reorder columns (drag handles or buttons) - Deferred to Phase 9 (Drag & Drop)
 
-#### Step 7.1: Card Display
+### Phase 7: Firebase Integration
 
-- Display cards within columns
-- Show card title, createdAt
-- **Test**: Verify cards render in columns
+**Note**: Moved before Cards to test Firebase sync early and minimize surprises before adding more complexity.
 
-#### Step 7.2: Card CRUD Operations
-
-- Implement create card
-- Implement edit card title
-- Implement delete card
-- **Test**: Verify all card operations work
-
-### Phase 8: Drag & Drop
-
-#### Step 8.1: Install & Setup react-dnd-kit
-
-- Install react-dnd-kit
-- Configure DndContext
-- **Test**: Verify drag context works
-
-#### Step 8.2: Column Reordering
-
-- Implement drag & drop for columns
-- Update order in RxDB
-- **Test**: Verify columns can be reordered
-
-#### Step 8.3: Card Drag & Drop
-
-- Implement drag & drop within column (reorder)
-- Implement drag & drop across columns
-- Update card order and columnId in RxDB
-- **Test**: Verify cards can be moved within and between columns
-
-### Phase 9: Firebase Integration
-
-#### Step 9.1: Firebase Setup
+#### Step 7.1: Firebase Setup
 
 - Install Firebase SDK
 - Configure Firebase (Firestore, not Realtime DB - RxDB uses Firestore)
 - Set up Firebase config
 - **Test**: Verify Firebase connection works
 
-#### Step 9.2: Firebase Auth
+#### Step 7.2: Firebase Auth
 
 - Implement sign in/out
 - Add auth state listener
 - Protect routes (require auth for boards)
 - **Test**: Verify authentication flow works
 
-#### Step 9.3: RxDB Firestore Replication - Setup
+#### Step 7.3: RxDB Firestore Replication - Setup
 
 - Configure RxDB Firestore replication plugin
 - Set up replication for boards collection
 - Configure conflict resolution (LWW - handled by RxDB)
 - **Test**: Verify Firestore replication initializes
 
-#### Step 9.4: RxDB Firestore Replication - All Collections
+#### Step 7.4: RxDB Firestore Replication - Columns Collection
 
-- Extend Firestore replication for columns and cards collections
-- Handle nested relationships
-- **Test**: Verify all collections sync to Firestore
+- Extend Firestore replication for columns collection
+- Test sync with existing boards and columns data
+- **Test**: Verify columns sync to Firestore
 
-#### Step 9.5: Offline Support (RxDB Built-in)
+#### Step 7.5: Offline Support (RxDB Built-in)
 
 - RxDB automatically handles offline queue
-- Test offline behavior
+- Test offline behavior with boards and columns
 - **Test**: Verify offline operations queue and sync when online
+
+### Phase 8: Cards
+
+#### Step 8.1: Card Display
+
+- Display cards within columns
+- Show card title, createdAt
+- **Test**: Verify cards render in columns
+
+#### Step 8.2: Card CRUD Operations
+
+- Implement create card
+- Implement edit card title
+- Implement delete card
+- **Test**: Verify all card operations work
+
+#### Step 8.3: Extend Firestore Replication for Cards
+
+- Add cards collection to Firestore replication
+- Test sync with cards
+- **Test**: Verify cards sync to Firestore
+
+### Phase 9: Drag & Drop
+
+#### Step 9.1: Install & Setup react-dnd-kit
+
+- Install react-dnd-kit
+- Configure DndContext
+- **Test**: Verify drag context works
+
+#### Step 9.2: Column Reordering
+
+- Implement drag & drop for columns
+- Update order in RxDB
+- **Test**: Verify columns can be reordered
+
+#### Step 9.3: Card Drag & Drop
+
+- Implement drag & drop within column (reorder)
+- Implement drag & drop across columns
+- Update card order and columnId in RxDB
+- **Test**: Verify cards can be moved within and between columns
 
 ### Phase 10: Multi-User & Sharing
 
