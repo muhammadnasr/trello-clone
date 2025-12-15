@@ -10,9 +10,40 @@ vi.mock('../../../src/lib/services/boards', () => ({
   createBoard: vi.fn(),
 }))
 
+// Mock the auth store
+const mockUser = {
+  uid: 'test-user-123',
+  email: 'test@example.com',
+} as any
+
+let mockAuthState = {
+  user: mockUser,
+  isLoading: false,
+  isAuthenticated: true,
+}
+
+const mockUseAuthStore = vi.fn((selector: any) => selector(mockAuthState))
+
+vi.mock('../../../src/stores/auth', () => {
+  return {
+    useAuthStore: Object.assign(
+      (selector: any) => selector(mockAuthState),
+      {
+        getState: () => mockAuthState,
+      }
+    ),
+  }
+})
+
 describe('CreateBoardDialog', () => {
   beforeEach(() => {
     vi.clearAllMocks()
+    // Reset to authenticated state by default
+    mockAuthState = {
+      user: mockUser,
+      isLoading: false,
+      isAuthenticated: true,
+    }
   })
 
   it('renders trigger button', () => {
@@ -41,7 +72,7 @@ describe('CreateBoardDialog', () => {
       title: 'New Board',
       createdAt: new Date().toISOString(),
       updatedAt: new Date().toISOString(),
-      ownerId: 'user1',
+      ownerId: 'test-user-123',
     })
 
     render(<CreateBoardDialog />)
@@ -66,9 +97,9 @@ describe('CreateBoardDialog', () => {
     const createButton = screen.getByText('Create')
     await user.click(createButton)
 
-    // Verify createBoard was called
+    // Verify createBoard was called with authenticated user's uid
     await waitFor(() => {
-      expect(mockCreateBoard).toHaveBeenCalledWith('New Board', 'user1')
+      expect(mockCreateBoard).toHaveBeenCalledWith('New Board', 'test-user-123')
     })
   })
 
@@ -109,7 +140,7 @@ describe('CreateBoardDialog', () => {
       title: 'New Board',
       createdAt: new Date().toISOString(),
       updatedAt: new Date().toISOString(),
-      ownerId: 'user1',
+      ownerId: 'test-user-123',
     })
 
     render(<CreateBoardDialog />)
@@ -125,7 +156,42 @@ describe('CreateBoardDialog', () => {
     await user.click(screen.getByText('Create'))
 
     await waitFor(() => {
-      expect(mockCreateBoard).toHaveBeenCalledWith('New Board', 'user1')
+      expect(mockCreateBoard).toHaveBeenCalledWith('New Board', 'test-user-123')
+    })
+  })
+
+  it('creates board with anonymous ownerId when user is not authenticated', async () => {
+    const user = userEvent.setup()
+    const mockCreateBoard = vi.mocked(boardsService.createBoard)
+    
+    // Set unauthenticated state
+    mockAuthState = {
+      user: null,
+      isLoading: false,
+      isAuthenticated: false,
+    }
+    mockUseAuthStore.mockImplementation((selector: any) => selector(mockAuthState))
+
+    mockCreateBoard.mockResolvedValue({
+      id: 'board1',
+      title: 'Anonymous Board',
+      createdAt: new Date().toISOString(),
+      updatedAt: new Date().toISOString(),
+      ownerId: 'anonymous',
+    })
+
+    const { rerender } = render(<CreateBoardDialog />)
+
+    await user.click(screen.getByText('Create Board'))
+    await waitFor(() => {
+      expect(screen.getByText('Create New Board')).toBeTruthy()
+    })
+
+    await user.type(screen.getByPlaceholderText('Board name'), 'Anonymous Board')
+    await user.click(screen.getByText('Create'))
+
+    await waitFor(() => {
+      expect(mockCreateBoard).toHaveBeenCalledWith('Anonymous Board', 'anonymous')
     })
   })
 })

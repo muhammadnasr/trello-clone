@@ -1,7 +1,11 @@
 import { StrictMode } from 'react'
 import { createRoot } from 'react-dom/client'
 import { RouterProvider, createRouter } from '@tanstack/react-router'
-import { initDatabase } from './lib/db/init'
+import { initDatabase, attachBackendSubscriptions } from './lib/db/init'
+import { cancelReplication } from './lib/db/replication'
+import { initFirebase } from './lib/firebase/config'
+import { initAuthStateListener } from './lib/services/auth'
+import { useAuthStore } from './stores/auth'
 import './index.css'
 import { routeTree } from './routeTree.gen'
 
@@ -15,7 +19,35 @@ declare module '@tanstack/react-router' {
 
 async function bootstrap() {
   try {
+    // Step 1: Hydrate from IndexedDB on startup
     await initDatabase()
+
+    // Step 2: Initialize Firebase and auth (if configured)
+    if (import.meta.env.VITE_FIREBASE_PROJECT_ID) {
+      initFirebase()
+      
+      // Set up auth state listener
+      initAuthStateListener()
+      
+      // Subscribe to auth changes to attach backend subscriptions when authenticated
+      let hasAttachedSubscriptions = false
+      useAuthStore.subscribe((state) => {
+        // Attach backend subscriptions if authenticated and not already attached
+        if (state.isAuthenticated && !state.isLoading && !hasAttachedSubscriptions) {
+          hasAttachedSubscriptions = true
+          attachBackendSubscriptions().catch((error) => {
+            console.error('Failed to attach backend subscriptions:', error)
+            hasAttachedSubscriptions = false
+          })
+        }
+        
+        // Cancel subscriptions if user logs out
+        if (!state.isAuthenticated && !state.isLoading && hasAttachedSubscriptions) {
+          hasAttachedSubscriptions = false
+          cancelReplication()
+        }
+      })
+    }
     
     createRoot(document.getElementById('root')!).render(
       <StrictMode>

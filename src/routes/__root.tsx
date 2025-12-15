@@ -1,10 +1,7 @@
-import { createRootRoute, Outlet } from '@tanstack/react-router'
+import { createRootRoute } from '@tanstack/react-router'
+import { RootLayout } from '@/components/layout/RootLayout'
 
 export const Route = createRootRoute({
-  component: () => (
-    <div className="min-h-screen">
-      <Outlet />
-    </div>
-  ),
+  component: RootLayout,
 })
 

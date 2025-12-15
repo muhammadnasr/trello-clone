@@ -11,6 +11,7 @@ import {
 } from '@/components/ui/dialog'
 import { Input } from '@/components/ui/input'
 import { useBoardsStore } from '@/stores/boards'
+import { useAuthStore } from '@/stores/auth'
 
 interface CreateBoardDialogProps {
   onBoardCreated?: () => void
@@ -22,6 +23,7 @@ export function CreateBoardDialog({ onBoardCreated }: CreateBoardDialogProps) {
   const [isCreating, setIsCreating] = useState(false)
   const createBoard = useBoardsStore((state) => state.createBoard)
   const error = useBoardsStore((state) => state.error)
+  const user = useAuthStore((state) => state.user)
 
   const handleCreate = async () => {
     if (!title.trim()) {
@@ -30,7 +32,7 @@ export function CreateBoardDialog({ onBoardCreated }: CreateBoardDialogProps) {
 
     setIsCreating(true)
     try {
-      const ownerId = 'user1'
+      const ownerId = user?.uid || 'anonymous'
       await createBoard(title.trim(), ownerId)
       setTitle('')
       setOpen(false)

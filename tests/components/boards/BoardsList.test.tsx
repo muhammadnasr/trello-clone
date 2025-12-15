@@ -1,10 +1,34 @@
-import { describe, it, expect, beforeEach } from 'vitest'
+import { describe, it, expect, beforeEach, vi } from 'vitest'
 import React from 'react'
 import { render, screen, waitFor } from '@testing-library/react'
 import { RouterProvider, createRouter } from '@tanstack/react-router'
 import { routeTree } from '../../../src/routeTree.gen'
 import { useBoardsStore } from '../../../src/stores/boards'
 import type { Board } from '../../../src/lib/types/board'
+import { mockUser } from '../../lib/auth-helpers'
+
+// Mock auth store for route protection
+const mockAuthState = {
+  user: mockUser,
+  isLoading: false,
+  isAuthenticated: true,
+}
+
+vi.mock('../../../src/stores/auth', () => ({
+  useAuthStore: Object.assign(
+    vi.fn((selector: any) => selector(mockAuthState)),
+    {
+      getState: () => mockAuthState,
+    }
+  ),
+}))
+
+// Mock Firebase to prevent initialization in tests
+vi.mock('../../../src/lib/firebase/config', () => ({
+  initFirebase: vi.fn(),
+  getAuthInstance: vi.fn(),
+  getFirestoreDatabase: vi.fn(),
+}))
 
 const router = createRouter({ routeTree })
 

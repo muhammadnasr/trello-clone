@@ -7,6 +7,32 @@ import { routeTree } from '../../../src/routeTree.gen'
 import { useBoardsStore } from '../../../src/stores/boards'
 import { initDatabase, cleanupDatabase } from '../../../src/lib/db/init'
 import { createTestDatabase } from '../../lib/db/test-helpers'
+import { mockUser } from '../../lib/auth-helpers'
+
+// Mock auth store for route protection
+let mockAuthState = {
+  user: mockUser,
+  isLoading: false,
+  isAuthenticated: true,
+}
+
+vi.mock('../../../src/stores/auth', () => {
+  return {
+    useAuthStore: Object.assign(
+      (selector: any) => selector(mockAuthState),
+      {
+        getState: () => mockAuthState,
+      }
+    ),
+  }
+})
+
+// Mock Firebase to prevent initialization in tests
+vi.mock('../../../src/lib/firebase/config', () => ({
+  initFirebase: vi.fn(),
+  getAuthInstance: vi.fn(),
+  getFirestoreDatabase: vi.fn(),
+}))
 
 const router = createRouter({ routeTree })
 
@@ -94,6 +120,12 @@ describe('BoardsList Integration - Update Board', () => {
       isLoading: false,
       error: null,
     })
+    // Reset to authenticated state
+    mockAuthState = {
+      user: mockUser,
+      isLoading: false,
+      isAuthenticated: true,
+    }
   })
 
   afterEach(async () => {
@@ -170,6 +202,51 @@ describe('BoardsList Integration - Update Board', () => {
     expect(screen.getByText('Original Title')).toBeInTheDocument()
     expect(screen.queryByText('New Title')).not.toBeInTheDocument()
   })
+
+  it('updates board title when renamed without authentication', async () => {
+    const user = userEvent.setup()
+    
+    // Set unauthenticated state
+    mockAuthState = {
+      user: null,
+      isLoading: false,
+      isAuthenticated: false,
+    }
+    
+    const { createBoard } = await import('../../../src/lib/services/boards')
+    await createBoard('Original Title', 'anonymous')
+
+    router.history.push('/')
+    render(<RouterProvider router={router} />)
+
+    await waitFor(() => {
+      expect(screen.getByText('Original Title')).toBeInTheDocument()
+    }, { timeout: 2000 })
+
+    const boardCard = screen.getByText('Original Title').closest('div.group')
+    expect(boardCard).toBeInTheDocument()
+    
+    await user.hover(boardCard!)
+
+    const editButton = await screen.findByTitle('Rename board')
+    
+    await user.click(editButton)
+
+    await waitFor(() => {
+      expect(screen.getByText('Rename Board')).toBeInTheDocument()
+    })
+
+    const input = screen.getByPlaceholderText('Board name')
+    await user.clear(input)
+    await user.type(input, 'Updated Title')
+
+    await user.click(screen.getByRole('button', { name: 'Save' }))
+
+    await waitFor(() => {
+      expect(screen.getByText('Updated Title')).toBeInTheDocument()
+      expect(screen.queryByText('Original Title')).not.toBeInTheDocument()
+    }, { timeout: 2000 })
+  })
 })
 
 describe('BoardsList Integration - Delete Board', () => {
@@ -183,6 +260,12 @@ describe('BoardsList Integration - Delete Board', () => {
       error: null,
     })
     window.confirm = vi.fn(() => true)
+    // Reset to authenticated state
+    mockAuthState = {
+      user: mockUser,
+      isLoading: false,
+      isAuthenticated: true,
+    }
   })
 
   afterEach(async () => {
@@ -248,6 +331,44 @@ describe('BoardsList Integration - Delete Board', () => {
     expect(window.confirm).toHaveBeenCalled()
 
     expect(screen.getByText('Board to Keep')).toBeInTheDocument()
+  })
+
+  it('deletes board when delete button is clicked without authentication', async () => {
+    const user = userEvent.setup()
+    
+    // Set unauthenticated state
+    mockAuthState = {
+      user: null,
+      isLoading: false,
+      isAuthenticated: false,
+    }
+    
+    const { createBoard } = await import('../../../src/lib/services/boards')
+    await createBoard('Board to Delete', 'anonymous')
+
+    router.history.push('/')
+    render(<RouterProvider router={router} />)
+
+    await waitFor(() => {
+      expect(screen.getByText('Board to Delete')).toBeInTheDocument()
+    }, { timeout: 2000 })
+
+    const boardCard = screen.getByText('Board to Delete').closest('div.group')
+    expect(boardCard).toBeInTheDocument()
+    
+    await user.hover(boardCard!)
+
+    const deleteButton = await screen.findByTitle('Delete board')
+    
+    await user.click(deleteButton)
+
+    expect(window.confirm).toHaveBeenCalledWith(
+      expect.stringContaining('Board to Delete')
+    )
+
+    await waitFor(() => {
+      expect(screen.queryByText('Board to Delete')).not.toBeInTheDocument()
+    }, { timeout: 2000 })
   })
 })
 

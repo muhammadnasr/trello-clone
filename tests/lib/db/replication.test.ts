@@ -77,9 +77,6 @@ vi.mock('../../../src/lib/firebase/config', () => ({
   })),
 }))
 
-// Import after mocks are set up
-const { setupFirestoreReplication } = await import('../../../src/lib/db/replication')
-
 describe('Firestore Replication', () => {
   let db: TrelloDatabase
 
@@ -97,6 +94,13 @@ describe('Firestore Replication', () => {
   })
 
   describe('setupFirestoreReplication', () => {
+    let setupFirestoreReplication: typeof import('../../../src/lib/db/replication').setupFirestoreReplication
+
+    beforeEach(async () => {
+      const module = await import('../../../src/lib/db/replication')
+      setupFirestoreReplication = module.setupFirestoreReplication
+    })
+
     it('throws error when VITE_FIREBASE_PROJECT_ID is not set', () => {
       delete import.meta.env.VITE_FIREBASE_PROJECT_ID
       expect(() => {
@@ -165,6 +169,13 @@ describe('Firestore Replication', () => {
   })
 
   describe('getReplicationStates', () => {
+    let setupFirestoreReplication: typeof import('../../../src/lib/db/replication').setupFirestoreReplication
+
+    beforeEach(async () => {
+      const module = await import('../../../src/lib/db/replication')
+      setupFirestoreReplication = module.setupFirestoreReplication
+    })
+
     it('returns null when replication is not initialized', () => {
       const states = getReplicationStates()
       expect(states.boards).toBeNull()
@@ -183,6 +194,13 @@ describe('Firestore Replication', () => {
   })
 
   describe('cancelReplication', () => {
+    let setupFirestoreReplication: typeof import('../../../src/lib/db/replication').setupFirestoreReplication
+
+    beforeEach(async () => {
+      const module = await import('../../../src/lib/db/replication')
+      setupFirestoreReplication = module.setupFirestoreReplication
+    })
+
     it('handles cancel when replication is not set up', () => {
       expect(() => cancelReplication()).not.toThrow()
     })
@@ -216,6 +234,13 @@ describe('Firestore Replication', () => {
   })
 
   describe('replication observables', () => {
+    let setupFirestoreReplication: typeof import('../../../src/lib/db/replication').setupFirestoreReplication
+
+    beforeEach(async () => {
+      const module = await import('../../../src/lib/db/replication')
+      setupFirestoreReplication = module.setupFirestoreReplication
+    })
+
     it('boards replication has all required observables', () => {
       const replication = setupFirestoreReplication(db)
       
@@ -257,7 +282,7 @@ describe('Firestore Replication', () => {
 
 describe('Replication Integration with Database Init', () => {
   it('skips replication setup when testDatabase is provided', async () => {
-    const { initDatabase, cleanupDatabase } = await import('../../../src/lib/db/init')
+    const { initDatabase, cleanupDatabase } = await import('../../../src/lib/db/init') // Dynamic import to avoid circular dependency
     const testDb = await createTestDatabase()
     
     // Should not throw even if Firebase is not configured

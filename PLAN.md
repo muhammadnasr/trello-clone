@@ -11,7 +11,7 @@
 - ✅ Phase 6: Board Detail & Columns
 
 **Remaining Phases: 4.5/11**
-- ✅ Phase 7: Firebase Integration (Firestore Replication ✅ Complete, Auth ⏳ Pending)
+- ✅ Phase 7: Firebase Integration (Firestore Replication ✅ Complete, Offline Support ✅ Verified, Auth ⏳ Pending)
 - ⏳ Phase 8: Cards (Display + CRUD + Firestore Sync)
 - ⏳ Phase 9: Drag & Drop (Column & Card Reordering)
 - ⏳ Phase 10: Multi-User & Sharing (Sharing UI + Logic + Security Rules)
@@ -25,7 +25,7 @@
 - ⏳ Drag & Drop (Not started)
 - ⏳ Multi-User & Sharing (Not started)
 
-**Estimated Progress: ~45%**
+**Estimated Progress: ~47%**
 - Foundation & Infrastructure: ✅ Complete
 - Core Features (Boards/Columns): ✅ Complete
 - Firebase Sync: ✅ Complete (Firestore Replication)
@@ -227,11 +227,12 @@ Using RxDB is acceptable, as long as the solution clearly demonstrates:
 - [x] Test sync with existing boards and columns data
 - [x] **Test**: Verify columns sync to Firestore
 
-#### Step 7.5: Offline Support (RxDB Built-in)
+#### ✅ Step 7.5: Offline Support (RxDB Built-in) (COMPLETED)
 
-- RxDB automatically handles offline queue
-- Test offline behavior with boards and columns
-- **Test**: Verify offline operations queue and sync when online
+- [x] RxDB automatically handles offline queue
+- [x] Test offline behavior with boards and columns
+- [x] **Test**: Verify offline operations queue and sync when online
+- [x] **Verified**: Offline functionality works correctly with LWW (Last-Write-Wins) conflict resolution. RxDB proves to be an excellent choice for local-first architecture with seamless offline support.
 
 ### Phase 8: Cards
 
@@ -377,9 +378,9 @@ trello-clone/
 
 ## Key Technical Decisions
 
-1. **RxDB** - Local-first database with built-in IndexedDB storage, BroadcastChannel sync, and Firestore replication
+1. **RxDB** - Local-first database with built-in IndexedDB storage, BroadcastChannel sync, and Firestore replication. ✅ **Verified**: Excellent choice - offline functionality works seamlessly with LWW conflict resolution.
 2. **Firebase Firestore** (not Realtime Database) - RxDB has built-in Firestore replication plugin with LWW conflict resolution
-3. **Last-Write-Wins (LWW)** - RxDB handles conflict resolution automatically using timestamps
+3. **Last-Write-Wins (LWW)** - RxDB handles conflict resolution automatically using timestamps. ✅ **Tested**: Works correctly in offline scenarios.
 4. **Optimistic Updates** - UI updates immediately via RxDB reactive queries, sync happens in background
 5. **RxDB Collections** - Each entity type (boards, columns, cards) will be an RxDB collection with reactive queries
 6. **Zustand + RxDB** - Zustand for UI state management, RxDB for persistence and sync (connected via reactive queries)
@@ -438,4 +439,33 @@ trello-clone/
 - Keep existing functionality intact
 - Ensure all tests still pass after refactoring
 - Update component imports across the codebase
+
+### Replace Dynamic Imports with Static Imports in Tests
+
+**Goal**: Simplify test code by using static imports instead of dynamic `await import()` calls.
+
+**Current State**:
+- Test files use `await import('../../../src/lib/services/boards')` inside test functions
+- Dynamic imports are used in:
+  - `tests/components/boards/BoardsList.integration.test.tsx`
+  - `tests/components/columns/ColumnsList.integration.test.tsx`
+  - `tests/lib/db/replication.test.ts`
+
+**Why Dynamic Imports Were Used**:
+- Originally used to ensure mocks are set up before importing modules
+- To avoid circular dependencies in some cases
+
+**Proposed Solution**:
+- Replace `await import()` with static `import` statements at the top of test files
+- Vitest hoists `vi.mock()` calls, so static imports work correctly
+- Benefits:
+  - Cleaner, more readable code
+  - Standard JavaScript/TypeScript import pattern
+  - Better IDE support and autocomplete
+  - Easier to understand and maintain
+
+**Implementation Notes**:
+- Verify all tests still pass after conversion
+- Some dynamic imports may be necessary (e.g., Firebase mocks that need to be set up first)
+- Keep dynamic imports only where truly needed (document why)
 
