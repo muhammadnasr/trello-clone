@@ -94,6 +94,9 @@ describe('CreateColumnDialog', () => {
     const mockCreateColumn = vi.mocked(columnsService.createColumn)
     mockCreateColumn.mockRejectedValue(new Error('Failed to create'))
 
+    // Suppress console.error for this test since we're intentionally testing error handling
+    const consoleErrorSpy = vi.spyOn(console, 'error').mockImplementation(() => {})
+
     useColumnsStore.setState({ error: 'Failed to create' })
 
     render(<CreateColumnDialog boardId="board1" nextOrder={0} />)
@@ -109,6 +112,8 @@ describe('CreateColumnDialog', () => {
     await waitFor(() => {
       expect(screen.getByText('Failed to create')).toBeInTheDocument()
     })
+
+    consoleErrorSpy.mockRestore()
   })
 
   it('disables create button when input is empty', async () => {

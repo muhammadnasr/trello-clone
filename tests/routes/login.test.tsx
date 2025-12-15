@@ -1,5 +1,5 @@
 import { describe, it, expect, beforeEach, vi } from 'vitest'
-import { render, screen, waitFor } from '@testing-library/react'
+import { render, screen, waitFor, act } from '@testing-library/react'
 import userEvent from '@testing-library/user-event'
 import { RouterProvider, createRouter } from '@tanstack/react-router'
 import { routeTree } from '../../src/routeTree.gen'
@@ -72,8 +72,10 @@ describe('Login Route', () => {
   it('renders login form when not authenticated', async () => {
     render(<RouterProvider router={router} />)
     
-    // Navigate to login
-    await router.navigate({ to: '/login' })
+    // Navigate to login - wrap in act() to handle router state updates
+    await act(async () => {
+      await router.navigate({ to: '/login' })
+    })
     
     await waitFor(() => {
       expect(screen.getByRole('heading', { name: 'Sign In' })).toBeInTheDocument()
@@ -91,8 +93,10 @@ describe('Login Route', () => {
 
     render(<RouterProvider router={router} />)
     
-    // Try to navigate to login
-    await router.navigate({ to: '/login' })
+    // Try to navigate to login - wrap in act() to handle router state updates
+    await act(async () => {
+      await router.navigate({ to: '/login' })
+    })
     
     await waitFor(() => {
       // Should redirect to home
