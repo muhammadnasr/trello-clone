@@ -86,7 +86,8 @@ describe('ColumnsList Integration - Create Column', () => {
     render(<RouterProvider router={router} />)
 
     await waitFor(() => {
-      expect(screen.getByText('Test Board')).toBeInTheDocument()
+      // Check for the board title in the page heading (not breadcrumb)
+      expect(screen.getByRole('heading', { name: 'Test Board' })).toBeInTheDocument()
     }, { timeout: 2000 })
 
     await user.click(screen.getByText('Add Column'))
@@ -119,7 +120,8 @@ describe('ColumnsList Integration - Create Column', () => {
     render(<RouterProvider router={router} />)
 
     await waitFor(() => {
-      expect(screen.getByText('Test Board')).toBeInTheDocument()
+      // Check for the board title in the page heading (not breadcrumb)
+      expect(screen.getByRole('heading', { name: 'Test Board' })).toBeInTheDocument()
     }, { timeout: 2000 })
 
     await user.click(screen.getByText('Add Column'))

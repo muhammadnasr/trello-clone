@@ -2,6 +2,7 @@ import { Outlet, useRouterState } from '@tanstack/react-router'
 import { SignOutButton } from '@/components/auth/SignOutButton'
 import { LoginSignupButtons } from '@/components/auth/LoginSignupButtons'
 import { useAuthStore } from '@/stores/auth'
+import { Breadcrumbs } from '@/components/navigation/Breadcrumbs'
 
 export function RootLayout() {
   const isAuthenticated = useAuthStore((state) => state.isAuthenticated)
@@ -15,7 +16,7 @@ export function RootLayout() {
       {!isLoginPage && (
         <div className="border-b bg-white px-8 py-4">
           <div className="mx-auto flex max-w-7xl items-center justify-between">
-            <h1 className="text-xl font-bold">Trello Clone</h1>
+            <Breadcrumbs />
             {hasFirebase && !isLoading && (
               isAuthenticated ? <SignOutButton /> : <LoginSignupButtons />
             )}
