@@ -1,12 +1,13 @@
 import { getDatabase } from '@/lib/db/init'
 import type { Board } from '@/lib/types/board'
+import { uuidv7 } from 'uuidv7'
 
 export async function createBoard(title: string, ownerId: string): Promise<Board> {
   const db = getDatabase()
   const now = new Date().toISOString()
   
   const board = await db.boards.insert({
-    id: `board-${Date.now()}-${Math.random().toString(36).substring(2, 9)}`,
+    id: uuidv7(),
     title,
     createdAt: now,
     updatedAt: now,

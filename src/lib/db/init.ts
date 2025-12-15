@@ -1,9 +1,10 @@
 import { createDatabase } from './database'
-import { syncBoardsToStore } from './sync'
+import { syncBoardsToStore, syncColumnsToStore } from './sync'
 import type { TrelloDatabase } from './database'
 
 let databaseInstance: TrelloDatabase | null = null
-let unsubscribeSync: (() => void) | null = null
+let unsubscribeBoardsSync: (() => void) | null = null
+let unsubscribeColumnsSync: (() => void) | null = null
 
 export async function initDatabase(testDatabase?: TrelloDatabase): Promise<TrelloDatabase> {
   if (databaseInstance) {
@@ -12,7 +13,8 @@ export async function initDatabase(testDatabase?: TrelloDatabase): Promise<Trell
 
   const db = testDatabase || await createDatabase()
   databaseInstance = db
-  unsubscribeSync = syncBoardsToStore(db)
+  unsubscribeBoardsSync = syncBoardsToStore(db)
+  unsubscribeColumnsSync = syncColumnsToStore(db)
 
   return db
 }
@@ -25,9 +27,13 @@ export function getDatabase(): TrelloDatabase {
 }
 
 export async function cleanupDatabase(): Promise<void> {
-  if (unsubscribeSync) {
-    unsubscribeSync()
-    unsubscribeSync = null
+  if (unsubscribeBoardsSync) {
+    unsubscribeBoardsSync()
+    unsubscribeBoardsSync = null
+  }
+  if (unsubscribeColumnsSync) {
+    unsubscribeColumnsSync()
+    unsubscribeColumnsSync = null
   }
   if (databaseInstance) {
     await databaseInstance.remove()

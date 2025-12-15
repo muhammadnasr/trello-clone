@@ -24,6 +24,7 @@
     "rxdb": "^16.21.1",
     "rxjs": "^7.8.2",
     "tailwind-merge": "^3.4.0",
+    "uuidv7": "^1.1.0",
     "zustand": "^5.0.9"
   },
   "devDependencies": {

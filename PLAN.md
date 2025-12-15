@@ -363,3 +363,33 @@ trello-clone/
 - No regressions in previous steps
 - Documentation updated (where applicable)
 
+---
+
+## Refactoring & Code Quality Improvements
+
+### Consolidate Create/Rename Dialogs
+
+**Goal**: Reduce code duplication by creating a single reusable dialog component for creating and renaming entities (boards, columns, cards).
+
+**Current State**:
+- Separate dialogs for create/rename operations:
+  - `CreateBoardDialog` - creates boards
+  - `RenameColumnDialog` - renames columns
+  - `CreateColumnDialog` - creates columns
+  - Inline rename dialog in `BoardCard` component
+
+**Proposed Solution**:
+- Create a generic `EntityDialog` component that can handle both create and rename modes
+- Accept props: `mode` ('create' | 'rename'), `entityType` ('board' | 'column' | 'card'), `initialValue` (for rename), `onSubmit`, `onCancel`
+- Replace all existing create/rename dialogs with this unified component
+- Benefits:
+  - Single source of truth for dialog UI/UX
+  - Easier to maintain and update
+  - Consistent behavior across all entities
+  - Less code duplication
+
+**Implementation Notes**:
+- Keep existing functionality intact
+- Ensure all tests still pass after refactoring
+- Update component imports across the codebase
+

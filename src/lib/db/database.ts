@@ -4,8 +4,9 @@ import { getRxStorageDexie } from 'rxdb/plugins/storage-dexie'
 import { wrappedValidateAjvStorage } from 'rxdb/plugins/validate-ajv'
 import { createRxDatabase } from 'rxdb/plugins/core'
 import type { RxDatabase } from 'rxdb'
-import type { BoardCollection } from './collections'
-import { boardSchema } from './collections'
+import type { TrelloCollections } from './collections'
+import { boardSchema } from './schemas/board.schema'
+import { columnSchema } from './schemas/column.schema'
 
 addRxPlugin(RxDBDevModePlugin)
 
@@ -13,7 +14,7 @@ const storage = wrappedValidateAjvStorage({
   storage: getRxStorageDexie(),
 })
 
-export type TrelloDatabase = RxDatabase<BoardCollection>
+export type TrelloDatabase = RxDatabase<TrelloCollections>
 
 export async function createDatabase(): Promise<TrelloDatabase> {
   const database = await createRxDatabase<TrelloDatabase>({
@@ -25,6 +26,9 @@ export async function createDatabase(): Promise<TrelloDatabase> {
   await database.addCollections({
     boards: {
       schema: boardSchema,
+    },
+    columns: {
+      schema: columnSchema,
     },
   })
 
