@@ -29,10 +29,10 @@ async function bootstrap() {
       // Set up auth state listener
       initAuthStateListener()
       
-      // Subscribe to auth changes to attach backend subscriptions when authenticated
+      // Subscribe to auth changes to attach/remove backend subscriptions
       let hasAttachedSubscriptions = false
       useAuthStore.subscribe((state) => {
-        // Attach backend subscriptions if authenticated and not already attached
+        // Only sync with Firestore if user is authenticated
         if (state.isAuthenticated && !state.isLoading && !hasAttachedSubscriptions) {
           hasAttachedSubscriptions = true
           attachBackendSubscriptions().catch((error) => {
@@ -41,7 +41,7 @@ async function bootstrap() {
           })
         }
         
-        // Cancel subscriptions if user logs out
+        // Cancel Firestore replication if user logs out (use IndexedDB only)
         if (!state.isAuthenticated && !state.isLoading && hasAttachedSubscriptions) {
           hasAttachedSubscriptions = false
           cancelReplication()

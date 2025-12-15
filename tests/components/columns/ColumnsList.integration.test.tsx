@@ -11,11 +11,19 @@ import { createTestDatabase } from '../../lib/db/test-helpers'
 import { mockUser } from '../../lib/auth-helpers'
 
 // Mock auth store
+// Use 'user1' to match test data ownerId
+const testUser = {
+  uid: 'user1',
+  email: 'test@example.com',
+} as any
+
 let mockAuthState = {
-  user: mockUser,
+  user: testUser,
   isLoading: false,
   isAuthenticated: true,
 }
+
+let authSubscribers: Array<(state: typeof mockAuthState) => void> = []
 
 vi.mock('../../../src/stores/auth', () => {
   return {
@@ -23,6 +31,13 @@ vi.mock('../../../src/stores/auth', () => {
       (selector: any) => selector(mockAuthState),
       {
         getState: () => mockAuthState,
+        subscribe: vi.fn((callback: any) => {
+          authSubscribers.push(callback)
+          callback(mockAuthState)
+          return () => {
+            authSubscribers = authSubscribers.filter((sub) => sub !== callback)
+          }
+        }),
       }
     ),
   }
@@ -60,12 +75,14 @@ describe('ColumnsList Integration - Create Column', () => {
       isLoading: false,
       error: null,
     })
-    // Reset to authenticated state
+    // Reset to authenticated state BEFORE creating data
     mockAuthState = {
-      user: mockUser,
+      user: testUser,
       isLoading: false,
       isAuthenticated: true,
     }
+    // Notify subscribers of auth state change
+    authSubscribers.forEach((sub) => sub(mockAuthState))
     
     const { createBoard } = await import('../../../src/lib/services/boards')
     const board = await createBoard('Test Board', 'user1')
@@ -146,6 +163,15 @@ describe('ColumnsList Integration - Update Column', () => {
 
   beforeEach(async () => {
     await cleanupDatabase()
+    // Reset to authenticated state BEFORE initDatabase
+    mockAuthState = {
+      user: testUser,
+      isLoading: false,
+      isAuthenticated: true,
+    }
+    // Notify subscribers of auth state change
+    authSubscribers.forEach((sub) => sub(mockAuthState))
+    
     const testDb = await createTestDatabase()
     await initDatabase(testDb)
     useBoardsStore.setState({
@@ -158,12 +184,6 @@ describe('ColumnsList Integration - Update Column', () => {
       isLoading: false,
       error: null,
     })
-    // Reset to authenticated state
-    mockAuthState = {
-      user: mockUser,
-      isLoading: false,
-      isAuthenticated: true,
-    }
     
     const { createBoard } = await import('../../../src/lib/services/boards')
     const { createColumn } = await import('../../../src/lib/services/columns')
@@ -250,6 +270,15 @@ describe('ColumnsList Integration - Delete Column', () => {
 
   beforeEach(async () => {
     await cleanupDatabase()
+    // Reset to authenticated state BEFORE initDatabase
+    mockAuthState = {
+      user: testUser,
+      isLoading: false,
+      isAuthenticated: true,
+    }
+    // Notify subscribers of auth state change
+    authSubscribers.forEach((sub) => sub(mockAuthState))
+    
     const testDb = await createTestDatabase()
     await initDatabase(testDb)
     useBoardsStore.setState({
@@ -263,12 +292,6 @@ describe('ColumnsList Integration - Delete Column', () => {
       error: null,
     })
     window.confirm = vi.fn(() => true)
-    // Reset to authenticated state
-    mockAuthState = {
-      user: mockUser,
-      isLoading: false,
-      isAuthenticated: true,
-    }
     
     const { createBoard } = await import('../../../src/lib/services/boards')
     const { createColumn } = await import('../../../src/lib/services/columns')

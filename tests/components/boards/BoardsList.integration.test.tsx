@@ -10,11 +10,19 @@ import { createTestDatabase } from '../../lib/db/test-helpers'
 import { mockUser } from '../../lib/auth-helpers'
 
 // Mock auth store for route protection
+// Use 'user1' to match test data ownerId
+const testUser = {
+  uid: 'user1',
+  email: 'test@example.com',
+} as any
+
 let mockAuthState = {
-  user: mockUser,
+  user: testUser,
   isLoading: false,
   isAuthenticated: true,
 }
+
+let authSubscribers: Array<(state: typeof mockAuthState) => void> = []
 
 vi.mock('../../../src/stores/auth', () => {
   return {
@@ -22,6 +30,13 @@ vi.mock('../../../src/stores/auth', () => {
       (selector: any) => selector(mockAuthState),
       {
         getState: () => mockAuthState,
+        subscribe: vi.fn((callback: any) => {
+          authSubscribers.push(callback)
+          callback(mockAuthState)
+          return () => {
+            authSubscribers = authSubscribers.filter((sub) => sub !== callback)
+          }
+        }),
       }
     ),
   }
@@ -113,6 +128,15 @@ describe('BoardsList Integration - Create Board', () => {
 describe('BoardsList Integration - Update Board', () => {
   beforeEach(async () => {
     await cleanupDatabase()
+    // Reset to authenticated state BEFORE initDatabase
+    mockAuthState = {
+      user: testUser,
+      isLoading: false,
+      isAuthenticated: true,
+    }
+    // Notify subscribers of auth state change
+    authSubscribers.forEach((sub) => sub(mockAuthState))
+    
     const testDb = await createTestDatabase()
     await initDatabase(testDb)
     useBoardsStore.setState({
@@ -120,12 +144,6 @@ describe('BoardsList Integration - Update Board', () => {
       isLoading: false,
       error: null,
     })
-    // Reset to authenticated state
-    mockAuthState = {
-      user: mockUser,
-      isLoading: false,
-      isAuthenticated: true,
-    }
   })
 
   afterEach(async () => {
@@ -212,9 +230,14 @@ describe('BoardsList Integration - Update Board', () => {
       isLoading: false,
       isAuthenticated: false,
     }
+    // Notify subscribers of auth state change
+    authSubscribers.forEach((sub) => sub(mockAuthState))
     
     const { createBoard } = await import('../../../src/lib/services/boards')
     await createBoard('Original Title', 'anonymous')
+    
+    // Wait for sync to update
+    await new Promise((resolve) => setTimeout(resolve, 200))
 
     router.history.push('/')
     render(<RouterProvider router={router} />)
@@ -252,6 +275,15 @@ describe('BoardsList Integration - Update Board', () => {
 describe('BoardsList Integration - Delete Board', () => {
   beforeEach(async () => {
     await cleanupDatabase()
+    // Reset to authenticated state BEFORE initDatabase
+    mockAuthState = {
+      user: testUser,
+      isLoading: false,
+      isAuthenticated: true,
+    }
+    // Notify subscribers of auth state change
+    authSubscribers.forEach((sub) => sub(mockAuthState))
+    
     const testDb = await createTestDatabase()
     await initDatabase(testDb)
     useBoardsStore.setState({
@@ -260,12 +292,6 @@ describe('BoardsList Integration - Delete Board', () => {
       error: null,
     })
     window.confirm = vi.fn(() => true)
-    // Reset to authenticated state
-    mockAuthState = {
-      user: mockUser,
-      isLoading: false,
-      isAuthenticated: true,
-    }
   })
 
   afterEach(async () => {
@@ -342,9 +368,14 @@ describe('BoardsList Integration - Delete Board', () => {
       isLoading: false,
       isAuthenticated: false,
     }
+    // Notify subscribers of auth state change
+    authSubscribers.forEach((sub) => sub(mockAuthState))
     
     const { createBoard } = await import('../../../src/lib/services/boards')
     await createBoard('Board to Delete', 'anonymous')
+    
+    // Wait for sync to update
+    await new Promise((resolve) => setTimeout(resolve, 200))
 
     router.history.push('/')
     render(<RouterProvider router={router} />)

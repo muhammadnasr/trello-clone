@@ -1,9 +1,34 @@
-import { describe, it, expect, beforeEach, afterEach } from 'vitest'
+import { describe, it, expect, beforeEach, afterEach, vi } from 'vitest'
 import type { TrelloDatabase } from '../../../src/lib/db/database'
 import { syncBoardsToStore, syncColumnsToStore } from '../../../src/lib/db/sync'
 import { useBoardsStore } from '../../../src/stores/boards'
 import { useColumnsStore } from '../../../src/stores/columns'
 import { createTestDatabase } from './test-helpers'
+
+// Mock auth store
+const mockUser = {
+  uid: 'user1',
+  email: 'test@example.com',
+} as any
+
+let mockAuthState = {
+  user: mockUser,
+  isLoading: false,
+  isAuthenticated: true,
+}
+
+vi.mock('../../../src/stores/auth', () => ({
+  useAuthStore: Object.assign(
+    (selector: any) => selector(mockAuthState),
+    {
+      getState: () => mockAuthState,
+      subscribe: vi.fn((callback: any) => {
+        callback(mockAuthState)
+        return () => {}
+      }),
+    }
+  ),
+}))
 
 describe('RxDB-Zustand Sync', () => {
   let db: TrelloDatabase
@@ -16,6 +41,12 @@ describe('RxDB-Zustand Sync', () => {
       isLoading: false,
       error: null,
     })
+    // Reset auth state
+    mockAuthState = {
+      user: mockUser,
+      isLoading: false,
+      isAuthenticated: true,
+    }
   })
 
   afterEach(async () => {
@@ -137,6 +168,21 @@ describe('RxDB-Zustand Columns Sync', () => {
       columns: [],
       isLoading: false,
       error: null,
+    })
+    // Reset auth state
+    mockAuthState = {
+      user: mockUser,
+      isLoading: false,
+      isAuthenticated: true,
+    }
+    // Create a board owned by the user for columns to belong to
+    const now = new Date().toISOString()
+    await db.boards.insert({
+      id: 'board1',
+      title: 'Test Board',
+      createdAt: now,
+      updatedAt: now,
+      ownerId: 'user1',
     })
   })
 

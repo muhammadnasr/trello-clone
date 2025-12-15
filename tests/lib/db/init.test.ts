@@ -1,7 +1,32 @@
-import { describe, it, expect, beforeEach, afterEach } from 'vitest'
+import { describe, it, expect, beforeEach, afterEach, vi } from 'vitest'
 import { initDatabase, getDatabase, cleanupDatabase } from '../../../src/lib/db/init'
 import { useBoardsStore } from '../../../src/stores/boards'
 import { createTestDatabase } from './test-helpers'
+
+// Mock auth store
+const mockUser = {
+  uid: 'user1',
+  email: 'test@example.com',
+} as any
+
+const mockAuthState = {
+  user: mockUser,
+  isLoading: false,
+  isAuthenticated: true,
+}
+
+vi.mock('../../../src/stores/auth', () => ({
+  useAuthStore: Object.assign(
+    (selector: any) => selector(mockAuthState),
+    {
+      getState: () => mockAuthState,
+      subscribe: vi.fn((callback: any) => {
+        callback(mockAuthState)
+        return () => {}
+      }),
+    }
+  ),
+}))
 
 describe('Database Initialization', () => {
   beforeEach(async () => {
