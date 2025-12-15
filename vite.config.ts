@@ -14,14 +14,7 @@ export default defineConfig({
   resolve: {
     alias: {
       '@': path.resolve(__dirname, './src'),
-      // Ensure Firebase is deduplicated - use the same instance for RxDB and our code
-      'firebase/app': path.resolve(__dirname, './node_modules/firebase/app'),
-      'firebase/firestore': path.resolve(__dirname, './node_modules/firebase/firestore'),
     },
-    dedupe: ['firebase', 'firebase/app', 'firebase/firestore'],
-  },
-  optimizeDeps: {
-    include: ['firebase/app', 'firebase/firestore'],
   },
   test: {
     globals: true,
