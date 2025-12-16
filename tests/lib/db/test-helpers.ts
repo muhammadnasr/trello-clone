@@ -6,6 +6,7 @@ import { RxDBDevModePlugin } from 'rxdb/plugins/dev-mode'
 import type { TrelloDatabase } from '../../../src/lib/db/database'
 import { boardSchema } from '../../../src/lib/db/schemas/board.schema'
 import { columnSchema } from '../../../src/lib/db/schemas/column.schema'
+import { cardSchema } from '../../../src/lib/db/schemas/card.schema'
 
 addRxPlugin(RxDBDevModePlugin)
 
@@ -26,6 +27,9 @@ export async function createTestDatabase(name?: string): Promise<TrelloDatabase>
     },
     columns: {
       schema: columnSchema,
+    },
+    cards: {
+      schema: cardSchema,
     },
   })
 
