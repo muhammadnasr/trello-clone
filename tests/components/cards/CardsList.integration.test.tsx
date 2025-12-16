@@ -4,6 +4,7 @@ import { render, screen, waitFor, within } from '@testing-library/react'
 import userEvent from '@testing-library/user-event'
 import { RouterProvider, createRouter } from '@tanstack/react-router'
 import { routeTree } from '../../../src/routeTree.gen'
+import type { DragEndEvent } from '@dnd-kit/core'
 import { useCardsStore } from '../../../src/stores/cards'
 import { useColumnsStore } from '../../../src/stores/columns'
 import { useBoardsStore } from '../../../src/stores/boards'
@@ -400,7 +401,6 @@ describe('CardsList Integration - Update Card', () => {
 describe('CardsList Integration - Delete Card', () => {
   let boardId: string
   let columnId: string
-  let cardId: string
 
   beforeEach(async () => {
     await cleanupDatabase()
@@ -438,8 +438,7 @@ describe('CardsList Integration - Delete Card', () => {
     columnId = column.id
     // Create multiple cards to ensure CardsList renders them
     await createCard(columnId, 'Card 1', 0, 'user1')
-    const card = await createCard(columnId, 'Card to Delete', 1, 'user1')
-    cardId = card.id
+    await createCard(columnId, 'Card to Delete', 1, 'user1')
     await createCard(columnId, 'Card 2', 2, 'user1')
 
     // Wait for stores to sync (RxDB reactive queries update store asynchronously)
@@ -575,6 +574,297 @@ describe('CardsList Integration - Delete Card', () => {
     await waitFor(() => {
       expect(screen.queryByText('Card to Delete')).not.toBeInTheDocument()
     }, { timeout: 2000 })
+  })
+})
+
+describe('CardsList Integration - Drag and Drop', () => {
+  let boardId: string
+  let columnId: string
+
+  beforeEach(async () => {
+    await cleanupDatabase()
+    const testDb = await createTestDatabase()
+    await initDatabase(testDb)
+    useBoardsStore.setState({
+      boards: [],
+      isLoading: false,
+      error: null,
+    })
+    useColumnsStore.setState({
+      columns: [],
+      isLoading: false,
+      error: null,
+    })
+    useCardsStore.setState({
+      cards: [],
+      isLoading: false,
+      error: null,
+    })
+    mockAuthState = {
+      user: testUser,
+      isLoading: false,
+      isAuthenticated: true,
+    }
+    authSubscribers.forEach((sub) => sub(mockAuthState))
+    
+    const { createBoard } = await import('../../../src/lib/services/boards')
+    const { createColumn } = await import('../../../src/lib/services/columns')
+    const { createCard } = await import('../../../src/lib/services/cards')
+    const board = await createBoard('Test Board', 'user1')
+    boardId = board.id
+    const column = await createColumn(boardId, 'Test Column', 0, 'user1')
+    columnId = column.id
+    
+    // Create 4 cards with orders 0, 1, 2, 3
+    await createCard(columnId, 'Card 0', 0, 'user1')
+    await createCard(columnId, 'Card 1', 1, 'user1')
+    await createCard(columnId, 'Card 2', 2, 'user1')
+    await createCard(columnId, 'Card 3', 3, 'user1')
+    
+    await new Promise((resolve) => setTimeout(resolve, 300))
+  })
+
+  afterEach(async () => {
+    await cleanupDatabase()
+  })
+
+  it('renders drag handles for all cards', async () => {
+    router.history.push(`/boards/${boardId}`)
+    render(<RouterProvider router={router} />)
+
+    await waitFor(() => {
+      expect(screen.getByText('Card 0')).toBeInTheDocument()
+      expect(screen.getByText('Card 1')).toBeInTheDocument()
+      expect(screen.getByText('Card 2')).toBeInTheDocument()
+      expect(screen.getByText('Card 3')).toBeInTheDocument()
+    })
+
+    // Check that drag handles are rendered for cards
+    // Note: Columns also have drag handles, so we need to find them within card containers
+    const card0 = screen.getByText('Card 0').closest('.group')
+    const card1 = screen.getByText('Card 1').closest('.group')
+    const card2 = screen.getByText('Card 2').closest('.group')
+    const card3 = screen.getByText('Card 3').closest('.group')
+    
+    expect(card0).toBeInTheDocument()
+    expect(card1).toBeInTheDocument()
+    expect(card2).toBeInTheDocument()
+    expect(card3).toBeInTheDocument()
+    
+    // Each card should have a drag handle
+    const card0Handle = within(card0!).getByLabelText('Drag handle')
+    const card1Handle = within(card1!).getByLabelText('Drag handle')
+    const card2Handle = within(card2!).getByLabelText('Drag handle')
+    const card3Handle = within(card3!).getByLabelText('Drag handle')
+    
+    expect(card0Handle).toBeInTheDocument()
+    expect(card1Handle).toBeInTheDocument()
+    expect(card2Handle).toBeInTheDocument()
+    expect(card3Handle).toBeInTheDocument()
+  })
+
+  it('reorders cards when drag ends - move first card to third position', async () => {
+    router.history.push(`/boards/${boardId}`)
+    render(<RouterProvider router={router} />)
+
+    await waitFor(() => {
+      expect(screen.getByText('Card 0')).toBeInTheDocument()
+      expect(screen.getByText('Card 1')).toBeInTheDocument()
+      expect(screen.getByText('Card 2')).toBeInTheDocument()
+      expect(screen.getByText('Card 3')).toBeInTheDocument()
+    })
+
+    const cards = useCardsStore.getState().cards
+    const columnCards = cards
+      .filter((card) => card.columnId === columnId)
+      .sort((a, b) => a.order - b.order)
+    
+    const card0Id = columnCards[0].id // Card 0
+    const card2Id = columnCards[2].id // Card 2
+
+    // Test the actual handleCardReorder function
+    const { handleCardReorder } = await import('../../../src/lib/utils/card-reorder')
+    
+    // Simulate drag end event: Card 0 dragged to after Card 2
+    const mockDragEndEvent = {
+      active: { id: card0Id },
+      over: { id: card2Id },
+    } as DragEndEvent
+
+    // Call the actual reorder function
+    await handleCardReorder(mockDragEndEvent, cards, columnId)
+
+    // Verify the UI updates to show the new order
+    await waitFor(() => {
+      const updatedCards = useCardsStore.getState().cards
+        .filter((card) => card.columnId === columnId)
+        .sort((a, b) => a.order - b.order)
+      
+      // After dragging Card 0 to after Card 2:
+      // Original: [Card 0, Card 1, Card 2, Card 3]
+      // Result: [Card 1, Card 2, Card 0, Card 3]
+      expect(updatedCards[0].title).toBe('Card 1')
+      expect(updatedCards[1].title).toBe('Card 2')
+      expect(updatedCards[2].title).toBe('Card 0')
+      expect(updatedCards[3].title).toBe('Card 3')
+    }, { timeout: 2000 })
+  })
+
+  it('reorders cards when drag ends - move last card to first position', async () => {
+    router.history.push(`/boards/${boardId}`)
+    render(<RouterProvider router={router} />)
+
+    await waitFor(() => {
+      expect(screen.getByText('Card 0')).toBeInTheDocument()
+      expect(screen.getByText('Card 3')).toBeInTheDocument()
+    })
+
+    const cards = useCardsStore.getState().cards
+    const columnCards = cards
+      .filter((card) => card.columnId === columnId)
+      .sort((a, b) => a.order - b.order)
+    
+    const card3Id = columnCards[3].id // Card 3
+    const card0Id = columnCards[0].id // Card 0
+
+    const { handleCardReorder } = await import('../../../src/lib/utils/card-reorder')
+    
+    // Simulate drag end event: Card 3 dragged to before Card 0
+    const mockDragEndEvent = {
+      active: { id: card3Id },
+      over: { id: card0Id },
+    } as DragEndEvent
+
+    await handleCardReorder(mockDragEndEvent, cards, columnId)
+
+    await waitFor(() => {
+      const updatedCards = useCardsStore.getState().cards
+        .filter((card) => card.columnId === columnId)
+        .sort((a, b) => a.order - b.order)
+      
+      // After dragging Card 3 to before Card 0:
+      // Original: [Card 0, Card 1, Card 2, Card 3]
+      // Result: [Card 3, Card 0, Card 1, Card 2]
+      expect(updatedCards[0].title).toBe('Card 3')
+      expect(updatedCards[1].title).toBe('Card 0')
+      expect(updatedCards[2].title).toBe('Card 1')
+      expect(updatedCards[3].title).toBe('Card 2')
+    }, { timeout: 2000 })
+  })
+
+  it('reorders cards when drag ends - move middle card up', async () => {
+    router.history.push(`/boards/${boardId}`)
+    render(<RouterProvider router={router} />)
+
+    await waitFor(() => {
+      expect(screen.getByText('Card 1')).toBeInTheDocument()
+      expect(screen.getByText('Card 0')).toBeInTheDocument()
+    })
+
+    const cards = useCardsStore.getState().cards
+    const columnCards = cards
+      .filter((card) => card.columnId === columnId)
+      .sort((a, b) => a.order - b.order)
+    
+    const card2Id = columnCards[2].id // Card 2
+    const card0Id = columnCards[0].id // Card 0
+
+    const { handleCardReorder } = await import('../../../src/lib/utils/card-reorder')
+    
+    // Simulate drag end event: Card 2 dragged to before Card 0
+    const mockDragEndEvent = {
+      active: { id: card2Id },
+      over: { id: card0Id },
+    } as DragEndEvent
+
+    await handleCardReorder(mockDragEndEvent, cards, columnId)
+
+    await waitFor(() => {
+      const updatedCards = useCardsStore.getState().cards
+        .filter((card) => card.columnId === columnId)
+        .sort((a, b) => a.order - b.order)
+      
+      // After dragging Card 2 to before Card 0:
+      // Original: [Card 0, Card 1, Card 2, Card 3]
+      // Result: [Card 2, Card 0, Card 1, Card 3]
+      expect(updatedCards[0].title).toBe('Card 2')
+      expect(updatedCards[1].title).toBe('Card 0')
+      expect(updatedCards[2].title).toBe('Card 1')
+      expect(updatedCards[3].title).toBe('Card 3')
+    }, { timeout: 2000 })
+  })
+
+  it('does not reorder when drag ends on same card', async () => {
+    router.history.push(`/boards/${boardId}`)
+    render(<RouterProvider router={router} />)
+
+    await waitFor(() => {
+      expect(screen.getByText('Card 0')).toBeInTheDocument()
+    })
+
+    const cards = useCardsStore.getState().cards
+    const columnCards = cards
+      .filter((card) => card.columnId === columnId)
+      .sort((a, b) => a.order - b.order)
+    
+    const card1Id = columnCards[1].id // Card 1
+
+    const { handleCardReorder } = await import('../../../src/lib/utils/card-reorder')
+    
+    // Simulate drag end event: Card 1 dragged to itself
+    const mockDragEndEvent = {
+      active: { id: card1Id },
+      over: { id: card1Id },
+    } as DragEndEvent
+
+    await handleCardReorder(mockDragEndEvent, cards, columnId)
+
+    // Wait a bit to ensure no updates happened
+    await new Promise((resolve) => setTimeout(resolve, 200))
+
+    const updatedCards = useCardsStore.getState().cards
+      .filter((card) => card.columnId === columnId)
+      .sort((a, b) => a.order - b.order)
+    
+    // Order should remain unchanged
+    expect(updatedCards[0].title).toBe('Card 0')
+    expect(updatedCards[1].title).toBe('Card 1')
+    expect(updatedCards[2].title).toBe('Card 2')
+    expect(updatedCards[3].title).toBe('Card 3')
+  })
+
+  it('does not reorder when drag ends without over target', async () => {
+    router.history.push(`/boards/${boardId}`)
+    render(<RouterProvider router={router} />)
+
+    await waitFor(() => {
+      expect(screen.getByText('Card 0')).toBeInTheDocument()
+    })
+
+    const cards = useCardsStore.getState().cards
+
+    const { handleCardReorder } = await import('../../../src/lib/utils/card-reorder')
+    
+    // Simulate drag end event without over target
+    const mockDragEndEvent = {
+      active: { id: 'card-1' },
+      over: null,
+    } as DragEndEvent
+
+    await handleCardReorder(mockDragEndEvent, cards, columnId)
+
+    // Wait a bit to ensure no updates happened
+    await new Promise((resolve) => setTimeout(resolve, 200))
+
+    const updatedCards = useCardsStore.getState().cards
+      .filter((card) => card.columnId === columnId)
+      .sort((a, b) => a.order - b.order)
+    
+    // Order should remain unchanged
+    expect(updatedCards[0].title).toBe('Card 0')
+    expect(updatedCards[1].title).toBe('Card 1')
+    expect(updatedCards[2].title).toBe('Card 2')
+    expect(updatedCards[3].title).toBe('Card 3')
   })
 })
 
