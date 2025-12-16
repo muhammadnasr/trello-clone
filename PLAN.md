@@ -526,3 +526,54 @@ trello-clone/
 - Verify all tests still pass after optimization
 - Measure performance impact before/after if possible
 
+### Remove Unnecessary setTimeout in Integration Tests
+
+**Goal**: Remove artificial delays (`setTimeout`) from integration tests that were added as workarounds for sync timing issues.
+
+**Current State**:
+- `CardsList.integration.test.tsx` has multiple `await new Promise((resolve) => setTimeout(resolve, 100))` calls
+- These were added to wait for auth state sync, but should be handled with proper `waitFor` assertions instead
+
+**Proposed Solution**:
+- Remove all `setTimeout` calls used for waiting on sync
+- Replace with proper `waitFor` assertions that check for expected state changes
+- Use `waitFor` to verify store state is updated rather than arbitrary delays
+- Benefits:
+  - More reliable tests (wait for actual conditions, not arbitrary time)
+  - Faster test execution
+  - Better test maintainability
+
+**Implementation Notes**:
+- Verify all tests still pass after removing setTimeout
+- Ensure proper waitFor assertions are in place for auth state changes
+
+### Revise useEffects
+
+**Goal**: Review and optimize `useEffect` hooks across components to ensure they follow best practices and avoid unnecessary re-renders or side effects.
+
+**Current State**:
+- Multiple components use `useEffect` for various purposes (sync state, focus management, etc.)
+- Some effects may have unnecessary dependencies or missing cleanup
+- Need to review for:
+  - Proper dependency arrays
+  - Cleanup functions where needed
+  - Avoiding cascading re-renders
+  - Ensuring effects only run when necessary
+
+**Proposed Solution**:
+- Audit all `useEffect` hooks in card-related components (`Card.tsx`, `CreateCard.tsx`, etc.)
+- Review effects for:
+  - Correct dependency arrays
+  - Proper cleanup (remove event listeners, cancel subscriptions, etc.)
+  - Avoiding unnecessary re-renders (e.g., syncing state only when props actually change)
+  - Using refs where appropriate to avoid dependency issues
+- Benefits:
+  - More predictable component behavior
+  - Better performance
+  - Fewer bugs from stale closures or missing cleanup
+
+**Implementation Notes**:
+- Focus on card components first (Card.tsx, CreateCard.tsx)
+- Verify all tests still pass after revisions
+- Ensure no regressions in component behavior
+

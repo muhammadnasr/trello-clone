@@ -104,11 +104,19 @@ describe('CardsList Integration - Create Card', () => {
   it('creates card when form is submitted', async () => {
     const user = userEvent.setup()
 
+    // Add some existing cards to test with multiple cards present
+    const { createCard } = await import('../../../src/lib/services/cards')
+    await createCard(columnId, 'Existing Card 1', 0, 'user1')
+    await createCard(columnId, 'Existing Card 2', 1, 'user1')
+    await new Promise((resolve) => setTimeout(resolve, 200))
+
     router.history.push(`/boards/${boardId}`)
     render(<RouterProvider router={router} />)
 
     await waitFor(() => {
       expect(screen.getByText('Test Column')).toBeInTheDocument()
+      expect(screen.getByText('Existing Card 1')).toBeInTheDocument()
+      expect(screen.getByText('Existing Card 2')).toBeInTheDocument()
     }, { timeout: 2000 })
 
     const addCardButton = screen.getByText('+ Add a card')
@@ -128,11 +136,17 @@ describe('CardsList Integration - Create Card', () => {
       expect(screen.getByText('New Card Title')).toBeInTheDocument()
     }, { timeout: 2000 })
 
+    // Verify all cards are present (2 existing + 1 new)
+    expect(screen.getByText('Existing Card 1')).toBeInTheDocument()
+    expect(screen.getByText('Existing Card 2')).toBeInTheDocument()
+
     const cardsInStore = useCardsStore.getState().cards
-    expect(cardsInStore).toHaveLength(1)
-    expect(cardsInStore[0].title).toBe('New Card Title')
-    expect(cardsInStore[0].columnId).toBe(columnId)
-    expect(cardsInStore[0].ownerId).toBe('user1')
+    expect(cardsInStore).toHaveLength(3)
+    expect(cardsInStore.some(c => c.title === 'New Card Title')).toBe(true)
+    expect(cardsInStore.some(c => c.title === 'Existing Card 1')).toBe(true)
+    expect(cardsInStore.some(c => c.title === 'Existing Card 2')).toBe(true)
+    expect(cardsInStore.find(c => c.title === 'New Card Title')?.columnId).toBe(columnId)
+    expect(cardsInStore.find(c => c.title === 'New Card Title')?.ownerId).toBe('user1')
   })
 
   it('creates card without authentication', async () => {
@@ -146,25 +160,34 @@ describe('CardsList Integration - Create Card', () => {
     }
     authSubscribers.forEach((sub) => sub(mockAuthState))
     
-    // Wait for sync to update
-    await new Promise((resolve) => setTimeout(resolve, 100))
-    
     // Create board/column with anonymous ownerId
     const { createBoard } = await import('../../../src/lib/services/boards')
     const { createColumn } = await import('../../../src/lib/services/columns')
+    const { createCard } = await import('../../../src/lib/services/cards')
     const anonymousBoard = await createBoard('Anonymous Board', 'anonymous')
     const anonymousBoardId = anonymousBoard.id
     const anonymousColumn = await createColumn(anonymousBoardId, 'Anonymous Column', 0, 'anonymous')
     const anonymousColumnId = anonymousColumn.id
+    // Create multiple cards
+    await createCard(anonymousColumnId, 'Anonymous Existing 1', 0, 'anonymous')
+    await createCard(anonymousColumnId, 'Anonymous Existing 2', 1, 'anonymous')
     
     // Wait for store to sync
-    await new Promise((resolve) => setTimeout(resolve, 200))
+    await new Promise((resolve) => setTimeout(resolve, 500))
+    
+    // Verify cards are synced to store
+    await waitFor(() => {
+      const cards = useCardsStore.getState().cards
+      expect(cards.length).toBeGreaterThanOrEqual(2)
+    }, { timeout: 2000 })
 
     router.history.push(`/boards/${anonymousBoardId}`)
     render(<RouterProvider router={router} />)
 
     await waitFor(() => {
       expect(screen.getByText('Anonymous Column')).toBeInTheDocument()
+      expect(screen.getByText('Anonymous Existing 1')).toBeInTheDocument()
+      expect(screen.getByText('Anonymous Existing 2')).toBeInTheDocument()
     }, { timeout: 2000 })
 
     const addCardButton = screen.getByText('+ Add a card')
@@ -184,11 +207,17 @@ describe('CardsList Integration - Create Card', () => {
       expect(screen.getByText('Anonymous Card')).toBeInTheDocument()
     }, { timeout: 2000 })
 
+    // Verify all cards are present (2 existing + 1 new)
+    expect(screen.getByText('Anonymous Existing 1')).toBeInTheDocument()
+    expect(screen.getByText('Anonymous Existing 2')).toBeInTheDocument()
+
     const cardsInStore = useCardsStore.getState().cards
-    expect(cardsInStore).toHaveLength(1)
-    expect(cardsInStore[0].title).toBe('Anonymous Card')
-    expect(cardsInStore[0].columnId).toBe(anonymousColumnId)
-    expect(cardsInStore[0].ownerId).toBe('anonymous')
+    expect(cardsInStore).toHaveLength(3)
+    expect(cardsInStore.some(c => c.title === 'Anonymous Card')).toBe(true)
+    expect(cardsInStore.some(c => c.title === 'Anonymous Existing 1')).toBe(true)
+    expect(cardsInStore.some(c => c.title === 'Anonymous Existing 2')).toBe(true)
+    expect(cardsInStore.find(c => c.title === 'Anonymous Card')?.columnId).toBe(anonymousColumnId)
+    expect(cardsInStore.find(c => c.title === 'Anonymous Card')?.ownerId).toBe('anonymous')
   })
 })
 
@@ -230,11 +259,20 @@ describe('CardsList Integration - Update Card', () => {
     boardId = board.id
     const column = await createColumn(boardId, 'Test Column', 0, 'user1')
     columnId = column.id
-    const card = await createCard(columnId, 'Initial Card Title', 0, 'user1')
+    // Create multiple cards to test with multiple cards present
+    await createCard(columnId, 'Other Card 1', 0, 'user1')
+    const card = await createCard(columnId, 'Initial Card Title', 1, 'user1')
     cardId = card.id
+    await createCard(columnId, 'Other Card 2', 2, 'user1')
 
     // Wait for stores to sync (RxDB reactive queries update store asynchronously)
-    await new Promise((resolve) => setTimeout(resolve, 300))
+    await new Promise((resolve) => setTimeout(resolve, 500))
+    
+    // Verify cards are synced to store
+    await waitFor(() => {
+      const cards = useCardsStore.getState().cards
+      expect(cards.length).toBeGreaterThanOrEqual(3)
+    }, { timeout: 2000 })
   })
 
   afterEach(async () => {
@@ -249,6 +287,8 @@ describe('CardsList Integration - Update Card', () => {
 
     await waitFor(() => {
       expect(screen.getByText('Initial Card Title')).toBeInTheDocument()
+      expect(screen.getByText('Other Card 1')).toBeInTheDocument()
+      expect(screen.getByText('Other Card 2')).toBeInTheDocument()
     }, { timeout: 2000 })
 
     const cardTitle = screen.getByText('Initial Card Title')
@@ -269,9 +309,15 @@ describe('CardsList Integration - Update Card', () => {
       expect(screen.queryByText('Initial Card Title')).not.toBeInTheDocument()
     }, { timeout: 2000 })
 
+    // Verify other cards are still present and unchanged
+    expect(screen.getByText('Other Card 1')).toBeInTheDocument()
+    expect(screen.getByText('Other Card 2')).toBeInTheDocument()
+
     const cardsInStore = useCardsStore.getState().cards
-    expect(cardsInStore).toHaveLength(1)
-    expect(cardsInStore[0].title).toBe('Updated Card Title')
+    expect(cardsInStore).toHaveLength(3)
+    expect(cardsInStore.find(c => c.id === cardId)?.title).toBe('Updated Card Title')
+    expect(cardsInStore.some(c => c.title === 'Other Card 1')).toBe(true)
+    expect(cardsInStore.some(c => c.title === 'Other Card 2')).toBe(true)
   })
 
   it('updates card title when edited without authentication', async () => {
@@ -296,16 +342,27 @@ describe('CardsList Integration - Update Card', () => {
     const anonymousBoardId = anonymousBoard.id
     const anonymousColumn = await createColumn(anonymousBoardId, 'Anonymous Column', 0, 'anonymous')
     const anonymousColumnId = anonymousColumn.id
-    await createCard(anonymousColumnId, 'Initial Card Title', 0, 'anonymous')
+    // Create multiple cards
+    await createCard(anonymousColumnId, 'Anonymous Card 1', 0, 'anonymous')
+    await createCard(anonymousColumnId, 'Initial Card Title', 1, 'anonymous')
+    await createCard(anonymousColumnId, 'Anonymous Card 2', 2, 'anonymous')
     
     // Wait for store to sync
-    await new Promise((resolve) => setTimeout(resolve, 200))
+    await new Promise((resolve) => setTimeout(resolve, 500))
+    
+    // Verify cards are synced to store
+    await waitFor(() => {
+      const cards = useCardsStore.getState().cards
+      expect(cards.length).toBeGreaterThanOrEqual(3)
+    }, { timeout: 2000 })
 
     router.history.push(`/boards/${anonymousBoardId}`)
     render(<RouterProvider router={router} />)
 
     await waitFor(() => {
       expect(screen.getByText('Initial Card Title')).toBeInTheDocument()
+      expect(screen.getByText('Anonymous Card 1')).toBeInTheDocument()
+      expect(screen.getByText('Anonymous Card 2')).toBeInTheDocument()
     }, { timeout: 2000 })
 
     const cardTitle = screen.getByText('Initial Card Title')
@@ -326,11 +383,17 @@ describe('CardsList Integration - Update Card', () => {
       expect(screen.queryByText('Initial Card Title')).not.toBeInTheDocument()
     }, { timeout: 2000 })
 
+    // Verify other cards are still present
+    expect(screen.getByText('Anonymous Card 1')).toBeInTheDocument()
+    expect(screen.getByText('Anonymous Card 2')).toBeInTheDocument()
+
     const cardsInStore = useCardsStore.getState().cards
-    expect(cardsInStore).toHaveLength(1)
-    expect(cardsInStore[0].title).toBe('Anonymous Updated Card')
-    expect(cardsInStore[0].columnId).toBe(anonymousColumnId)
-    expect(cardsInStore[0].ownerId).toBe('anonymous')
+    expect(cardsInStore).toHaveLength(3)
+    expect(cardsInStore.some(c => c.title === 'Anonymous Updated Card')).toBe(true)
+    expect(cardsInStore.some(c => c.title === 'Anonymous Card 1')).toBe(true)
+    expect(cardsInStore.some(c => c.title === 'Anonymous Card 2')).toBe(true)
+    expect(cardsInStore.find(c => c.title === 'Anonymous Updated Card')?.columnId).toBe(anonymousColumnId)
+    expect(cardsInStore.find(c => c.title === 'Anonymous Updated Card')?.ownerId).toBe('anonymous')
   })
 })
 
