@@ -11,7 +11,7 @@
 - ✅ Phase 6: Board Detail & Columns
 - ✅ Phase 7: Firebase Integration (Firestore Replication ✅ Complete, Offline Support ✅ Verified, Auth ✅ Complete)
 - ✅ Phase 8: Cards (Display + CRUD + Firestore Sync ✅ Complete)
-- ✅ Phase 9: Drag & Drop (Column Reordering ✅ Complete, Card Drag & Drop ✅ Complete)
+- ✅ Phase 9: Drag & Drop (Column Reordering ✅ Complete, Card Drag & Drop ✅ Complete, UX Improvements ✅ Complete)
 
 **Remaining Phases: 2/11**
 - ⏳ Phase 10: Multi-User & Sharing (Sharing UI + Logic + Security Rules)
@@ -22,14 +22,14 @@
 - ✅ Columns CRUD (Create, Read, Update, Delete)
 - ✅ Cards CRUD (Create, Read, Update, Delete ✅ Complete)
 - ✅ Firebase Sync (Firestore Replication ✅ Complete)
-- ✅ Drag & Drop (Column Reordering ✅ Complete, Card Drag & Drop ✅ Complete - Within Column + Cross-Column)
+- ✅ Drag & Drop (Column Reordering ✅ Complete, Card Drag & Drop ✅ Complete - Within Column + Cross-Column, UX Improvements ✅ Complete)
 - ⏳ Multi-User & Sharing (Not started)
 
-**Estimated Progress: ~82%**
+**Estimated Progress: ~84%**
 - Foundation & Infrastructure: ✅ Complete
 - Core Features (Boards/Columns/Cards): ✅ Complete
 - Firebase Sync: ✅ Complete (Firestore Replication + Auth)
-- Drag & Drop: ✅ Complete (Column Reordering + Card Drag & Drop Within Column + Cross-Column)
+- Drag & Drop: ✅ Complete (Column Reordering + Card Drag & Drop Within Column + Cross-Column + UX Improvements)
 - Architecture Improvements: ✅ Parallel sync subscriptions with `ownerId` filtering (Boards, Columns & Cards)
 - Remaining Features: ⏳ Multi-User & Sharing, Polish & Bonus Features
 
@@ -282,6 +282,13 @@ Using RxDB is acceptable, as long as the solution clearly demonstrates:
 - [x] Make columns droppable using `useDroppable` hook
 - [x] Move `DndContext` to `ColumnsList` to enable cross-column drags
 - [x] **Test**: Verify cards can be moved within and between columns (16 integration tests, including 3 cross-column tests)
+
+#### ✅ Step 9.4: Drag & Drop UX Improvements (COMPLETED)
+
+- [x] Add DragOverlay for cards to prevent disappearing when dragging between columns
+- [x] Filter out dragged cards from CardsList during drag to prevent visual glitches
+- [x] Add optimistic updates for card columnId to prevent bounce-back on drop
+- [x] Improve drag experience with visual feedback (card follows cursor in overlay)
 
 ### Phase 10: Multi-User & Sharing
 
