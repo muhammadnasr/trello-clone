@@ -125,14 +125,27 @@ describe('ColumnsList Integration - Create Column', () => {
   it('creates column without authentication', async () => {
     const user = userEvent.setup()
 
-    // Set unauthenticated state
+    // Set unauthenticated state BEFORE creating board
     mockAuthState = {
       user: null,
       isLoading: false,
       isAuthenticated: false,
     }
+    // Notify subscribers of auth state change
+    authSubscribers.forEach((sub) => sub(mockAuthState))
+    
+    // Wait for sync to update
+    await new Promise((resolve) => setTimeout(resolve, 100))
+    
+    // Create a board with anonymous ownerId for unauthenticated test
+    const { createBoard } = await import('../../../src/lib/services/boards')
+    const anonymousBoard = await createBoard('Anonymous Board', 'anonymous')
+    const anonymousBoardId = anonymousBoard.id
+    
+    // Wait for store to sync
+    await new Promise((resolve) => setTimeout(resolve, 200))
 
-    router.history.push(`/boards/${boardId}`)
+    router.history.push(`/boards/${anonymousBoardId}`)
     render(<RouterProvider router={router} />)
 
     await waitFor(() => {
@@ -188,7 +201,7 @@ describe('ColumnsList Integration - Update Column', () => {
     const { createColumn } = await import('../../../src/lib/services/columns')
     const board = await createBoard('Test Board', 'user1')
     boardId = board.id
-    await createColumn(boardId, 'Original Column', 0)
+    await createColumn(boardId, 'Original Column', 0, 'user1')
     
     // Wait for stores to sync (RxDB reactive queries update store asynchronously)
     await new Promise((resolve) => setTimeout(resolve, 200))
@@ -296,7 +309,7 @@ describe('ColumnsList Integration - Delete Column', () => {
     const { createColumn } = await import('../../../src/lib/services/columns')
     const board = await createBoard('Test Board', 'user1')
     boardId = board.id
-    await createColumn(boardId, 'Column to Delete', 0)
+    await createColumn(boardId, 'Column to Delete', 0, 'user1')
     
     // Wait for stores to sync (RxDB reactive queries update store asynchronously)
     await new Promise((resolve) => setTimeout(resolve, 200))

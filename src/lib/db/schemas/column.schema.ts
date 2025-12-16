@@ -17,6 +17,10 @@ export const columnSchema = {
     order: {
       type: 'number',
     },
+    ownerId: {
+      type: 'string',
+      maxLength: 100,
+    },
     createdAt: {
       type: 'string',
       format: 'date-time',
@@ -26,7 +30,7 @@ export const columnSchema = {
       format: 'date-time',
     },
   },
-  required: ['id', 'boardId', 'title', 'order', 'createdAt', 'updatedAt'],
-  indexes: ['boardId'],
+  required: ['id', 'boardId', 'title', 'order', 'ownerId', 'createdAt', 'updatedAt'],
+  indexes: ['boardId', 'ownerId'],
 }
 

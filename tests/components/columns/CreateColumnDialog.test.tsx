@@ -10,6 +10,14 @@ vi.mock('../../../src/lib/services/columns', () => ({
   createColumn: vi.fn(),
 }))
 
+vi.mock('../../../src/stores/auth', () => ({
+  useAuthStore: (selector: any) => selector({
+    user: { uid: 'user1' },
+    isLoading: false,
+    isAuthenticated: true,
+  }),
+}))
+
 describe('CreateColumnDialog', () => {
   beforeEach(() => {
     useColumnsStore.setState({
@@ -44,6 +52,7 @@ describe('CreateColumnDialog', () => {
       boardId: 'board1',
       title: 'New Column',
       order: 0,
+      ownerId: 'user1',
       createdAt: new Date().toISOString(),
       updatedAt: new Date().toISOString(),
     }
@@ -59,7 +68,7 @@ describe('CreateColumnDialog', () => {
     await user.type(screen.getByPlaceholderText('Column name'), 'New Column')
     await user.click(screen.getByText('Create'))
 
-    expect(mockCreateColumn).toHaveBeenCalledWith('board1', 'New Column', 0)
+    expect(mockCreateColumn).toHaveBeenCalledWith('board1', 'New Column', 0, 'user1')
   })
 
   it('closes dialog after successful creation', async () => {
@@ -70,6 +79,7 @@ describe('CreateColumnDialog', () => {
       boardId: 'board1',
       title: 'New Column',
       order: 0,
+      ownerId: 'user1',
       createdAt: new Date().toISOString(),
       updatedAt: new Date().toISOString(),
     })

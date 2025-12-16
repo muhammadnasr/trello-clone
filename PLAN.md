@@ -25,15 +25,16 @@
 - ⏳ Drag & Drop (Not started)
 - ⏳ Multi-User & Sharing (Not started)
 
-**Estimated Progress: ~47%**
+**Estimated Progress: ~52%**
 - Foundation & Infrastructure: ✅ Complete
 - Core Features (Boards/Columns): ✅ Complete
 - Firebase Sync: ✅ Complete (Firestore Replication)
+- Architecture Improvements: ✅ Parallel sync subscriptions with `ownerId` filtering (Boards & Columns)
 - Remaining Features: ⏳ Not started (Cards, Auth, Drag & Drop, Multi-User, Polish)
 
 **Next Phase: Phase 7 - Firebase Auth (remaining) / Phase 8 - Cards**
 
-**Test Coverage**: 85 tests passing (unit + integration)
+**Test Coverage**: 135 tests passing (unit + integration)
 
 ---
 
@@ -193,6 +194,7 @@ Using RxDB is acceptable, as long as the solution clearly demonstrates:
 - [x] Column services and Zustand store
 - [x] Columns sync to store
 - [x] **Test**: Verify all column operations work (29 new tests)
+- [x] **Architecture Improvement**: Refactored sync to use parallel subscriptions with `ownerId` filtering (see Refactoring section)
 - [ ] Implement reorder columns (drag handles or buttons) - Deferred to Phase 9 (Drag & Drop)
 
 ### Phase 7: Firebase Integration
@@ -414,6 +416,29 @@ trello-clone/
 
 ## Refactoring & Code Quality Improvements
 
+### ✅ Parallel Sync Subscriptions with `ownerId` Filtering (COMPLETED)
+
+**Goal**: Refactor sync function to use parallel subscriptions instead of chained dependencies, making it more scalable and efficient.
+
+**What Was Done**:
+- Added `ownerId` field to Column schema and TypeScript type
+- Updated `createColumn` service to accept `ownerId` parameter
+- Updated `CreateColumnDialog` to get `ownerId` from auth store
+- Refactored `syncStoresToDatabase` to use parallel subscriptions:
+  - Boards subscription: filters by `ownerId` directly
+  - Columns subscription: filters by `ownerId` directly (independent, no chaining)
+  - Both subscriptions run in parallel with no dependencies
+- Updated all tests to pass `ownerId` when creating columns
+
+**Benefits**:
+- ✅ Simpler sync logic: no dependency chain between boards and columns
+- ✅ Scalable: adding cards will follow the same pattern (filter by `ownerId`)
+- ✅ Better performance: parallel subscriptions instead of sequential
+- ✅ No race conditions: each subscription is independent
+- ✅ Easier to maintain: clear separation of concerns
+
+**Impact**: This refactoring makes the codebase ready for adding cards with minimal changes. Cards will follow the same pattern: add `ownerId` to schema and filter by `ownerId` in a parallel subscription.
+
 ### Consolidate Create/Rename Dialogs
 
 **Goal**: Reduce code duplication by creating a single reusable dialog component for creating and renaming entities (boards, columns, cards).
@@ -468,4 +493,32 @@ trello-clone/
 - Verify all tests still pass after conversion
 - Some dynamic imports may be necessary (e.g., Firebase mocks that need to be set up first)
 - Keep dynamic imports only where truly needed (document why)
+
+### Component Re-render Optimization
+
+**Goal**: Optimize component re-renders to prevent unnecessary updates when unrelated store values change.
+
+**Current State**:
+- Components re-render whenever any store value changes, even unrelated ones
+- No React.memo or derived state optimization
+- Multiple `useBoardsStore` / `useColumnsStore` calls in same component (e.g., `BoardsList.tsx`, `CreateBoardDialog.tsx`)
+- Components subscribe to entire store slices rather than specific selectors
+
+**Proposed Solution**:
+- Consolidate multiple store selector calls into single selector that returns object of needed values
+- Add `React.memo` to leaf components that receive primitive props (e.g., `BoardCard`, `ColumnCard`)
+- Consider selector memoization for complex derived state
+- Use Zustand's `shallow` equality check when selecting multiple values
+
+**Benefits**:
+- Reduced unnecessary re-renders
+- Better performance, especially as app scales
+- More efficient React rendering cycles
+- Better user experience with smoother UI updates
+
+**Implementation Notes**:
+- Keep current architecture - stores are well-structured
+- This is a performance optimization, not a critical issue for current scale
+- Verify all tests still pass after optimization
+- Measure performance impact before/after if possible
 

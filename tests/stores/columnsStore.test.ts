@@ -32,6 +32,7 @@ describe('Columns Store', () => {
         boardId: 'board1',
         title: 'Column 1',
         order: 0,
+        ownerId: 'user1',
         createdAt: new Date().toISOString(),
         updatedAt: new Date().toISOString(),
       },
@@ -53,6 +54,7 @@ describe('Columns Store', () => {
         boardId: 'board1',
         title: 'New Column',
         order: 0,
+        ownerId: 'user1',
         createdAt: new Date().toISOString(),
         updatedAt: new Date().toISOString(),
       }
@@ -61,9 +63,9 @@ describe('Columns Store', () => {
       useColumnsStore.getState().setError('Previous error')
       
       const createColumn = useColumnsStore.getState().createColumn
-      const result = await createColumn('board1', 'New Column', 0)
+      const result = await createColumn('board1', 'New Column', 0, 'user1')
 
-      expect(mockCreateColumn).toHaveBeenCalledWith('board1', 'New Column', 0)
+      expect(mockCreateColumn).toHaveBeenCalledWith('board1', 'New Column', 0, 'user1')
       expect(result).toEqual(newColumn)
       expect(useColumnsStore.getState().error).toBeNull()
     })
@@ -74,7 +76,7 @@ describe('Columns Store', () => {
 
       const createColumn = useColumnsStore.getState().createColumn
 
-      await expect(createColumn('board1', 'New Column', 0)).rejects.toThrow('Service error')
+      await expect(createColumn('board1', 'New Column', 0, 'user1')).rejects.toThrow('Service error')
       expect(useColumnsStore.getState().error).toBe('Service error')
     })
 

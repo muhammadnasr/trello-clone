@@ -1,11 +1,10 @@
 import { createDatabase } from './database'
-import { syncBoardsToStore, syncColumnsToStore } from './sync'
+import { syncStoresToDatabase } from './sync'
 import { setupFirestoreReplication, cancelReplication, getReplicationStates } from './replication'
 import type { TrelloDatabase } from './database'
 
 let databaseInstance: TrelloDatabase | null = null
-let unsubscribeBoardsSync: (() => void) | null = null
-let unsubscribeColumnsSync: (() => void) | null = null
+let unsubscribeSync: (() => void) | null = null
 
 /**
  * Initialize database and hydrate from IndexedDB.
@@ -22,9 +21,9 @@ export async function initDatabase(testDatabase?: TrelloDatabase): Promise<Trell
   const db = testDatabase || await createDatabase()
   databaseInstance = db
   
-  // Sync RxDB data to Zustand store (hydrates store with IndexedDB data)
-  unsubscribeBoardsSync = syncBoardsToStore(db)
-  unsubscribeColumnsSync = syncColumnsToStore(db)
+  // Sync RxDB data to Zustand stores (hydrates stores with IndexedDB data)
+  // This sets up reactive queries for both boards and columns
+  unsubscribeSync = syncStoresToDatabase(db)
 
   return db
 }
@@ -69,13 +68,9 @@ export function getDatabase(): TrelloDatabase {
 }
 
 export async function cleanupDatabase(): Promise<void> {
-  if (unsubscribeBoardsSync) {
-    unsubscribeBoardsSync()
-    unsubscribeBoardsSync = null
-  }
-  if (unsubscribeColumnsSync) {
-    unsubscribeColumnsSync()
-    unsubscribeColumnsSync = null
+  if (unsubscribeSync) {
+    unsubscribeSync()
+    unsubscribeSync = null
   }
   cancelReplication()
   if (databaseInstance) {
