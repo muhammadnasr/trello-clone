@@ -2,7 +2,7 @@
 
 ## 📊 Progress Summary
 
-**Completed Phases: 7.5/11**
+**Completed Phases: 8.5/11**
 - ✅ Phase 1: Foundation
 - ✅ Phase 2: RxDB Setup & Data Models (Boards & Columns schemas)
 - ✅ Phase 3: Zustand Store Integration
@@ -10,10 +10,10 @@
 - ✅ Phase 5: Basic UI - Boards List
 - ✅ Phase 6: Board Detail & Columns
 - ✅ Phase 7: Firebase Integration (Firestore Replication ✅ Complete, Offline Support ✅ Verified, Auth ✅ Complete)
+- ✅ Phase 8: Cards (Display + CRUD + Firestore Sync ✅ Complete)
 - ✅ Phase 9: Drag & Drop (Column Reordering ✅ Complete, Card Drag & Drop ⏳ Pending)
 
-**Remaining Phases: 3.5/11**
-- ⏳ Phase 8: Cards (Display + CRUD + Firestore Sync)
+**Remaining Phases: 2.5/11**
 - ⏳ Phase 9: Drag & Drop (Card Drag & Drop remaining)
 - ⏳ Phase 10: Multi-User & Sharing (Sharing UI + Logic + Security Rules)
 - ⏳ Phase 11: Polish & Bonus Features (Offline Indicator + Animations + Accessibility + PWA + Deployment)
@@ -21,22 +21,22 @@
 **Core Features Status:**
 - ✅ Boards CRUD (Create, Read, Update, Delete)
 - ✅ Columns CRUD (Create, Read, Update, Delete)
-- ⏳ Cards (Not started)
+- ✅ Cards CRUD (Create, Read, Update, Delete ✅ Complete)
 - ✅ Firebase Sync (Firestore Replication ✅ Complete)
 - ✅ Drag & Drop (Column Reordering ✅ Complete, Card Drag & Drop ⏳ Pending)
 - ⏳ Multi-User & Sharing (Not started)
 
-**Estimated Progress: ~68%**
+**Estimated Progress: ~75%**
 - Foundation & Infrastructure: ✅ Complete
-- Core Features (Boards/Columns): ✅ Complete
+- Core Features (Boards/Columns/Cards): ✅ Complete
 - Firebase Sync: ✅ Complete (Firestore Replication + Auth)
 - Drag & Drop: ✅ Column Reordering Complete (Card Drag & Drop ⏳ Pending)
-- Architecture Improvements: ✅ Parallel sync subscriptions with `ownerId` filtering (Boards & Columns)
-- Remaining Features: ⏳ Cards, Card Drag & Drop, Multi-User, Polish
+- Architecture Improvements: ✅ Parallel sync subscriptions with `ownerId` filtering (Boards, Columns & Cards)
+- Remaining Features: ⏳ Card Drag & Drop, Multi-User, Polish
 
-**Next Phase: Phase 8 - Cards (Display + CRUD + Firestore Sync)**
+**Next Phase: Phase 9.3 - Card Drag & Drop (Within Column + Across Columns)**
 
-**Test Coverage**: 137+ tests passing (unit + integration, including drag & drop tests)
+**Test Coverage**: 181 tests passing (unit + integration, including drag & drop tests)
 
 ---
 
@@ -238,26 +238,26 @@ Using RxDB is acceptable, as long as the solution clearly demonstrates:
 - [x] **Test**: Verify offline operations queue and sync when online
 - [x] **Verified**: Offline functionality works correctly with LWW (Last-Write-Wins) conflict resolution. RxDB proves to be an excellent choice for local-first architecture with seamless offline support.
 
-### Phase 8: Cards
+### ✅ Phase 8: Cards (COMPLETED)
 
-#### Step 8.1: Card Display
+#### ✅ Step 8.1: Card Display (COMPLETED)
 
-- Display cards within columns
-- Show card title, createdAt
-- **Test**: Verify cards render in columns
+- [x] Display cards within columns
+- [x] Show card title, createdAt
+- [x] **Test**: Verify cards render in columns
 
-#### Step 8.2: Card CRUD Operations
+#### ✅ Step 8.2: Card CRUD Operations (COMPLETED)
 
-- Implement create card
-- Implement edit card title
-- Implement delete card
-- **Test**: Verify all card operations work
+- [x] Implement create card (inline, no dialog)
+- [x] Implement edit card title (inline editing)
+- [x] Implement delete card
+- [x] **Test**: Verify all card operations work (unit + integration tests)
 
-#### Step 8.3: Extend Firestore Replication for Cards
+#### ✅ Step 8.3: Extend Firestore Replication for Cards (COMPLETED)
 
-- Add cards collection to Firestore replication
-- Test sync with cards
-- **Test**: Verify cards sync to Firestore
+- [x] Add cards collection to Firestore replication
+- [x] Test sync with cards
+- [x] **Test**: Verify cards sync to Firestore
 
 ### Phase 9: Drag & Drop
 
@@ -275,12 +275,12 @@ Using RxDB is acceptable, as long as the solution clearly demonstrates:
 - [x] Sort columns by order in ColumnsList
 - [x] **Test**: Verify columns can be reordered (all tests pass)
 
-#### Step 9.3: Card Drag & Drop
+#### Step 9.3: Card Drag & Drop (IN PROGRESS)
 
-- Implement drag & drop within column (reorder)
-- Implement drag & drop across columns
-- Update card order and columnId in RxDB
-- **Test**: Verify cards can be moved within and between columns
+- [ ] Implement drag & drop within column (reorder) - ⏳ Starting
+- [ ] Implement drag & drop across columns
+- [ ] Update card order and columnId in RxDB
+- [ ] **Test**: Verify cards can be moved within and between columns
 
 ### Phase 10: Multi-User & Sharing
 
