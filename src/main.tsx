@@ -26,13 +26,11 @@ async function bootstrap() {
     // Step 2: Initialize Firebase and auth (if configured)
     if (import.meta.env.VITE_FIREBASE_PROJECT_ID) {
       initFirebase()
-      
+
       // Set up auth state listener
       initAuthStateListener()
-      
-      // Step 3: Initialize sync status monitoring (after Firebase is initialized)
-      initSyncStatusMonitoring()
-      
+
+
       // Subscribe to auth changes to attach/remove backend subscriptions
       let hasAttachedSubscriptions = false
       useAuthStore.subscribe((state) => {
@@ -44,18 +42,18 @@ async function bootstrap() {
             hasAttachedSubscriptions = false
           })
         }
-        
+
         // Cancel Firestore replication if user logs out (use IndexedDB only)
         if (!state.isAuthenticated && !state.isLoading && hasAttachedSubscriptions) {
           hasAttachedSubscriptions = false
           cancelReplication()
         }
       })
-    } else {
-      // Initialize sync status monitoring even without Firebase (for offline mode)
-      initSyncStatusMonitoring()
     }
-    
+    // Step 3: Initialize sync status monitoring (after Firebase is initialized)
+    // or even without Firebase (for offline mode)
+    initSyncStatusMonitoring()
+
     createRoot(document.getElementById('root')!).render(
       <StrictMode>
         <RouterProvider router={router} />

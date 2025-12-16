@@ -1,51 +1,43 @@
 import { Wifi, WifiOff, CloudOff, AlertCircle, Loader2 } from 'lucide-react'
-import { useSyncStatusStore } from '@/stores/syncStatus'
-import { useAuthStore } from '@/stores/auth'
+import { useSyncStatusStore, SyncStatus } from '@/stores/syncStatus'
 
 export function StatusIndicator() {
-  const syncStatus = useSyncStatusStore((state) => state.syncStatus)
-  const isOnline = useSyncStatusStore((state) => state.isOnline)
-  const isAuthenticated = useAuthStore((state) => state.isAuthenticated)
-  const hasFirebase = !!import.meta.env.VITE_FIREBASE_PROJECT_ID
+  const status = useSyncStatusStore((state) => state.status)
 
-  // Determine overall status
+  // Determine overall status based on sync status enum
   const getStatus = (): { icon: React.ReactNode; color: string; label: string } => {
-    if (!hasFirebase || !isAuthenticated) {
-      return {
-        icon: <CloudOff className="h-4 w-4" />,
-        color: 'text-gray-400',
-        label: 'Sync disabled (not authenticated)',
-      }
-    }
-
-    if (!isOnline) {
-      return {
-        icon: <WifiOff className="h-4 w-4" />,
-        color: 'text-red-500',
-        label: 'Offline - Changes will sync when online',
-      }
-    }
-
-    if (syncStatus === 'error') {
-      return {
-        icon: <AlertCircle className="h-4 w-4" />,
-        color: 'text-red-500',
-        label: 'Sync error - Check connection',
-      }
-    }
-
-    if (syncStatus === 'syncing') {
-      return {
-        icon: <Loader2 className="h-4 w-4 animate-spin" />,
-        color: 'text-yellow-500',
-        label: 'Syncing...',
-      }
-    }
-
-    return {
-      icon: <Wifi className="h-4 w-4" />,
-      color: 'text-green-500',
-      label: 'Online',
+    switch (status) {
+      case SyncStatus.OFFLINE:
+        return {
+          icon: <WifiOff className="h-4 w-4" />,
+          color: 'text-red-500',
+          label: 'Offline - Changes will sync when online',
+        }
+      case SyncStatus.ERROR:
+        return {
+          icon: <AlertCircle className="h-4 w-4" />,
+          color: 'text-red-500',
+          label: 'Sync error - Check connection',
+        }
+      case SyncStatus.SYNCING:
+        return {
+          icon: <Loader2 className="h-4 w-4 animate-spin" />,
+          color: 'text-yellow-500',
+          label: 'Syncing...',
+        }
+      case SyncStatus.ONLINE:
+        return {
+          icon: <Wifi className="h-4 w-4" />,
+          color: 'text-green-500',
+          label: 'Online',
+        }
+      case SyncStatus.DISABLED:
+      default:
+        return {
+          icon: <CloudOff className="h-4 w-4" />,
+          color: 'text-gray-400',
+          label: 'Sync disabled',
+        }
     }
   }
 

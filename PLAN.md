@@ -2,7 +2,7 @@
 
 ## 📊 Progress Summary
 
-**Completed Phases: 9/11**
+**Completed Phases: 9.5/11**
 - ✅ Phase 1: Foundation
 - ✅ Phase 2: RxDB Setup & Data Models (Boards & Columns schemas)
 - ✅ Phase 3: Zustand Store Integration
@@ -12,8 +12,9 @@
 - ✅ Phase 7: Firebase Integration (Firestore Replication ✅ Complete, Offline Support ✅ Verified, Auth ✅ Complete)
 - ✅ Phase 8: Cards (Display + CRUD + Firestore Sync ✅ Complete)
 - ✅ Phase 9: Drag & Drop (Column Reordering ✅ Complete, Card Drag & Drop ✅ Complete, UX Improvements ✅ Complete)
+- ✅ Phase 11.1: Offline Indicator (Status Indicator ✅ Complete with enum-based status, comprehensive tests)
 
-**Remaining Phases: 2/11**
+**Remaining Phases: 1.5/11**
 - ⏳ Phase 10: Multi-User & Sharing (Sharing UI + Logic + Security Rules)
 - ⏳ Phase 11: Polish & Bonus Features (Offline Indicator ✅ Complete, Animations + Accessibility + PWA + Deployment)
 
@@ -23,19 +24,21 @@
 - ✅ Cards CRUD (Create, Read, Update, Delete ✅ Complete)
 - ✅ Firebase Sync (Firestore Replication ✅ Complete)
 - ✅ Drag & Drop (Column Reordering ✅ Complete, Card Drag & Drop ✅ Complete - Within Column + Cross-Column, UX Improvements ✅ Complete)
+- ✅ Status Indicator (Sync status monitoring with enum-based status, comprehensive tests ✅ Complete)
 - ⏳ Multi-User & Sharing (Not started)
 
-**Estimated Progress: ~85%**
+**Estimated Progress: ~88%**
 - Foundation & Infrastructure: ✅ Complete
 - Core Features (Boards/Columns/Cards): ✅ Complete
 - Firebase Sync: ✅ Complete (Firestore Replication + Auth)
 - Drag & Drop: ✅ Complete (Column Reordering + Card Drag & Drop Within Column + Cross-Column + UX Improvements)
+- Status Monitoring: ✅ Complete (Enum-based sync status with comprehensive test coverage)
 - Architecture Improvements: ✅ Parallel sync subscriptions with `ownerId` filtering (Boards, Columns & Cards)
-- Remaining Features: ⏳ Multi-User & Sharing, Polish & Bonus Features
+- Remaining Features: ⏳ Multi-User & Sharing, Additional Polish & Bonus Features
 
 **Next Phase: Phase 10 - Multi-User & Sharing**
 
-**Test Coverage**: 192 tests passing (unit + integration, including drag & drop tests)
+**Test Coverage**: 214 tests passing (unit + integration, including drag & drop tests and sync status tests)
 
 ---
 
@@ -321,7 +324,10 @@ Using RxDB is acceptable, as long as the solution clearly demonstrates:
 - [x] Monitor RxDB replication states (boards, columns, cards)
 - [x] Display status in header with color-coded icons
 - [x] Show appropriate status based on authentication and Firebase config
-- [x] **Test**: Verify status indicator updates correctly
+- [x] **Refactored**: Merged `isOnline` into unified `SyncStatus` enum (DISABLED, OFFLINE, SYNCING, ERROR, ONLINE)
+- [x] **Refactored**: Removed Firebase dependency from StatusIndicator component (decoupled from Firebase/auth concerns)
+- [x] **Refactored**: Simplified sync status aggregation logic (direct status updates from replication observables)
+- [x] **Test**: Comprehensive test coverage (22 tests: 11 for syncStatus store, 11 for StatusIndicator component)
 
 #### Step 11.2: Animations (motion/react)
 

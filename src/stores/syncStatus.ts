@@ -2,26 +2,28 @@ import { create } from 'zustand'
 import { getReplicationStates } from '@/lib/db/replication'
 import { useAuthStore } from './auth'
 
-type SyncStatus = 'online' | 'offline' | 'syncing' | 'error' | 'disabled'
+export const SyncStatus = {
+  DISABLED: 'DISABLED',// No Firebase or not authenticated
+  OFFLINE: 'OFFLINE',// Browser is offline
+  SYNCING: 'SYNCING',// Replication is active
+  ERROR: 'ERROR',// Replication has error
+  ONLINE: 'ONLINE',// Everything is working
+} as const
+
+export type SyncStatus = typeof SyncStatus[keyof typeof SyncStatus]
 
 interface SyncStatusState {
-  syncStatus: SyncStatus
-  isOnline: boolean
-  setSyncStatus: (status: SyncStatus) => void
-  setIsOnline: (online: boolean) => void
+  status: SyncStatus
+  setStatus: (status: SyncStatus) => void
 }
 
 export const useSyncStatusStore = create<SyncStatusState>((set) => ({
-  syncStatus: 'disabled',
-  isOnline: typeof navigator !== 'undefined' ? navigator.onLine : true,
-  setSyncStatus: (status) => set({ syncStatus: status }),
-  setIsOnline: (online) => set({ isOnline: online }),
+  status: SyncStatus.DISABLED,
+  setStatus: (status) => set({ status }),
 }))
 
 let replicationSubscriptions: Array<() => void> = []
 let isMonitoring = false
-const stateRef = { hasActive: false, hasError: false }
-let updateSyncStatusFn: (() => void) | null = null
 
 /**
  * Initialize sync status monitoring.
@@ -47,72 +49,43 @@ export function initSyncStatusMonitoring(): () => void {
 
     const isAuthenticated = useAuthStore.getState().isAuthenticated
     const hasFirebase = !!import.meta.env.VITE_FIREBASE_PROJECT_ID
-    const isOnline = useSyncStatusStore.getState().isOnline
+    const isOnline = typeof navigator !== 'undefined' ? navigator.onLine : true
 
     console.log('📊 Sync status check:', { isAuthenticated, hasFirebase, isOnline })
 
     if (!hasFirebase || !isAuthenticated) {
-      console.log('❌ Sync disabled: no Firebase or not authenticated')
-      useSyncStatusStore.getState().setSyncStatus('disabled')
+      useSyncStatusStore.getState().setStatus(SyncStatus.DISABLED)
       return
     }
 
     if (!isOnline) {
-      console.log('❌ Sync offline: browser is offline')
-      useSyncStatusStore.getState().setSyncStatus('offline')
+      useSyncStatusStore.getState().setStatus(SyncStatus.OFFLINE)
       return
     }
 
     const replicationStates = getReplicationStates()
     const states = [replicationStates.boards, replicationStates.columns, replicationStates.cards].filter(Boolean)
 
-    console.log('📦 Replication states found:', {
-      boards: !!replicationStates.boards,
-      columns: !!replicationStates.columns,
-      cards: !!replicationStates.cards,
-      totalStates: states.length,
-    })
-
     if (states.length === 0) {
-      console.log('❌ Sync disabled: no replication states available')
-      useSyncStatusStore.getState().setSyncStatus('disabled')
+      useSyncStatusStore.getState().setStatus(SyncStatus.DISABLED)
       return
     }
 
-    // Reset state
-    stateRef.hasActive = false
-    stateRef.hasError = false
-    console.log('🔄 Reset stateRef:', { hasActive: stateRef.hasActive, hasError: stateRef.hasError })
-
-    const updateStatus = () => {
-      console.log('🔄 updateStatus called, stateRef:', { hasActive: stateRef.hasActive, hasError: stateRef.hasError })
-      
-      if (stateRef.hasError) {
-        console.log('❌ Setting status to error')
-        useSyncStatusStore.getState().setSyncStatus('error')
-      } else if (stateRef.hasActive) {
-        console.log('🔄 Setting status to syncing')
-        useSyncStatusStore.getState().setSyncStatus('syncing')
-      } else {
-        console.log('📴 Setting status to offline')
-        useSyncStatusStore.getState().setSyncStatus('offline')
-      }
-    }
-
-    states.forEach((state, index) => {
-      const stateName = ['boards', 'columns', 'cards'][index] || `state-${index}`
-      console.log(`📡 Subscribing to ${stateName} replication state`)
-
+    states.forEach((state) => {
       const activeSub = state!.active$.subscribe((active) => {
-        console.log(`📡 ${stateName} active$ emitted:`, active)
-        stateRef.hasActive = active
-        updateStatus()
+        if(active) {
+          useSyncStatusStore.getState().setStatus(SyncStatus.SYNCING)
+        } else {
+          useSyncStatusStore.getState().setStatus(SyncStatus.ONLINE)
+        }
       })
 
       const errorSub = state!.error$.subscribe((error) => {
-        console.log(`📡 ${stateName} error$ emitted:`, error)
-        stateRef.hasError = !!error
-        updateStatus()
+        if(error) {
+          useSyncStatusStore.getState().setStatus(SyncStatus.ERROR)
+        } else {
+          useSyncStatusStore.getState().setStatus(SyncStatus.ONLINE)
+        }
       })
 
       replicationSubscriptions.push(() => {
@@ -123,18 +96,15 @@ export function initSyncStatusMonitoring(): () => void {
 
     // Initial status update
     console.log('🔄 Initial status update')
-    updateStatus()
   }
 
   // Monitor browser online/offline
   const handleOnline = () => {
-    useSyncStatusStore.getState().setIsOnline(true)
     updateSyncStatus()
   }
   
   const handleOffline = () => {
-    useSyncStatusStore.getState().setIsOnline(false)
-    useSyncStatusStore.getState().setSyncStatus('offline')
+    useSyncStatusStore.getState().setStatus(SyncStatus.OFFLINE)
   }
 
   window.addEventListener('online', handleOnline)
@@ -148,33 +118,14 @@ export function initSyncStatusMonitoring(): () => void {
   // Initial update
   updateSyncStatus()
   
-  // Store the function so it can be called externally
-  updateSyncStatusFn = updateSyncStatus
-
   const cleanup = () => {
     isMonitoring = false
     window.removeEventListener('online', handleOnline)
     window.removeEventListener('offline', handleOffline)
     replicationSubscriptions.forEach((unsub) => unsub())
     replicationSubscriptions = []
-    stateRef.hasActive = false
-    stateRef.hasError = false
     authUnsubscribe()
   }
 
   return cleanup
 }
-
-/**
- * Trigger a sync status update manually.
- * Useful when replication is set up after monitoring has started.
- */
-export function triggerSyncStatusUpdate(): void {
-  if (updateSyncStatusFn) {
-    console.log('🔄 Manually triggering sync status update')
-    updateSyncStatusFn()
-  } else {
-    console.warn('⚠️ Sync status monitoring not initialized yet')
-  }
-}
-
