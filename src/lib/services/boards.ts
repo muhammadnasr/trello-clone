@@ -1,6 +1,7 @@
 import { getDatabase } from '@/lib/db/init'
 import type { Board } from '@/lib/types/board'
 import { uuidv7 } from 'uuidv7'
+import { getColumnsByBoardId } from './columns'
 
 export async function createBoard(title: string, ownerId: string): Promise<Board> {
   const db = getDatabase()
@@ -39,6 +40,27 @@ export async function deleteBoard(id: string): Promise<void> {
     throw new Error(`Board with id ${id} not found`)
   }
 
+  // Cascade delete: Delete all columns and their cards using bulk queries
+  // Get all columns for this board
+  const columns = await getColumnsByBoardId(id)
+  
+  // Delete all cards in all columns of this board using find().remove()
+  for (const column of columns) {
+    await db.cards.find({
+      selector: {
+        columnId: column.id,
+      },
+    }).remove()
+  }
+  
+  // Delete all columns for this board using find().remove()
+  await db.columns.find({
+    selector: {
+      boardId: id,
+    },
+  }).remove()
+
+  // Finally, delete the board
   await board.remove()
 }
 

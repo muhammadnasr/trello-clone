@@ -41,6 +41,14 @@ export async function deleteColumn(id: string): Promise<void> {
     throw new Error(`Column with id ${id} not found`)
   }
 
+  // Cascade delete: Delete all cards in this column using find().remove()
+  await db.cards.find({
+    selector: {
+      columnId: id,
+    },
+  }).remove()
+
+  // Finally, delete the column
   await column.remove()
 }
 

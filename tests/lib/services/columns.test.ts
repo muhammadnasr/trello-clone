@@ -109,5 +109,47 @@ describe('Column Service Functions', () => {
     expect(columns).toHaveLength(1)
     expect(columns[0].title).toBe('Column 1')
   })
+
+  it('proves cascading delete: when column is deleted, all cards are deleted', async () => {
+    const { createCard, getCardsByColumnId } = await import('../../../src/lib/services/cards')
+    
+    // Create a column with cards
+    const column = await createColumn(boardId, 'Column with Cards', 0, 'user1')
+    
+    const card1 = await createCard(column.id, 'Card 1', 0, 'user1')
+    const card2 = await createCard(column.id, 'Card 2', 1, 'user1')
+    const card3 = await createCard(column.id, 'Card 3', 2, 'user1')
+    
+    // Verify everything exists before deletion
+    const db = getDatabase()
+    const columnBeforeDelete = await db.columns.findOne(column.id).exec()
+    const card1BeforeDelete = await db.cards.findOne(card1.id).exec()
+    const card2BeforeDelete = await db.cards.findOne(card2.id).exec()
+    const card3BeforeDelete = await db.cards.findOne(card3.id).exec()
+    
+    expect(columnBeforeDelete).not.toBeNull()
+    expect(card1BeforeDelete).not.toBeNull()
+    expect(card2BeforeDelete).not.toBeNull()
+    expect(card3BeforeDelete).not.toBeNull()
+    
+    // Delete the column
+    await deleteColumn(column.id)
+    
+    // Verify column is deleted
+    const deletedColumn = await db.columns.findOne(column.id).exec()
+    expect(deletedColumn).toBeNull()
+    
+    // PROOF: All cards are deleted (cascading delete)
+    const deletedCard1 = await db.cards.findOne(card1.id).exec()
+    const deletedCard2 = await db.cards.findOne(card2.id).exec()
+    const deletedCard3 = await db.cards.findOne(card3.id).exec()
+    expect(deletedCard1).toBeNull() // Card deleted
+    expect(deletedCard2).toBeNull() // Card deleted
+    expect(deletedCard3).toBeNull() // Card deleted
+    
+    // Additional verification: query by columnId returns empty array
+    const cardsAfterDelete = await getCardsByColumnId(column.id)
+    expect(cardsAfterDelete).toHaveLength(0) // No cards remain
+  })
 })
 
