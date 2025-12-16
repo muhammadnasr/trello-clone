@@ -6,6 +6,7 @@ import { cancelReplication } from './lib/db/replication'
 import { initFirebase } from './lib/firebase/config'
 import { initAuthStateListener } from './lib/services/auth'
 import { useAuthStore } from './stores/auth'
+import { initSyncStatusMonitoring } from './stores/syncStatus'
 import './index.css'
 import { routeTree } from './routeTree.gen'
 
@@ -29,6 +30,9 @@ async function bootstrap() {
       // Set up auth state listener
       initAuthStateListener()
       
+      // Step 3: Initialize sync status monitoring (after Firebase is initialized)
+      initSyncStatusMonitoring()
+      
       // Subscribe to auth changes to attach/remove backend subscriptions
       let hasAttachedSubscriptions = false
       useAuthStore.subscribe((state) => {
@@ -47,6 +51,9 @@ async function bootstrap() {
           cancelReplication()
         }
       })
+    } else {
+      // Initialize sync status monitoring even without Firebase (for offline mode)
+      initSyncStatusMonitoring()
     }
     
     createRoot(document.getElementById('root')!).render(

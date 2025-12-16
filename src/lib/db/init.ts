@@ -1,6 +1,7 @@
 import { createDatabase } from './database'
 import { syncStoresToDatabase } from './sync'
 import { setupFirestoreReplication, cancelReplication, getReplicationStates } from './replication'
+import { triggerSyncStatusUpdate } from '../../stores/syncStatus'
 import type { TrelloDatabase } from './database'
 
 let databaseInstance: TrelloDatabase | null = null
@@ -54,6 +55,10 @@ export async function attachBackendSubscriptions(): Promise<void> {
       boards: !!replication.boardsReplication,
       columns: !!replication.columnsReplication,
     })
+    
+    // Trigger sync status update after replication is set up
+    // Use setTimeout to ensure replication states are available
+    triggerSyncStatusUpdate()
   } catch (error) {
     console.error('❌ Failed to attach Firestore replication:', error)
     throw error

@@ -3,7 +3,7 @@ import { SignOutButton } from '@/components/auth/SignOutButton'
 import { LoginSignupButtons } from '@/components/auth/LoginSignupButtons'
 import { useAuthStore } from '@/stores/auth'
 import { Breadcrumbs } from '@/components/navigation/Breadcrumbs'
-import { OfflineIndicator } from '@/components/ui/OfflineIndicator'
+import { StatusIndicator } from '@/components/ui/StatusIndicator'
 
 export function RootLayout() {
   const isAuthenticated = useAuthStore((state) => state.isAuthenticated)
@@ -19,7 +19,7 @@ export function RootLayout() {
           <div className="mx-auto flex max-w-7xl items-center justify-between">
             <Breadcrumbs />
             <div className="flex items-center gap-4">
-              <OfflineIndicator />
+              <StatusIndicator />
               {hasFirebase && !isLoading && (
                 isAuthenticated ? <SignOutButton /> : <LoginSignupButtons />
               )}
