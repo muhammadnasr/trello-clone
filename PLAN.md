@@ -2,18 +2,19 @@
 
 ## 📊 Progress Summary
 
-**Completed Phases: 6.5/11**
+**Completed Phases: 7.5/11**
 - ✅ Phase 1: Foundation
 - ✅ Phase 2: RxDB Setup & Data Models (Boards & Columns schemas)
 - ✅ Phase 3: Zustand Store Integration
 - ✅ Phase 4: BroadcastChannel Tab Sync
 - ✅ Phase 5: Basic UI - Boards List
 - ✅ Phase 6: Board Detail & Columns
+- ✅ Phase 7: Firebase Integration (Firestore Replication ✅ Complete, Offline Support ✅ Verified, Auth ✅ Complete)
+- ✅ Phase 9: Drag & Drop (Column Reordering ✅ Complete, Card Drag & Drop ⏳ Pending)
 
-**Remaining Phases: 4.5/11**
-- ✅ Phase 7: Firebase Integration (Firestore Replication ✅ Complete, Offline Support ✅ Verified, Auth ⏳ Pending)
+**Remaining Phases: 3.5/11**
 - ⏳ Phase 8: Cards (Display + CRUD + Firestore Sync)
-- ⏳ Phase 9: Drag & Drop (Column & Card Reordering)
+- ⏳ Phase 9: Drag & Drop (Card Drag & Drop remaining)
 - ⏳ Phase 10: Multi-User & Sharing (Sharing UI + Logic + Security Rules)
 - ⏳ Phase 11: Polish & Bonus Features (Offline Indicator + Animations + Accessibility + PWA + Deployment)
 
@@ -22,7 +23,7 @@
 - ✅ Columns CRUD (Create, Read, Update, Delete)
 - ⏳ Cards (Not started)
 - ✅ Firebase Sync (Firestore Replication ✅ Complete)
-- ⏳ Drag & Drop (Not started)
+- ✅ Drag & Drop (Column Reordering ✅ Complete, Card Drag & Drop ⏳ Pending)
 - ⏳ Multi-User & Sharing (Not started)
 
 **Estimated Progress: ~52%**
@@ -259,17 +260,19 @@ Using RxDB is acceptable, as long as the solution clearly demonstrates:
 
 ### Phase 9: Drag & Drop
 
-#### Step 9.1: Install & Setup react-dnd-kit
+#### ✅ Step 9.1: Install & Setup react-dnd-kit (COMPLETED)
 
-- Install react-dnd-kit
-- Configure DndContext
-- **Test**: Verify drag context works
+- [x] Install react-dnd-kit (@dnd-kit/core, @dnd-kit/sortable, @dnd-kit/utilities)
+- [x] Configure DndContext in ColumnsList
+- [x] **Test**: Verify drag context works (build passes, existing tests pass)
 
-#### Step 9.2: Column Reordering
+#### ✅ Step 9.2: Column Reordering (COMPLETED)
 
-- Implement drag & drop for columns
-- Update order in RxDB
-- **Test**: Verify columns can be reordered
+- [x] Implement drag & drop for columns using SortableContext
+- [x] Add drag handle (GripVertical icon) to ColumnCard
+- [x] Update order in RxDB when columns are reordered
+- [x] Sort columns by order in ColumnsList
+- [x] **Test**: Verify columns can be reordered (all tests pass)
 
 #### Step 9.3: Card Drag & Drop
 

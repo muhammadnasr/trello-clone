@@ -372,3 +372,104 @@ describe('ColumnsList Integration - Delete Column', () => {
   })
 })
 
+describe('ColumnsList Integration - Drag and Drop', () => {
+  let boardId: string
+
+  beforeEach(async () => {
+    await cleanupDatabase()
+    const testDb = await createTestDatabase()
+    await initDatabase(testDb)
+    useBoardsStore.setState({
+      boards: [],
+      isLoading: false,
+      error: null,
+    })
+    useColumnsStore.setState({
+      columns: [],
+      isLoading: false,
+      error: null,
+    })
+    mockAuthState = {
+      user: testUser,
+      isLoading: false,
+      isAuthenticated: true,
+    }
+    authSubscribers.forEach((sub) => sub(mockAuthState))
+    
+    const { createBoard } = await import('../../../src/lib/services/boards')
+    const { createColumn } = await import('../../../src/lib/services/columns')
+    const board = await createBoard('Test Board', 'user1')
+    boardId = board.id
+    
+    // Create 4 columns with orders 0, 1, 2, 3
+    await createColumn(boardId, 'Column 0', 0, 'user1')
+    await createColumn(boardId, 'Column 1', 1, 'user1')
+    await createColumn(boardId, 'Column 2', 2, 'user1')
+    await createColumn(boardId, 'Column 3', 3, 'user1')
+    
+    await new Promise((resolve) => setTimeout(resolve, 300))
+  })
+
+  afterEach(async () => {
+    await cleanupDatabase()
+  })
+
+  it('renders drag handles for all columns', async () => {
+    router.history.push(`/boards/${boardId}`)
+    render(<RouterProvider router={router} />)
+
+    await waitFor(() => {
+      expect(screen.getByText('Column 0')).toBeInTheDocument()
+    })
+
+    // Check that drag handles are rendered (aria-label="Drag handle")
+    const dragHandles = screen.getAllByLabelText('Drag handle')
+    expect(dragHandles.length).toBe(4)
+  })
+
+  it('reorders columns when drag ends', async () => {
+    router.history.push(`/boards/${boardId}`)
+    render(<RouterProvider router={router} />)
+
+    await waitFor(() => {
+      expect(screen.getByText('Column 0')).toBeInTheDocument()
+      expect(screen.getByText('Column 1')).toBeInTheDocument()
+    })
+
+    const columns = useColumnsStore.getState().columns
+    const boardColumns = columns
+      .filter((col) => col.boardId === boardId)
+      .sort((a, b) => a.order - b.order)
+    
+    const column0Id = boardColumns[0].id // Column 0
+    const column2Id = boardColumns[2].id // Column 2
+
+    // Now we can test the actual handleColumnReorder function!
+    const { handleColumnReorder } = await import('../../../src/lib/utils/column-reorder')
+    
+    // Simulate drag end event: Column 0 dragged to after Column 2
+    const mockDragEndEvent = {
+      active: { id: column0Id },
+      over: { id: column2Id },
+    } as DragEndEvent
+
+    // Call the actual reorder function
+    await handleColumnReorder(mockDragEndEvent, columns, boardId)
+
+    // Verify the UI updates to show the new order
+    await waitFor(() => {
+      const updatedColumns = useColumnsStore.getState().columns
+        .filter((col) => col.boardId === boardId)
+        .sort((a, b) => a.order - b.order)
+      
+      // After dragging Column 0 to after Column 2:
+      // Original: [Column 0, Column 1, Column 2, Column 3]
+      // Result: [Column 1, Column 2, Column 0, Column 3]
+      expect(updatedColumns[0].title).toBe('Column 1')
+      expect(updatedColumns[1].title).toBe('Column 2')
+      expect(updatedColumns[2].title).toBe('Column 0')
+      expect(updatedColumns[3].title).toBe('Column 3')
+    }, { timeout: 2000 })
+  })
+})
+
