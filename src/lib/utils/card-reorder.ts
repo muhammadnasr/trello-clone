@@ -4,6 +4,99 @@ import type { Card } from '@/lib/types/card'
 import type { Column } from '@/lib/types/column'
 import * as cardsService from '@/lib/services/cards'
 
+function getColumnCardsSorted(cards: Card[], columnId: string): Card[] {
+  return cards
+    .filter((card) => card.columnId === columnId)
+    .sort((a, b) => a.order - b.order)
+}
+
+/**
+ * Renumbers cards in a column sequentially (0, 1, 2, ...).
+ * Returns an array of update promises.
+ */
+function renumberCards(
+  cardsToRenumber: Card[],
+): Promise<void>[] {
+
+  const updates: Promise<void>[] = []
+
+  cardsToRenumber.forEach((card, index) => {
+    if (card.order !== index) {
+      updates.push(cardsService.updateCard(card.id, { order: index }))
+    }
+  })
+
+  return updates
+}
+
+/**
+ * Moves a card from source column to target column at a specific position.
+ * If targetIndex is undefined, moves card to the end of target column.
+ */
+async function moveCardToColumn(
+  draggedCard: Card,
+  sourceColumnCards: Card[],
+  targetColumnCards: Card[],
+  targetColumnId: string,
+  targetIndex?: number
+): Promise<void> {
+  const updates: Promise<void>[] = []
+
+  // Remove card from source column and renumber
+  const cardsToRenumber = sourceColumnCards.filter((card) => card.id !== draggedCard.id)
+  updates.push(...renumberCards(cardsToRenumber))
+
+  // Determine final position and prepare target cards array
+  let finalTargetCards: Card[]
+
+  if (targetIndex === undefined) {
+    // Move to end - append dragged card
+    finalTargetCards = [...targetColumnCards, draggedCard]
+  } else {
+    // Insert at specific position
+    finalTargetCards = [
+      ...targetColumnCards.slice(0, targetIndex),
+      draggedCard,
+      ...targetColumnCards.slice(targetIndex),
+    ]
+  }
+
+  // Update target column cards
+  finalTargetCards.forEach((card, index) => {
+    if (card.id === draggedCard.id) {
+      // Move the dragged card to target column
+      updates.push(
+        cardsService.updateCard(card.id, { columnId: targetColumnId, order: index })
+      )
+    } else if (card.order !== index) {
+      // Renumber other cards if needed
+      updates.push(cardsService.updateCard(card.id, { order: index }))
+    }
+  })
+
+  await Promise.all(updates)
+}
+
+/**
+ * Reorders cards within the same column.
+ */
+async function reorderCardsInSameColumn(
+  columnCards: Card[],
+  activeId: string,
+  overId: string
+): Promise<void> {
+  const oldIndex = columnCards.findIndex((card) => card.id === activeId)
+  const newIndex = columnCards.findIndex((card) => card.id === overId)
+
+  if (oldIndex === -1 || newIndex === -1) return
+
+  const reorderedCards = arrayMove(columnCards, oldIndex, newIndex)
+
+  // Renumber all cards in the column
+  const updates = renumberCards(reorderedCards)
+  await Promise.all(updates)
+}
+
 /**
  * Handles card reordering within and between columns after a drag and drop operation.
  * Supports:
@@ -25,44 +118,24 @@ export async function handleCardReorder(
   if (!draggedCard) return
 
   const sourceColumnId = draggedCard.columnId
-  const sourceColumnCards = cards
-    .filter((card) => card.columnId === sourceColumnId)
-    .sort((a, b) => a.order - b.order)
+  const sourceColumnCards = getColumnCardsSorted(cards, sourceColumnId)
 
-  // Check if dropping on a column (cross-column move)
+  // Check if dropping on a column (empty column area)
   const targetColumn = columns.find((col) => col.id === over.id)
   if (targetColumn) {
-    // Dropping on a column - move card to the end of that column
-    const targetColumnCards = cards
-      .filter((card) => card.columnId === targetColumn.id)
-      .sort((a, b) => a.order - b.order)
-
-    const newOrder = targetColumnCards.length
-
-    // Update orders in source column (remove the card and renumber)
-    const updates: Promise<void>[] = []
-    const remainingSourceCards = sourceColumnCards.filter((card) => card.id !== draggedCard.id)
-    remainingSourceCards.forEach((card, index) => {
-      if (card.order !== index) {
-        updates.push(cardsService.updateCard(card.id, { order: index }))
-      }
-    })
-
-    // Update orders in target column (ensure sequential ordering)
-    targetColumnCards.forEach((card, index) => {
-      if (card.order !== index) {
-        updates.push(cardsService.updateCard(card.id, { order: index }))
-      }
-    })
-
-    // Move the card to the target column
-    updates.push(cardsService.updateCard(draggedCard.id, { columnId: targetColumn.id, order: newOrder }))
-
-    await Promise.all(updates)
+    // Dropping on a column - move card to the end
+    const targetColumnCards = getColumnCardsSorted(cards, targetColumn.id)
+    await moveCardToColumn(
+      draggedCard,
+      sourceColumnCards,
+      targetColumnCards,
+      targetColumn.id
+      // targetIndex undefined = move to end
+    )
     return
   }
 
-  // Dropping on another card - check if same column or different column
+  // Dropping on another card
   const targetCard = cards.find((card) => card.id === over.id)
   if (!targetCard) return
 
@@ -70,56 +143,20 @@ export async function handleCardReorder(
 
   if (sourceColumnId === targetColumnId) {
     // Same column - reorder within column
-    const oldIndex = sourceColumnCards.findIndex((card) => card.id === active.id)
-    const newIndex = sourceColumnCards.findIndex((card) => card.id === over.id)
-
-    if (oldIndex === -1 || newIndex === -1) return
-
-    const reorderedCards = arrayMove(sourceColumnCards, oldIndex, newIndex)
-
-    // Update order for cards that changed position
-    await Promise.all(
-      reorderedCards.map(async (card, index) => {
-        if (card.order !== index) {
-          await cardsService.updateCard(card.id, { order: index })
-        }
-      })
-    )
+    await reorderCardsInSameColumn(sourceColumnCards, active.id as string, over.id as string)
   } else {
     // Different column - move card to target column at target card's position
-    const targetColumnCards = cards
-      .filter((card) => card.columnId === targetColumnId)
-      .sort((a, b) => a.order - b.order)
-
+    const targetColumnCards = getColumnCardsSorted(cards, targetColumnId)
     const targetIndex = targetColumnCards.findIndex((card) => card.id === targetCard.id)
     if (targetIndex === -1) return
 
-    // Insert dragged card at target position
-    const newTargetCards = [
-      ...targetColumnCards.slice(0, targetIndex),
+    await moveCardToColumn(
       draggedCard,
-      ...targetColumnCards.slice(targetIndex),
-    ]
-
-    // Update orders in source column (remove the card and renumber)
-    const updates: Promise<void>[] = []
-    const remainingSourceCards = sourceColumnCards.filter((card) => card.id !== draggedCard.id)
-    remainingSourceCards.forEach((card, index) => {
-      if (card.order !== index) {
-        updates.push(cardsService.updateCard(card.id, { order: index }))
-      }
-    })
-
-    // Update orders in target column (insert the card and renumber)
-    newTargetCards.forEach((card, index) => {
-      if (card.id === draggedCard.id) {
-        updates.push(cardsService.updateCard(card.id, { columnId: targetColumnId, order: index }))
-      } else if (card.order !== index) {
-        updates.push(cardsService.updateCard(card.id, { order: index }))
-      }
-    })
-
-    await Promise.all(updates)
+      sourceColumnCards,
+      targetColumnCards,
+      targetColumnId,
+      targetIndex
+    )
   }
 }
 
