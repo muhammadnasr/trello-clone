@@ -15,7 +15,7 @@
 
 **Remaining Phases: 2/11**
 - ⏳ Phase 10: Multi-User & Sharing (Sharing UI + Logic + Security Rules)
-- ⏳ Phase 11: Polish & Bonus Features (Offline Indicator + Animations + Accessibility + PWA + Deployment)
+- ⏳ Phase 11: Polish & Bonus Features (Offline Indicator ✅ Complete, Animations + Accessibility + PWA + Deployment)
 
 **Core Features Status:**
 - ✅ Boards CRUD (Create, Read, Update, Delete)
@@ -25,7 +25,7 @@
 - ✅ Drag & Drop (Column Reordering ✅ Complete, Card Drag & Drop ✅ Complete - Within Column + Cross-Column, UX Improvements ✅ Complete)
 - ⏳ Multi-User & Sharing (Not started)
 
-**Estimated Progress: ~84%**
+**Estimated Progress: ~85%**
 - Foundation & Infrastructure: ✅ Complete
 - Core Features (Boards/Columns/Cards): ✅ Complete
 - Firebase Sync: ✅ Complete (Firestore Replication + Auth)
@@ -313,11 +313,15 @@ Using RxDB is acceptable, as long as the solution clearly demonstrates:
 
 ### Phase 11: Polish & Bonus Features
 
-#### Step 11.1: Offline Indicator
+#### ✅ Step 11.1: Offline Indicator (COMPLETED)
 
-- Add online/offline status indicator
-- Show sync status (RxDB provides sync state)
-- **Test**: Verify status indicator updates correctly
+- [x] Add online/offline status indicator
+- [x] Show sync status (RxDB provides sync state)
+- [x] Monitor browser online/offline events
+- [x] Monitor RxDB replication states (boards, columns, cards)
+- [x] Display status in header with color-coded icons
+- [x] Show appropriate status based on authentication and Firebase config
+- [x] **Test**: Verify status indicator updates correctly
 
 #### Step 11.2: Animations (motion/react)
 
