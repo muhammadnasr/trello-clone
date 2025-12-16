@@ -26,16 +26,17 @@
 - ✅ Drag & Drop (Column Reordering ✅ Complete, Card Drag & Drop ⏳ Pending)
 - ⏳ Multi-User & Sharing (Not started)
 
-**Estimated Progress: ~52%**
+**Estimated Progress: ~68%**
 - Foundation & Infrastructure: ✅ Complete
 - Core Features (Boards/Columns): ✅ Complete
-- Firebase Sync: ✅ Complete (Firestore Replication)
+- Firebase Sync: ✅ Complete (Firestore Replication + Auth)
+- Drag & Drop: ✅ Column Reordering Complete (Card Drag & Drop ⏳ Pending)
 - Architecture Improvements: ✅ Parallel sync subscriptions with `ownerId` filtering (Boards & Columns)
-- Remaining Features: ⏳ Not started (Cards, Auth, Drag & Drop, Multi-User, Polish)
+- Remaining Features: ⏳ Cards, Card Drag & Drop, Multi-User, Polish
 
-**Next Phase: Phase 7 - Firebase Auth (remaining) / Phase 8 - Cards**
+**Next Phase: Phase 8 - Cards (Display + CRUD + Firestore Sync)**
 
-**Test Coverage**: 135 tests passing (unit + integration)
+**Test Coverage**: 137+ tests passing (unit + integration, including drag & drop tests)
 
 ---
 
