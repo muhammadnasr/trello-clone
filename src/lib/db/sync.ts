@@ -1,6 +1,7 @@
 import type { TrelloDatabase } from './database'
 import { useBoardsStore } from '@/stores/boards'
 import { useColumnsStore } from '@/stores/columns'
+import { useCardsStore } from '@/stores/cards'
 import { useAuthStore } from '@/stores/auth'
 
 // Helper to get current ownerId
@@ -14,6 +15,7 @@ const getOwnerId = (): string => {
 export function syncStoresToDatabase(database: TrelloDatabase): () => void {
   let boardsUnsubscribe: (() => void) | null = null
   let columnsUnsubscribe: (() => void) | null = null
+  let cardsUnsubscribe: (() => void) | null = null
   let authUnsubscribe: (() => void) | null = null
 
   const setupSubscriptions = () => {
@@ -25,6 +27,10 @@ export function syncStoresToDatabase(database: TrelloDatabase): () => void {
     if (columnsUnsubscribe) {
       columnsUnsubscribe()
       columnsUnsubscribe = null
+    }
+    if (cardsUnsubscribe) {
+      cardsUnsubscribe()
+      cardsUnsubscribe = null
     }
 
     const ownerId = getOwnerId()
@@ -57,6 +63,23 @@ export function syncStoresToDatabase(database: TrelloDatabase): () => void {
       })
 
     columnsUnsubscribe = () => columnsSub.unsubscribe()
+
+    // Cards subscription - independent, filtered by ownerId
+    // Check if cards collection exists (for backward compatibility with old databases)
+    if (database.cards) {
+      const cardsSub = database.cards
+        .find({
+          selector: {
+            ownerId,
+          },
+        })
+        .$.subscribe((rxDocuments) => {
+          const cards = rxDocuments.map((doc) => doc.toJSON())
+          useCardsStore.getState().setCards(cards)
+        })
+
+      cardsUnsubscribe = () => cardsSub.unsubscribe()
+    }
   }
 
   // Set up initial subscriptions
@@ -73,6 +96,9 @@ export function syncStoresToDatabase(database: TrelloDatabase): () => void {
     }
     if (columnsUnsubscribe) {
       columnsUnsubscribe()
+    }
+    if (cardsUnsubscribe) {
+      cardsUnsubscribe()
     }
     if (authUnsubscribe) {
       authUnsubscribe()

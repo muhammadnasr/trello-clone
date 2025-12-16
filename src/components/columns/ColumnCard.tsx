@@ -4,7 +4,10 @@ import { CSS } from '@dnd-kit/utilities'
 import type { Column } from '@/lib/types/column'
 import { Button } from '@/components/ui/button'
 import { useColumnsStore } from '@/stores/columns'
+import { useCardsStore } from '@/stores/cards'
 import { RenameColumnDialog } from './RenameColumnDialog'
+import { CardsList } from '@/components/cards/CardsList'
+import { CreateCard } from '@/components/cards/CreateCard'
 import { Pencil, Trash2, GripVertical } from 'lucide-react'
 
 interface ColumnCardProps {
@@ -14,6 +17,11 @@ interface ColumnCardProps {
 export function ColumnCard({ column }: ColumnCardProps) {
   const [isRenameOpen, setIsRenameOpen] = useState(false)
   const deleteColumn = useColumnsStore((state) => state.deleteColumn)
+  const cards = useCardsStore((state) => state.cards)
+  const columnCards = cards.filter((card) => card.columnId === column.id)
+  const nextOrder = columnCards.length > 0 
+    ? Math.max(...columnCards.map((card) => card.order), -1) + 1 
+    : 0
 
   const {
     attributes,
@@ -76,8 +84,9 @@ export function ColumnCard({ column }: ColumnCardProps) {
             </Button>
           </div>
         </div>
-        <div className="text-sm text-gray-500 dark:text-gray-400">
-          Cards will appear here
+        <CardsList columnId={column.id} />
+        <div className="mt-2">
+          <CreateCard columnId={column.id} nextOrder={nextOrder} />
         </div>
       </div>
       <RenameColumnDialog

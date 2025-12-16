@@ -4,15 +4,18 @@ import type { TrelloDatabase } from './database'
 import { getFirestoreDatabase } from '../firebase/config'
 import type { Board } from '../types/board'
 import type { Column } from '../types/column'
+import type { Card } from '../types/card'
 
 let boardsReplication: RxFirestoreReplicationState<Board> | null = null
 let columnsReplication: RxFirestoreReplicationState<Column> | null = null
+let cardsReplication: RxFirestoreReplicationState<Card> | null = null
 
 export function setupFirestoreReplication(
   database: TrelloDatabase
 ): {
   boardsReplication: RxFirestoreReplicationState<Board>
   columnsReplication: RxFirestoreReplicationState<Column>
+  cardsReplication: RxFirestoreReplicationState<Card>
 } {
   const projectId = import.meta.env.VITE_FIREBASE_PROJECT_ID
   const firestoreDatabase = getFirestoreDatabase()
@@ -138,11 +141,67 @@ export function setupFirestoreReplication(
     console.error('❌ Failed to start columns replication:', error)
   })
 
+  // Set up replication for cards collection
+  let cardsFirestoreCollection
+  try {
+    cardsFirestoreCollection = collection(firestoreDatabase, 'cards')
+    console.log('✅ Cards collection reference created')
+  } catch (error) {
+    console.error('❌ Failed to create cards collection reference:', error)
+    throw error
+  }
+  
+  try {
+    cardsReplication = replicateFirestore<Card>({
+      replicationIdentifier: `https://firestore.googleapis.com/${projectId}/cards`,
+      collection: database.cards,
+      firestore: {
+        projectId,
+        database: firestoreDatabase,
+        collection: cardsFirestoreCollection as CollectionReference<Card>,
+      },
+      pull: {},
+      push: {},
+      live: true,
+      serverTimestampField: 'serverTimestamp',
+    })
+    console.log('✅ Cards replication created successfully')
+  } catch (error) {
+    console.error('❌ Failed to create cards replication:', error)
+    console.error('Error details:', {
+      message: error instanceof Error ? error.message : String(error),
+      stack: error instanceof Error ? error.stack : undefined,
+    })
+    throw error
+  }
+
+  // Monitor cards replication status
+  cardsReplication.active$.subscribe((active) => {
+    console.log('📊 Cards replication active:', active)
+  })
+  cardsReplication.received$.subscribe((received) => {
+    console.log('📥 Cards replication received:', received)
+  })
+  cardsReplication.sent$.subscribe((sent) => {
+    console.log('📤 Cards replication sent:', sent)
+  })
+  cardsReplication.error$.subscribe((error) => {
+    if (error) {
+      console.error('❌ Cards replication error:', error)
+    }
+  })
+
+  // Start replication explicitly
+  cardsReplication.start().catch((error) => {
+    console.error('❌ Failed to start cards replication:', error)
+  })
+
   console.log('✅ Firestore replication setup complete')
 
   return {
     boardsReplication: boardsReplication!,
     columnsReplication: columnsReplication!,
+    cardsReplication: cardsReplication!,
   }
 }
 
@@ -155,15 +214,21 @@ export function cancelReplication(): void {
     columnsReplication.cancel()
     columnsReplication = null
   }
+  if (cardsReplication) {
+    cardsReplication.cancel()
+    cardsReplication = null
+  }
 }
 
 export function getReplicationStates(): {
   boards: RxFirestoreReplicationState<Board> | null
   columns: RxFirestoreReplicationState<Column> | null
+  cards: RxFirestoreReplicationState<Card> | null
 } {
   return {
     boards: boardsReplication,
     columns: columnsReplication,
+    cards: cardsReplication,
   }
 }
 
@@ -175,6 +240,10 @@ export async function waitForInitialReplication(): Promise<void> {
   if (columnsReplication) {
     await columnsReplication.awaitInitialReplication()
     console.log('✅ Columns initial replication complete')
+  }
+  if (cardsReplication) {
+    await cardsReplication.awaitInitialReplication()
+    console.log('✅ Cards initial replication complete')
   }
 }
 

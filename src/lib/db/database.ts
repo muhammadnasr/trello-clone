@@ -7,6 +7,7 @@ import type { RxDatabase } from 'rxdb'
 import type { TrelloCollections } from './collections'
 import { boardSchema } from './schemas/board.schema'
 import { columnSchema } from './schemas/column.schema'
+import { cardSchema } from './schemas/card.schema'
 
 addRxPlugin(RxDBDevModePlugin)
 
@@ -29,6 +30,9 @@ export async function createDatabase(): Promise<TrelloDatabase> {
     },
     columns: {
       schema: columnSchema,
+    },
+    cards: {
+      schema: cardSchema,
     },
   })
 
