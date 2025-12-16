@@ -83,7 +83,7 @@ export function Card({ card }: CardProps) {
             size="sm"
             title="Delete card"
             onClick={handleDelete}
-            className="h-6 w-6 p-0 text-destructive hover:text-destructive opacity-0 group-hover:opacity-100 transition-opacity"
+            className="h-6 w-6 p-0 text-destructive hover:text-destructive opacity-0 group-hover:opacity-100 transition-opacity -mt-0.5"
           >
             <Trash2 className="h-3 w-3" />
           </Button>

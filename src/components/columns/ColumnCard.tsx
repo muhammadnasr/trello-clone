@@ -51,7 +51,7 @@ export function ColumnCard({ column }: ColumnCardProps) {
         style={style}
         className="bg-white dark:bg-gray-800 rounded-lg shadow p-4 min-w-[280px]"
       >
-        <div className="flex items-center justify-between mb-2">
+        <div className="relative flex items-center justify-between mb-2">
           <div className="flex items-center gap-2 flex-1">
             <button
               {...attributes}
@@ -61,27 +61,29 @@ export function ColumnCard({ column }: ColumnCardProps) {
             >
               <GripVertical className="h-5 w-5" />
             </button>
-            <h3 className="font-semibold text-lg">{column.title}</h3>
-          </div>
-          <div className="flex gap-1">
-            <Button
-              variant="ghost"
-              size="sm"
-              title="Rename column"
-              onClick={() => setIsRenameOpen(true)}
-              className="h-8 w-8 p-0"
-            >
-              <Pencil className="h-4 w-4" />
-            </Button>
-            <Button
-              variant="ghost"
-              size="sm"
-              title="Delete column"
-              onClick={handleDelete}
-              className="h-8 w-8 p-0 text-destructive hover:text-destructive"
-            >
-              <Trash2 className="h-4 w-4" />
-            </Button>
+            <div className="group relative flex-1">
+              <h3 className="font-semibold text-lg">{column.title}</h3>
+              <div className="absolute right-0 top-[-2px] flex gap-1 opacity-0 group-hover:opacity-100 transition-opacity">
+                <Button
+                  variant="ghost"
+                  size="sm"
+                  title="Rename column"
+                  onClick={() => setIsRenameOpen(true)}
+                  className="h-8 w-8 p-0"
+                >
+                  <Pencil className="h-4 w-4" />
+                </Button>
+                <Button
+                  variant="ghost"
+                  size="sm"
+                  title="Delete column"
+                  onClick={handleDelete}
+                  className="h-8 w-8 p-0 text-destructive hover:text-destructive"
+                >
+                  <Trash2 className="h-4 w-4" />
+                </Button>
+              </div>
+            </div>
           </div>
         </div>
         <CardsList columnId={column.id} />
