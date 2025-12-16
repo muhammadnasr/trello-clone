@@ -2,6 +2,7 @@ import {
   SortableContext,
   verticalListSortingStrategy,
 } from '@dnd-kit/sortable'
+import { useDndContext } from '@dnd-kit/core'
 import { useCardsStore } from '@/stores/cards'
 import { Card } from './Card'
 
@@ -11,11 +12,15 @@ interface CardsListProps {
 
 export function CardsList({ columnId }: CardsListProps) {
   const cards = useCardsStore((state) => state.cards)
+  const { active } = useDndContext()
+  const activeId = active?.id as string | undefined
+  
   const columnCards = cards
     .filter((card) => card.columnId === columnId)
+    .filter((card) => card.id !== activeId) // Filter out the card being dragged
     .sort((a, b) => a.order - b.order)
 
-  if (columnCards.length === 0) {
+  if (columnCards.length === 0 && !activeId) {
     return null
   }
 

@@ -5,19 +5,23 @@ import {
   PointerSensor,
   useSensor,
   useSensors,
+  DragOverlay,
   type DragEndEvent,
+  type DragStartEvent,
 } from '@dnd-kit/core'
 import {
   SortableContext,
   sortableKeyboardCoordinates,
   horizontalListSortingStrategy,
 } from '@dnd-kit/sortable'
+import { useState } from 'react'
 import { useColumnsStore } from '@/stores/columns'
 import { useCardsStore } from '@/stores/cards'
 import { handleColumnReorder } from '@/lib/utils/column-reorder'
 import { handleCardReorder } from '@/lib/utils/card-reorder'
 import { ColumnCard } from './ColumnCard'
 import { CreateColumnDialog } from './CreateColumnDialog'
+import { Card } from '@/components/cards/Card'
 
 interface ColumnsListProps {
   boardId: string
@@ -26,6 +30,8 @@ interface ColumnsListProps {
 export function ColumnsList({ boardId }: ColumnsListProps) {
   const columns = useColumnsStore((state) => state.columns)
   const cards = useCardsStore((state) => state.cards)
+  const setCards = useCardsStore((state) => state.setCards)
+  const [draggedCardId, setDraggedCardId] = useState<string | null>(null)
   
   const boardColumns = columns
     .filter((col) => col.boardId === boardId)
@@ -42,8 +48,17 @@ export function ColumnsList({ boardId }: ColumnsListProps) {
     })
   )
 
-  const handleDragEnd = async (event: DragEndEvent) => {
+  const handleDragStart = (event: DragStartEvent) => {
     const { active } = event
+    // Check if it's a card (not a column)
+    const draggedCard = cards.find((card) => card.id === active.id)
+    if (draggedCard) {
+      setDraggedCardId(active.id as string)
+    }
+  }
+
+  const handleDragEnd = async (event: DragEndEvent) => {
+    const { active, over } = event
     
     // Check if dragging a column or a card
     const isColumnDrag = boardColumns.some((col) => col.id === active.id)
@@ -52,9 +67,49 @@ export function ColumnsList({ boardId }: ColumnsListProps) {
       await handleColumnReorder(event, columns, boardId)
     } else {
       // It's a card drag
+      if (!over || active.id === over.id) {
+        // Drag was cancelled - clear drag state
+        setDraggedCardId(null)
+        return
+      }
+
+      // Optimistically update the card's columnId immediately
+      const draggedCard = cards.find((card) => card.id === active.id)
+      if (draggedCard) {
+        let targetColumnId: string | null = null
+        
+        // Check if dropping on a column
+        const targetColumn = boardColumns.find((col) => col.id === over.id)
+        if (targetColumn) {
+          targetColumnId = targetColumn.id
+        } else {
+          // Dropping on another card
+          const targetCard = cards.find((card) => card.id === over.id)
+          if (targetCard) {
+            targetColumnId = targetCard.columnId
+          }
+        }
+
+        if (targetColumnId && targetColumnId !== draggedCard.columnId) {
+          // Optimistically move card to target column
+          const updatedCards = cards.map((card) =>
+            card.id === active.id
+              ? { ...card, columnId: targetColumnId! }
+              : card
+          )
+          setCards(updatedCards)
+        }
+      }
+
+      // Clear drag state
+      setDraggedCardId(null)
+      
+      // Then handle the actual reorder (which will sync with database)
       await handleCardReorder(event, cards, boardColumns)
     }
   }
+
+  const draggedCard = draggedCardId ? cards.find((card) => card.id === draggedCardId) : null
 
   return (
     <div>
@@ -66,6 +121,7 @@ export function ColumnsList({ boardId }: ColumnsListProps) {
         <DndContext
           sensors={sensors}
           collisionDetection={closestCenter}
+          onDragStart={handleDragStart}
           onDragEnd={handleDragEnd}
         >
           <SortableContext
@@ -78,6 +134,13 @@ export function ColumnsList({ boardId }: ColumnsListProps) {
               ))}
             </div>
           </SortableContext>
+          <DragOverlay>
+            {draggedCard ? (
+              <div className="rotate-3 opacity-90">
+                <Card card={draggedCard} />
+              </div>
+            ) : null}
+          </DragOverlay>
         </DndContext>
       )}
     </div>
