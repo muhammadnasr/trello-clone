@@ -2,8 +2,6 @@ import type { TrelloDatabase } from './database'
 import { useBoardsStore } from '@/stores/boards'
 import { useColumnsStore } from '@/stores/columns'
 import { useAuthStore } from '@/stores/auth'
-import type { Board } from '@/lib/types/board'
-import type { Column } from '@/lib/types/column'
 
 export function syncBoardsToStore(database: TrelloDatabase): () => void {
   let unsubscribe: (() => void) | null = null
@@ -29,8 +27,7 @@ export function syncBoardsToStore(database: TrelloDatabase): () => void {
         },
       })
       .$.subscribe((rxDocuments) => {
-        const boards: Board[] = rxDocuments
-          .map((doc) => doc.toJSON() as Board)
+        const boards = rxDocuments.map((doc) => doc.toJSON())
         useBoardsStore.getState().setBoards(boards)
       })
 
@@ -97,8 +94,8 @@ export function syncColumnsToStore(database: TrelloDatabase): () => void {
       })
       .exec()
       .then((rxDocuments) => {
-        const columns: Column[] = rxDocuments
-          .map((doc) => doc.toJSON() as Column)
+        const columns = rxDocuments
+          .map((doc) => doc.toJSON())
           .filter((column) => userBoardIds.includes(column.boardId))
         useColumnsStore.getState().setColumns(columns)
       })

@@ -1,11 +1,7 @@
 import { createFileRoute } from '@tanstack/react-router'
-import { BoardsList } from '@/components/boards/BoardsList'
+import { IndexPage } from '@/components/pages/IndexPage'
 
 export const Route = createFileRoute('/')({
   component: IndexPage,
 })
-
-function IndexPage() {
-  return <BoardsList />
-}
 

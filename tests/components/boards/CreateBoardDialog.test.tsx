@@ -180,7 +180,7 @@ describe('CreateBoardDialog', () => {
       ownerId: 'anonymous',
     })
 
-    const { rerender } = render(<CreateBoardDialog />)
+    render(<CreateBoardDialog />)
 
     await user.click(screen.getByText('Create Board'))
     await waitFor(() => {

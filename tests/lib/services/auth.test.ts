@@ -1,6 +1,6 @@
 import { describe, it, expect, beforeEach, vi } from 'vitest'
 import { signIn, signUp, signOutUser, initAuthStateListener } from '../../../src/lib/services/auth'
-import { useAuthStore } from '../../../src/stores/auth'
+import type { Auth, User } from 'firebase/auth'
 
 // Mock Firebase Auth
 const mockSignInWithEmailAndPassword = vi.fn()
@@ -9,13 +9,16 @@ const mockSignOut = vi.fn()
 const mockOnAuthStateChanged = vi.fn()
 
 vi.mock('firebase/auth', () => ({
-  signInWithEmailAndPassword: (auth: any, email: string, password: string) =>
+  signInWithEmailAndPassword: (auth: Auth, email: string, password: string) =>
     mockSignInWithEmailAndPassword(auth, email, password),
-  createUserWithEmailAndPassword: (auth: any, email: string, password: string) =>
+  createUserWithEmailAndPassword: (auth: Auth, email: string, password: string) =>
     mockCreateUserWithEmailAndPassword(auth, email, password),
-  signOut: (auth: any) => mockSignOut(auth),
-  onAuthStateChanged: (auth: any, callback: any, errorCallback?: any) =>
-    mockOnAuthStateChanged(auth, callback, errorCallback),
+  signOut: (auth: Auth) => mockSignOut(auth),
+  onAuthStateChanged: (
+    auth: Auth,
+    callback: (user: User | null) => void,
+    errorCallback?: (error: Error) => void
+  ) => mockOnAuthStateChanged(auth, callback, errorCallback),
 }))
 
 // Mock Firebase config

@@ -28,7 +28,15 @@ export default defineConfig([
     },
   },
   {
-    files: ['src/components/ui/**/*.{ts,tsx}'],
+    // Test files need to be able to use any for mocking
+    files: ['**/*.test.ts', '**/*.test.tsx', 'tests/**/*.ts'],
+    rules: {
+      '@typescript-eslint/no-explicit-any': 'off',
+    },
+  },
+  {
+    // UI components and route files can export both components and other things
+    files: ['src/components/ui/**/*.{ts,tsx}', 'src/routes/**/*.{ts,tsx}'],
     rules: {
       'react-refresh/only-export-components': 'off',
     },

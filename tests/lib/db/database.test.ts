@@ -75,7 +75,7 @@ describe('Schema Validation', () => {
   it('rejects document with missing required field', async () => {
     const now = new Date().toISOString()
     
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+     
     const invalidDoc: any = {
       id: 'board1',
       title: 'Test Board',
@@ -87,7 +87,7 @@ describe('Schema Validation', () => {
   })
 
   it('rejects document with invalid date format', async () => {
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+     
     const invalidDoc: any = {
       id: 'board1',
       title: 'Test Board',
@@ -102,7 +102,7 @@ describe('Schema Validation', () => {
   it('rejects document with wrong type for title', async () => {
     const now = new Date().toISOString()
     
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+     
     const invalidDoc: any = {
       id: 'board1',
       title: 123, // should be string

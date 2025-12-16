@@ -8,7 +8,6 @@ import { useColumnsStore } from '../../../src/stores/columns'
 import { useBoardsStore } from '../../../src/stores/boards'
 import { initDatabase, cleanupDatabase } from '../../../src/lib/db/init'
 import { createTestDatabase } from '../../lib/db/test-helpers'
-import { mockUser } from '../../lib/auth-helpers'
 
 // Mock auth store
 // Use 'user1' to match test data ownerId

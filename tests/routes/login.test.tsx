@@ -1,9 +1,7 @@
 import { describe, it, expect, beforeEach, vi } from 'vitest'
 import { render, screen, waitFor, act } from '@testing-library/react'
-import userEvent from '@testing-library/user-event'
 import { RouterProvider, createRouter } from '@tanstack/react-router'
 import { routeTree } from '../../src/routeTree.gen'
-import { useAuthStore } from '../../src/stores/auth'
 
 // Mock auth store
 const mockAuthState = {

@@ -2,21 +2,20 @@ import { describe, it, expect, beforeEach, afterEach, vi } from 'vitest'
 import type { TrelloDatabase } from '../../../src/lib/db/database'
 import { cancelReplication, getReplicationStates } from '../../../src/lib/db/replication'
 import { createTestDatabase } from './test-helpers'
-import type { RxFirestoreReplicationState } from 'rxdb/plugins/replication-firestore'
+
+// Mock Firebase config
+const mockFirestoreDatabase = {
+  app: {
+    name: '[DEFAULT]',
+    options: {
+      projectId: 'test-project',
+    },
+  },
+}
 
 // Mock RxDB's replicateFirestore function
-vi.mock('rxdb/plugins/replication-firestore', () => {
-  const mockFirestoreDatabase = {
-    app: {
-      name: '[DEFAULT]',
-      options: {
-        projectId: 'test-project',
-      },
-    },
-  }
-  
-  return {
-    replicateFirestore: vi.fn((options: any) => {
+vi.mock('rxdb/plugins/replication-firestore', () => ({
+  replicateFirestore: vi.fn((options: any) => {
       const activeSubject = { subscribe: vi.fn(() => ({ unsubscribe: vi.fn() })) }
       const receivedSubject = { subscribe: vi.fn(() => ({ unsubscribe: vi.fn() })) }
       const sentSubject = { subscribe: vi.fn(() => ({ unsubscribe: vi.fn() })) }
@@ -39,8 +38,7 @@ vi.mock('rxdb/plugins/replication-firestore', () => {
         },
       }
     }),
-  }
-})
+}))
 
 // Mock Firebase Firestore collection
 vi.mock('firebase/firestore', () => ({
@@ -53,16 +51,6 @@ vi.mock('firebase/firestore', () => ({
   })),
   getFirestore: vi.fn(),
 }))
-
-// Mock Firebase config
-const mockFirestoreDatabase = {
-  app: {
-    name: '[DEFAULT]',
-    options: {
-      projectId: 'test-project',
-    },
-  },
-}
 
 vi.mock('../../../src/lib/firebase/config', () => ({
   getFirestoreDatabase: vi.fn(() => mockFirestoreDatabase),

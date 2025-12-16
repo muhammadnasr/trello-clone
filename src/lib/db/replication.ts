@@ -1,5 +1,5 @@
 import { replicateFirestore, type RxFirestoreReplicationState } from 'rxdb/plugins/replication-firestore'
-import { collection } from 'firebase/firestore'
+import { collection, type CollectionReference } from 'firebase/firestore'
 import type { TrelloDatabase } from './database'
 import { getFirestoreDatabase } from '../firebase/config'
 import type { Board } from '../types/board'
@@ -43,8 +43,8 @@ export function setupFirestoreReplication(
       firestore: {
         projectId,
         database: firestoreDatabase,
-        // Use type assertion to match RxDB's expected type
-        collection: boardsFirestoreCollection as any,
+        // Type assertion needed because RxDB expects a specific Firestore collection type
+        collection: boardsFirestoreCollection as CollectionReference<Board>,
       },
       pull: {},
       push: {},
@@ -99,8 +99,8 @@ export function setupFirestoreReplication(
       firestore: {
         projectId,
         database: firestoreDatabase,
-        // Use type assertion to match RxDB's expected type
-        collection: columnsFirestoreCollection as any,
+        // Type assertion needed because RxDB expects a specific Firestore collection type
+        collection: columnsFirestoreCollection as CollectionReference<Column>,
       },
       pull: {},
       push: {},
