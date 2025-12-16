@@ -1,3 +1,40 @@
+# Trello Clone - Local-First Kanban Board
+
+A Trello-like kanban board application built with React, TypeScript, RxDB, and Firebase. Features local-first architecture with automatic multi-tab sync and cross-device synchronization.
+
+## Tech Stack
+
+- **React + TypeScript + Vite** - Frontend framework
+- **RxDB** - Local-first database with IndexedDB storage
+- **Zustand** - State management
+- **Firebase Firestore** - Cloud synchronization
+- **TanStack Router** - Routing
+- **TailwindCSS v4** - Styling
+- **Shadcn-UI** - UI components
+- **react-dnd-kit** - Drag and drop functionality
+
+## Firebase Setup
+
+### Firestore Security Rules
+
+The application uses Firestore for cloud synchronization. The security rules are defined in `firestore.rules`.
+
+**Important:** After updating `firestore.rules`, deploy the rules to Firebase:
+
+1. **Via Firebase Console:**
+   - Go to Firebase Console → Firestore Database → Rules
+   - Copy the content from `firestore.rules`
+   - Paste and click "Publish"
+
+2. **Via Firebase CLI:**
+   ```bash
+   firebase deploy --only firestore:rules
+   ```
+
+**Note:** The current rules allow open access for development. For production, implement proper authentication-based security rules.
+
+---
+
 # React + TypeScript + Vite
 
 This template provides a minimal setup to get React working in Vite with HMR and some ESLint rules.
