@@ -19,11 +19,13 @@ export function ColumnsList({ boardId }: ColumnsListProps) {
         <h2 className="text-xl font-semibold">Columns</h2>
         <CreateColumnDialog boardId={boardId} nextOrder={nextOrder} />
       </div>
-      <div className="flex gap-4 overflow-x-auto pb-4">
-        {boardColumns.map((column) => (
-          <ColumnCard key={column.id} column={column} />
-        ))}
-      </div>
+      {boardColumns.length > 0 && (
+        <div className="flex gap-4 overflow-x-auto pb-4">
+          {boardColumns.map((column) => (
+            <ColumnCard key={column.id} column={column} />
+          ))}
+        </div>
+      )}
     </div>
   )
 }

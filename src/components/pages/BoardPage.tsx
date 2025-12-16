@@ -17,10 +17,7 @@ export function BoardPage({ boardId }: BoardPageProps) {
           <p className="text-gray-600">The board you're looking for doesn't exist.</p>
         </>
       ) : (
-        <>
-          <h1 className="text-3xl font-bold mb-6">{board.title}</h1>
-          <ColumnsList boardId={boardId} />
-        </>
+        <ColumnsList boardId={boardId} />
       )}
     </div>
   )

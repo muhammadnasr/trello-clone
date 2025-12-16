@@ -3,7 +3,7 @@ import { BoardPage } from '@/components/pages/BoardPage'
 
 export const Route = createFileRoute('/boards/$boardId')({
   component: BoardPageComponent,
-})
+}) 
 
 function BoardPageComponent() {
   const { boardId } = Route.useParams()
