@@ -13,7 +13,9 @@ import {
   horizontalListSortingStrategy,
 } from '@dnd-kit/sortable'
 import { useColumnsStore } from '@/stores/columns'
+import { useCardsStore } from '@/stores/cards'
 import { handleColumnReorder } from '@/lib/utils/column-reorder'
+import { handleCardReorder } from '@/lib/utils/card-reorder'
 import { ColumnCard } from './ColumnCard'
 import { CreateColumnDialog } from './CreateColumnDialog'
 
@@ -23,6 +25,7 @@ interface ColumnsListProps {
 
 export function ColumnsList({ boardId }: ColumnsListProps) {
   const columns = useColumnsStore((state) => state.columns)
+  const cards = useCardsStore((state) => state.cards)
   
   const boardColumns = columns
     .filter((col) => col.boardId === boardId)
@@ -40,7 +43,17 @@ export function ColumnsList({ boardId }: ColumnsListProps) {
   )
 
   const handleDragEnd = async (event: DragEndEvent) => {
-    await handleColumnReorder(event, columns, boardId)
+    const { active } = event
+    
+    // Check if dragging a column or a card
+    const isColumnDrag = boardColumns.some((col) => col.id === active.id)
+    
+    if (isColumnDrag) {
+      await handleColumnReorder(event, columns, boardId)
+    } else {
+      // It's a card drag
+      await handleCardReorder(event, cards, boardColumns)
+    }
   }
 
   return (

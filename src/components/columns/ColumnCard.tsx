@@ -1,5 +1,6 @@
 import { useState } from 'react'
 import { useSortable } from '@dnd-kit/sortable'
+import { useDroppable } from '@dnd-kit/core'
 import { CSS } from '@dnd-kit/utilities'
 import type { Column } from '@/lib/types/column'
 import { Button } from '@/components/ui/button'
@@ -32,10 +33,20 @@ export function ColumnCard({ column }: ColumnCardProps) {
     isDragging,
   } = useSortable({ id: column.id })
 
+  const { setNodeRef: setDroppableRef } = useDroppable({
+    id: column.id,
+  })
+
   const style = {
     transform: CSS.Transform.toString(transform),
     transition,
     opacity: isDragging ? 0.5 : 1,
+  }
+
+  // Combine refs for both sortable (change column order) and droppable (allow cards to be dropped)
+  const combinedRef = (node: HTMLDivElement | null) => {
+    setNodeRef(node)
+    setDroppableRef(node)
   }
 
   const handleDelete = async () => {
@@ -47,7 +58,7 @@ export function ColumnCard({ column }: ColumnCardProps) {
   return (
     <>
       <div
-        ref={setNodeRef}
+        ref={combinedRef}
         style={style}
         className="bg-white dark:bg-gray-800 rounded-lg shadow p-4 min-w-[280px]"
       >

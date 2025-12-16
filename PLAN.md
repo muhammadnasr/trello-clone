@@ -2,7 +2,7 @@
 
 ## 📊 Progress Summary
 
-**Completed Phases: 8.5/11**
+**Completed Phases: 9/11**
 - ✅ Phase 1: Foundation
 - ✅ Phase 2: RxDB Setup & Data Models (Boards & Columns schemas)
 - ✅ Phase 3: Zustand Store Integration
@@ -11,10 +11,9 @@
 - ✅ Phase 6: Board Detail & Columns
 - ✅ Phase 7: Firebase Integration (Firestore Replication ✅ Complete, Offline Support ✅ Verified, Auth ✅ Complete)
 - ✅ Phase 8: Cards (Display + CRUD + Firestore Sync ✅ Complete)
-- ✅ Phase 9: Drag & Drop (Column Reordering ✅ Complete, Card Drag & Drop ⏳ Pending)
+- ✅ Phase 9: Drag & Drop (Column Reordering ✅ Complete, Card Drag & Drop ✅ Complete)
 
-**Remaining Phases: 2.5/11**
-- ⏳ Phase 9: Drag & Drop (Card Drag & Drop remaining)
+**Remaining Phases: 2/11**
 - ⏳ Phase 10: Multi-User & Sharing (Sharing UI + Logic + Security Rules)
 - ⏳ Phase 11: Polish & Bonus Features (Offline Indicator + Animations + Accessibility + PWA + Deployment)
 
@@ -23,20 +22,20 @@
 - ✅ Columns CRUD (Create, Read, Update, Delete)
 - ✅ Cards CRUD (Create, Read, Update, Delete ✅ Complete)
 - ✅ Firebase Sync (Firestore Replication ✅ Complete)
-- ✅ Drag & Drop (Column Reordering ✅ Complete, Card Drag & Drop ⏳ Pending)
+- ✅ Drag & Drop (Column Reordering ✅ Complete, Card Drag & Drop ✅ Complete - Within Column + Cross-Column)
 - ⏳ Multi-User & Sharing (Not started)
 
-**Estimated Progress: ~75%**
+**Estimated Progress: ~82%**
 - Foundation & Infrastructure: ✅ Complete
 - Core Features (Boards/Columns/Cards): ✅ Complete
 - Firebase Sync: ✅ Complete (Firestore Replication + Auth)
-- Drag & Drop: ✅ Column Reordering Complete (Card Drag & Drop ⏳ Pending)
+- Drag & Drop: ✅ Complete (Column Reordering + Card Drag & Drop Within Column + Cross-Column)
 - Architecture Improvements: ✅ Parallel sync subscriptions with `ownerId` filtering (Boards, Columns & Cards)
-- Remaining Features: ⏳ Card Drag & Drop, Multi-User, Polish
+- Remaining Features: ⏳ Multi-User & Sharing, Polish & Bonus Features
 
-**Next Phase: Phase 9.3 - Card Drag & Drop (Within Column + Across Columns)**
+**Next Phase: Phase 10 - Multi-User & Sharing**
 
-**Test Coverage**: 181 tests passing (unit + integration, including drag & drop tests)
+**Test Coverage**: 192 tests passing (unit + integration, including drag & drop tests)
 
 ---
 
@@ -275,12 +274,14 @@ Using RxDB is acceptable, as long as the solution clearly demonstrates:
 - [x] Sort columns by order in ColumnsList
 - [x] **Test**: Verify columns can be reordered (all tests pass)
 
-#### Step 9.3: Card Drag & Drop (IN PROGRESS)
+#### ✅ Step 9.3: Card Drag & Drop (COMPLETED)
 
-- [ ] Implement drag & drop within column (reorder) - ⏳ Starting
-- [ ] Implement drag & drop across columns
-- [ ] Update card order and columnId in RxDB
-- [ ] **Test**: Verify cards can be moved within and between columns
+- [x] Implement drag & drop within column (reorder)
+- [x] Implement drag & drop across columns (drop on column or card)
+- [x] Update card order and columnId in RxDB
+- [x] Make columns droppable using `useDroppable` hook
+- [x] Move `DndContext` to `ColumnsList` to enable cross-column drags
+- [x] **Test**: Verify cards can be moved within and between columns (16 integration tests, including 3 cross-column tests)
 
 ### Phase 10: Multi-User & Sharing
 
