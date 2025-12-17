@@ -8,6 +8,7 @@ import {
   DragOverlay,
   type DragEndEvent,
   type DragStartEvent,
+  type DragOverEvent,
 } from '@dnd-kit/core'
 import {
   SortableContext,
@@ -32,13 +33,15 @@ export function ColumnsList({ boardId }: ColumnsListProps) {
   const cards = useCardsStore((state) => state.cards)
   const setCards = useCardsStore((state) => state.setCards)
   const [draggedCardId, setDraggedCardId] = useState<string | null>(null)
-  
+  const [draggedColumnId, setDraggedColumnId] = useState<string | null>(null)
+  const [overColumnId, setOverColumnId] = useState<string | null>(null)
+
   const boardColumns = columns
     .filter((col) => col.boardId === boardId)
     .sort((a, b) => a.order - b.order)
-  
-  const nextOrder = boardColumns.length > 0 
-    ? Math.max(...boardColumns.map((col) => col.order)) + 1 
+
+  const nextOrder = boardColumns.length > 0
+    ? Math.max(...boardColumns.map((col) => col.order)) + 1
     : 0
 
   const sensors = useSensors(
@@ -50,21 +53,60 @@ export function ColumnsList({ boardId }: ColumnsListProps) {
 
   const handleDragStart = (event: DragStartEvent) => {
     const { active } = event
-    // Check if it's a card (not a column)
-    const draggedCard = cards.find((card) => card.id === active.id)
-    if (draggedCard) {
-      setDraggedCardId(active.id as string)
+    // Check if it's a column
+    const isColumnDrag = boardColumns.some((col) => col.id === active.id)
+    if (isColumnDrag) {
+      setDraggedColumnId(active.id as string)
+    } else {
+      // Check if it's a card
+      const draggedCard = cards.find((card) => card.id === active.id)
+      if (draggedCard) {
+        setDraggedCardId(active.id as string)
+      }
     }
+  }
+
+  const handleDragOver = (event: DragOverEvent) => {
+    const { active, over } = event
+    // Only track column hover if we're dragging a column
+    const isColumnDrag = boardColumns.some((col) => col.id === active.id)
+    if (isColumnDrag && over) {
+      // Check if hovering over another column directly
+      let targetColumn = boardColumns.find((col) => col.id === over.id)
+
+      // If not a column, check if hovering over a card - find the column that contains it
+      if (!targetColumn) {
+        const targetCard = cards.find((card) => card.id === over.id)
+        if (targetCard) {
+          targetColumn = boardColumns.find((col) => col.id === targetCard.columnId)
+        }
+      }
+
+      if (targetColumn && targetColumn.id !== active.id) {
+        setOverColumnId(targetColumn.id)
+      } else {
+        setOverColumnId(null)
+      }
+    }
+  }
+
+  const handleDragCancel = () => {
+    setDraggedColumnId(null)
+    setDraggedCardId(null)
+    setOverColumnId(null)
   }
 
   const handleDragEnd = async (event: DragEndEvent) => {
     const { active, over } = event
-    
+
     // Check if dragging a column or a card
     const isColumnDrag = boardColumns.some((col) => col.id === active.id)
-    
+
     if (isColumnDrag) {
-      await handleColumnReorder(event, columns, boardId)
+      await handleColumnReorder(event, columns, boardId, cards)
+      // Clear drag state
+      setDraggedColumnId(null)
+      setOverColumnId(null)
     } else {
       // It's a card drag
       if (!over || active.id === over.id) {
@@ -77,7 +119,7 @@ export function ColumnsList({ boardId }: ColumnsListProps) {
       const draggedCard = cards.find((card) => card.id === active.id)
       if (draggedCard) {
         let targetColumnId: string | null = null
-        
+
         // Check if dropping on a column
         const targetColumn = boardColumns.find((col) => col.id === over.id)
         if (targetColumn) {
@@ -103,13 +145,14 @@ export function ColumnsList({ boardId }: ColumnsListProps) {
 
       // Clear drag state
       setDraggedCardId(null)
-      
+
       // Then handle the actual reorder (which will sync with database)
       await handleCardReorder(event, cards, boardColumns)
     }
   }
 
   const draggedCard = draggedCardId ? cards.find((card) => card.id === draggedCardId) : null
+  const draggedColumn = draggedColumnId ? boardColumns.find((col) => col.id === draggedColumnId) : null
 
   return (
     <div>
@@ -122,7 +165,9 @@ export function ColumnsList({ boardId }: ColumnsListProps) {
           sensors={sensors}
           collisionDetection={closestCenter}
           onDragStart={handleDragStart}
+          onDragOver={handleDragOver}
           onDragEnd={handleDragEnd}
+          onDragCancel={handleDragCancel}
         >
           <SortableContext
             items={boardColumns.map((col) => col.id)}
@@ -130,7 +175,13 @@ export function ColumnsList({ boardId }: ColumnsListProps) {
           >
             <div className="flex gap-4 overflow-x-auto pb-4">
               {boardColumns.map((column) => (
-                <ColumnCard key={column.id} column={column} />
+                <ColumnCard
+                  key={column.id}
+                  column={column}
+                  isDragging={draggedColumnId === column.id}
+                  isOver={overColumnId === column.id}
+                  isAnyColumnDragging={draggedColumnId !== null}
+                />
               ))}
             </div>
           </SortableContext>
@@ -138,6 +189,10 @@ export function ColumnsList({ boardId }: ColumnsListProps) {
             {draggedCard ? (
               <div className="rotate-3 opacity-90">
                 <Card card={draggedCard} />
+              </div>
+            ) : draggedColumn ? (
+              <div className="rotate-3 opacity-90">
+                <ColumnCard column={draggedColumn} isDragging={false} isOver={false} />
               </div>
             ) : null}
           </DragOverlay>

@@ -1,6 +1,7 @@
 import { arrayMove } from '@dnd-kit/sortable'
 import type { DragEndEvent } from '@dnd-kit/core'
 import type { Column } from '@/lib/types/column'
+import type { Card } from '@/lib/types/card'
 import * as columnsService from '@/lib/services/columns'
 
 /**
@@ -10,7 +11,8 @@ import * as columnsService from '@/lib/services/columns'
 export async function handleColumnReorder(
   event: DragEndEvent,
   columns: Column[],
-  boardId: string
+  boardId: string,
+  cards?: Card[]
 ): Promise<void> {
   const { active, over } = event
 
@@ -20,8 +22,24 @@ export async function handleColumnReorder(
     .filter((col) => col.boardId === boardId)
     .sort((a, b) => a.order - b.order)
 
+  // Find the target column - check if over.id is a column, or if it's a card, find its column
+  let targetColumnId: string | null = null
+  const targetColumn = boardColumns.find((col) => col.id === over.id)
+  
+  if (targetColumn) {
+    targetColumnId = targetColumn.id
+  } else if (cards) {
+    // If not a column, check if it's a card and find its column
+    const targetCard = cards.find((card) => card.id === over.id)
+    if (targetCard) {
+      targetColumnId = targetCard.columnId
+    }
+  }
+
+  if (!targetColumnId) return
+
   const oldIndex = boardColumns.findIndex((col) => col.id === active.id)
-  const newIndex = boardColumns.findIndex((col) => col.id === over.id)
+  const newIndex = boardColumns.findIndex((col) => col.id === targetColumnId)
 
   if (oldIndex === -1 || newIndex === -1) return
 
