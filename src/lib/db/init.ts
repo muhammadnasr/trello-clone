@@ -3,6 +3,7 @@ import { syncStoresToDatabase } from './localdb-store-sync'
 import { setupFirestoreReplication, cancelReplication, getReplicationStates } from './localdb-firestore-sync'
 import type { TrelloDatabase } from './database'
 import { useAuthStore } from '@/stores/auth'
+import { updateSyncStatus } from '@/stores/syncStatus'
 
 let databaseInstance: TrelloDatabase | null = null
 let unsubscribeSync: (() => void) | null = null
@@ -112,7 +113,10 @@ export async function attachBackendSubscriptions(): Promise<void> {
     console.log('✅ Firestore replication attached:', {
       boards: !!replication.boardsReplication,
       columns: !!replication.columnsReplication,
-    })    
+    })
+    
+    // Update sync status after replication is successfully set up
+    updateSyncStatus()
    
   } catch (error) {
     console.error('❌ Failed to attach Firestore replication:', error)

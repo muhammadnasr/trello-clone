@@ -24,6 +24,17 @@ export const useSyncStatusStore = create<SyncStatusState>((set) => ({
 
 let replicationSubscriptions: Array<() => void> = []
 let isMonitoring = false
+let updateSyncStatusFn: (() => void) | null = null
+
+/**
+ * Update sync status based on current replication states.
+ * Can be called manually after replication is set up.
+ */
+export function updateSyncStatus(): void {
+  if (updateSyncStatusFn) {
+    updateSyncStatusFn()
+  }
+}
 
 /**
  * Initialize sync status monitoring.
@@ -115,11 +126,15 @@ export function initSyncStatusMonitoring(): () => void {
     updateSyncStatus()
   })
 
+  // Store the function so it can be called externally
+  updateSyncStatusFn = updateSyncStatus
+
   // Initial update
   updateSyncStatus()
   
   const cleanup = () => {
     isMonitoring = false
+    updateSyncStatusFn = null
     window.removeEventListener('online', handleOnline)
     window.removeEventListener('offline', handleOffline)
     replicationSubscriptions.forEach((unsub) => unsub())
