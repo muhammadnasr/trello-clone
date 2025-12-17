@@ -3,7 +3,6 @@ export interface Card {
   columnId: string
   title: string
   order: number
-  ownerId: string
   createdAt: string
   updatedAt: string
 }

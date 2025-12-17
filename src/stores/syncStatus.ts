@@ -24,6 +24,17 @@ export const useSyncStatusStore = create<SyncStatusState>((set) => ({
 
 let replicationSubscriptions: Array<() => void> = []
 let isMonitoring = false
+let updateSyncStatusFn: (() => void) | null = null
+
+/**
+ * Trigger a sync status update.
+ * Call this after replication is established.
+ */
+export function triggerSyncStatusUpdate(): void {
+  if (updateSyncStatusFn) {
+    updateSyncStatusFn()
+  }
+}
 
 /**
  * Initialize sync status monitoring.
@@ -114,6 +125,9 @@ export function initSyncStatusMonitoring(): () => void {
   const authUnsubscribe = useAuthStore.subscribe(() => {
     updateSyncStatus()
   })
+
+  // Save reference for external calls
+  updateSyncStatusFn = updateSyncStatus
 
   // Initial update
   updateSyncStatus()

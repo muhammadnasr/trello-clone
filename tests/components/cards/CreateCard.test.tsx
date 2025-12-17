@@ -17,13 +17,6 @@ vi.mock('../../../src/stores/cards', async () => {
   }
 })
 
-vi.mock('../../../src/stores/auth', () => ({
-  useAuthStore: (selector: any) => selector({
-    user: { uid: 'user1' },
-    isLoading: false,
-    isAuthenticated: true,
-  }),
-}))
 
 describe('CreateCard', () => {
   const mockCreateCard = vi.fn()
@@ -49,10 +42,10 @@ describe('CreateCard', () => {
   it('shows input form when button is clicked', async () => {
     const user = userEvent.setup()
     render(<CreateCard columnId="column1" nextOrder={0} />)
-    
+
     const button = screen.getByText('+ Add a card')
     await user.click(button)
-    
+
     await waitFor(() => {
       expect(screen.getByPlaceholderText('Enter a title for this card...')).toBeInTheDocument()
       expect(screen.getByText('Add card')).toBeInTheDocument()
@@ -65,31 +58,30 @@ describe('CreateCard', () => {
       columnId: 'column1',
       title: 'New Card',
       order: 0,
-      ownerId: 'user1',
       createdAt: new Date().toISOString(),
       updatedAt: new Date().toISOString(),
     })
 
     const user = userEvent.setup()
     render(<CreateCard columnId="column1" nextOrder={0} />)
-    
+
     const button = screen.getByText('+ Add a card')
     await user.click(button)
-    
+
     await waitFor(() => {
       expect(screen.getByPlaceholderText('Enter a title for this card...')).toBeInTheDocument()
     })
-    
+
     const input = screen.getByPlaceholderText('Enter a title for this card...')
     await user.type(input, 'New Card')
-    
+
     const submitButton = screen.getByText('Add card')
     await user.click(submitButton)
-    
+
     await waitFor(() => {
-      expect(mockCreateCard).toHaveBeenCalledWith('column1', 'New Card', 0, 'user1')
+      expect(mockCreateCard).toHaveBeenCalledWith('column1', 'New Card', 0)
     })
-    
+
     // Form should close after submission
     await waitFor(() => {
       expect(screen.getByText('+ Add a card')).toBeInTheDocument()
@@ -99,17 +91,17 @@ describe('CreateCard', () => {
   it('cancels form when X button is clicked', async () => {
     const user = userEvent.setup()
     render(<CreateCard columnId="column1" nextOrder={0} />)
-    
+
     const button = screen.getByText('+ Add a card')
     await user.click(button)
-    
+
     await waitFor(() => {
       expect(screen.getByPlaceholderText('Enter a title for this card...')).toBeInTheDocument()
     })
-    
+
     const cancelButton = screen.getByRole('button', { name: '' })
     await user.click(cancelButton)
-    
+
     await waitFor(() => {
       expect(screen.getByText('+ Add a card')).toBeInTheDocument()
       expect(screen.queryByPlaceholderText('Enter a title for this card...')).not.toBeInTheDocument()
@@ -119,17 +111,17 @@ describe('CreateCard', () => {
   it('cancels form when Escape key is pressed', async () => {
     const user = userEvent.setup()
     render(<CreateCard columnId="column1" nextOrder={0} />)
-    
+
     const button = screen.getByText('+ Add a card')
     await user.click(button)
-    
+
     await waitFor(() => {
       expect(screen.getByPlaceholderText('Enter a title for this card...')).toBeInTheDocument()
     })
-    
+
     const input = screen.getByPlaceholderText('Enter a title for this card...')
     await user.type(input, '{Escape}')
-    
+
     await waitFor(() => {
       expect(screen.getByText('+ Add a card')).toBeInTheDocument()
       expect(screen.queryByPlaceholderText('Enter a title for this card...')).not.toBeInTheDocument()
@@ -139,10 +131,10 @@ describe('CreateCard', () => {
   it('disables submit button when input is empty', async () => {
     const user = userEvent.setup()
     render(<CreateCard columnId="column1" nextOrder={0} />)
-    
+
     const button = screen.getByText('+ Add a card')
     await user.click(button)
-    
+
     await waitFor(() => {
       const submitButton = screen.getByText('Add card')
       expect(submitButton).toBeDisabled()

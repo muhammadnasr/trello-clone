@@ -17,10 +17,6 @@ export const cardSchema = {
     order: {
       type: 'number',
     },
-    ownerId: {
-      type: 'string',
-      maxLength: 100,
-    },
     createdAt: {
       type: 'string',
       format: 'date-time',
@@ -30,7 +26,7 @@ export const cardSchema = {
       format: 'date-time',
     },
   },
-  required: ['id', 'columnId', 'title', 'order', 'ownerId', 'createdAt', 'updatedAt'],
-  indexes: ['columnId', 'ownerId'],
+  required: ['id', 'columnId', 'title', 'order', 'createdAt', 'updatedAt'],
+  indexes: ['columnId'],
 }
 

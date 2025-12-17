@@ -2,7 +2,7 @@ import { getDatabase } from '@/lib/db/init'
 import type { Column } from '@/lib/types/column'
 import { uuidv7 } from 'uuidv7'
 
-export async function createColumn(boardId: string, title: string, order: number, ownerId: string): Promise<Column> {
+export async function createColumn(boardId: string, title: string, order: number): Promise<Column> {
   const db = getDatabase()
   const now = new Date().toISOString()
 
@@ -11,7 +11,6 @@ export async function createColumn(boardId: string, title: string, order: number
     boardId,
     title,
     order,
-    ownerId,
     createdAt: now,
     updatedAt: now,
   })

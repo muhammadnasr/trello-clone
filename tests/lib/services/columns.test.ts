@@ -20,20 +20,19 @@ describe('Column Service Functions', () => {
   })
 
   it('creates a column successfully', async () => {
-    const column = await createColumn(boardId, 'Test Column', 0, 'user1')
+    const column = await createColumn(boardId, 'Test Column', 0)
     
     expect(column).toBeTruthy()
     expect(column.title).toBe('Test Column')
     expect(column.boardId).toBe(boardId)
     expect(column.order).toBe(0)
-    expect(column.ownerId).toBe('user1')
     expect(column.id).toBeTruthy()
     expect(column.createdAt).toBeTruthy()
     expect(column.updatedAt).toBeTruthy()
   })
 
   it('updates a column title', async () => {
-    const column = await createColumn(boardId, 'Original Title', 0, 'user1')
+    const column = await createColumn(boardId, 'Original Title', 0)
     const originalUpdatedAt = column.updatedAt
     
     await new Promise((resolve) => setTimeout(resolve, 10))
@@ -49,7 +48,7 @@ describe('Column Service Functions', () => {
   })
 
   it('updates a column order', async () => {
-    const column = await createColumn(boardId, 'Test Column', 0, 'user1')
+    const column = await createColumn(boardId, 'Test Column', 0)
     
     await updateColumn(column.id, { order: 5 })
 
@@ -66,7 +65,7 @@ describe('Column Service Functions', () => {
   })
 
   it('deletes a column successfully', async () => {
-    const column = await createColumn(boardId, 'Column to Delete', 0, 'user1')
+    const column = await createColumn(boardId, 'Column to Delete', 0)
     await deleteColumn(column.id)
 
     const db = getDatabase()
@@ -82,9 +81,9 @@ describe('Column Service Functions', () => {
   })
 
   it('gets columns by boardId sorted by order', async () => {
-    await createColumn(boardId, 'Column 2', 2, 'user1')
-    await createColumn(boardId, 'Column 0', 0, 'user1')
-    await createColumn(boardId, 'Column 1', 1, 'user1')
+    await createColumn(boardId, 'Column 2', 2)
+    await createColumn(boardId, 'Column 0', 0)
+    await createColumn(boardId, 'Column 1', 1)
 
     const columns = await getColumnsByBoardId(boardId)
     
@@ -101,8 +100,8 @@ describe('Column Service Functions', () => {
 
   it('only returns columns for the specified board', async () => {
     const board2 = await createBoard('Board 2', 'user1')
-    await createColumn(boardId, 'Column 1', 0, 'user1')
-    await createColumn(board2.id, 'Column 2', 0, 'user1')
+    await createColumn(boardId, 'Column 1', 0)
+    await createColumn(board2.id, 'Column 2', 0)
 
     const columns = await getColumnsByBoardId(boardId)
     
@@ -114,11 +113,11 @@ describe('Column Service Functions', () => {
     const { createCard, getCardsByColumnId } = await import('../../../src/lib/services/cards')
     
     // Create a column with cards
-    const column = await createColumn(boardId, 'Column with Cards', 0, 'user1')
+    const column = await createColumn(boardId, 'Column with Cards', 0)
     
-    const card1 = await createCard(column.id, 'Card 1', 0, 'user1')
-    const card2 = await createCard(column.id, 'Card 2', 1, 'user1')
-    const card3 = await createCard(column.id, 'Card 3', 2, 'user1')
+    const card1 = await createCard(column.id, 'Card 1', 0)
+    const card2 = await createCard(column.id, 'Card 2', 1)
+    const card3 = await createCard(column.id, 'Card 3', 2)
     
     // Verify everything exists before deletion
     const db = getDatabase()

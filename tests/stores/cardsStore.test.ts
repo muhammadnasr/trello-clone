@@ -32,7 +32,6 @@ describe('Cards Store', () => {
         columnId: 'column1',
         title: 'Card 1',
         order: 0,
-        ownerId: 'user1',
         createdAt: new Date().toISOString(),
         updatedAt: new Date().toISOString(),
       },
@@ -54,7 +53,6 @@ describe('Cards Store', () => {
         columnId: 'column1',
         title: 'New Card',
         order: 0,
-        ownerId: 'user1',
         createdAt: new Date().toISOString(),
         updatedAt: new Date().toISOString(),
       }
@@ -63,9 +61,9 @@ describe('Cards Store', () => {
       useCardsStore.getState().setError('Previous error')
       
       const createCard = useCardsStore.getState().createCard
-      const result = await createCard('column1', 'New Card', 0, 'user1')
+      const result = await createCard('column1', 'New Card', 0)
 
-      expect(mockCreateCard).toHaveBeenCalledWith('column1', 'New Card', 0, 'user1')
+      expect(mockCreateCard).toHaveBeenCalledWith('column1', 'New Card', 0)
       expect(result).toEqual(newCard)
       expect(useCardsStore.getState().error).toBeNull()
     })
@@ -76,7 +74,7 @@ describe('Cards Store', () => {
 
       const createCard = useCardsStore.getState().createCard
 
-      await expect(createCard('column1', 'New Card', 0, 'user1')).rejects.toThrow('Service error')
+      await expect(createCard('column1', 'New Card', 0)).rejects.toThrow('Service error')
       expect(useCardsStore.getState().error).toBe('Service error')
     })
 

@@ -1,7 +1,8 @@
 import { replicateFirestore, type RxFirestoreReplicationState } from 'rxdb/plugins/replication-firestore'
-import { collection, type CollectionReference } from 'firebase/firestore'
+import { collection, where, type CollectionReference } from 'firebase/firestore'
 import type { TrelloDatabase } from './database'
 import { getFirestoreDatabase } from '../firebase/config'
+import { useAuthStore } from '@/stores/auth'
 import type { Board } from '../types/board'
 import type { Column } from '../types/column'
 import type { Card } from '../types/card'
@@ -24,7 +25,9 @@ export function setupFirestoreReplication(
     throw new Error('VITE_FIREBASE_PROJECT_ID is not set in environment variables')
   }
 
-  console.log('🔥 Setting up Firestore replication...')
+  // Get current user ID for filtering
+  const currentUserId = useAuthStore.getState().user?.uid
+  console.log('🔥 Setting up Firestore replication for user:', currentUserId)
   console.log('🔥 Firestore database instance:', firestoreDatabase)
   console.log('🔥 Firestore database app:', firestoreDatabase.app?.name)
 
@@ -49,7 +52,11 @@ export function setupFirestoreReplication(
         // Type assertion needed because RxDB expects a specific Firestore collection type
         collection: boardsFirestoreCollection as CollectionReference<Board>,
       },
-      pull: {},
+      pull: {
+        filter: currentUserId ? [
+          where('ownerId', '==', currentUserId)
+        ] : []
+      },
       push: {},
       live: true,
       serverTimestampField: 'serverTimestamp',

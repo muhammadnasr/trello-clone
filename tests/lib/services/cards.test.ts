@@ -15,7 +15,7 @@ describe('Card Service Functions', () => {
     await initDatabase(testDb)
     const board = await createBoard('Test Board', 'user1')
     boardId = board.id
-    const column = await createColumn(boardId, 'Test Column', 0, 'user1')
+    const column = await createColumn(boardId, 'Test Column', 0)
     columnId = column.id
   })
 
@@ -24,20 +24,19 @@ describe('Card Service Functions', () => {
   })
 
   it('creates a card successfully', async () => {
-    const card = await createCard(columnId, 'Test Card', 0, 'user1')
+    const card = await createCard(columnId, 'Test Card', 0)
     
     expect(card).toBeTruthy()
     expect(card.title).toBe('Test Card')
     expect(card.columnId).toBe(columnId)
     expect(card.order).toBe(0)
-    expect(card.ownerId).toBe('user1')
     expect(card.id).toBeTruthy()
     expect(card.createdAt).toBeTruthy()
     expect(card.updatedAt).toBeTruthy()
   })
 
   it('updates a card title', async () => {
-    const card = await createCard(columnId, 'Original Title', 0, 'user1')
+    const card = await createCard(columnId, 'Original Title', 0)
     
     await updateCard(card.id, { title: 'Updated Title' })
     
@@ -47,7 +46,7 @@ describe('Card Service Functions', () => {
   })
 
   it('updates a card order', async () => {
-    const card = await createCard(columnId, 'Test Card', 0, 'user1')
+    const card = await createCard(columnId, 'Test Card', 0)
     
     await updateCard(card.id, { order: 5 })
     
@@ -57,8 +56,8 @@ describe('Card Service Functions', () => {
   })
 
   it('updates a card columnId', async () => {
-    const card = await createCard(columnId, 'Test Card', 0, 'user1')
-    const newColumn = await createColumn(boardId, 'New Column', 1, 'user1')
+    const card = await createCard(columnId, 'Test Card', 0)
+    const newColumn = await createColumn(boardId, 'New Column', 1)
     
     await updateCard(card.id, { columnId: newColumn.id })
     
@@ -72,7 +71,7 @@ describe('Card Service Functions', () => {
   })
 
   it('deletes a card successfully', async () => {
-    const card = await createCard(columnId, 'Test Card', 0, 'user1')
+    const card = await createCard(columnId, 'Test Card', 0)
     
     await deleteCard(card.id)
     
@@ -86,9 +85,9 @@ describe('Card Service Functions', () => {
   })
 
   it('gets cards by columnId sorted by order', async () => {
-    await createCard(columnId, 'Card 1', 2, 'user1')
-    await createCard(columnId, 'Card 2', 0, 'user1')
-    await createCard(columnId, 'Card 3', 1, 'user1')
+    await createCard(columnId, 'Card 1', 2)
+    await createCard(columnId, 'Card 2', 0)
+    await createCard(columnId, 'Card 3', 1)
     
     const cards = await getCardsByColumnId(columnId)
     
@@ -104,10 +103,10 @@ describe('Card Service Functions', () => {
   })
 
   it('only returns cards for the specified column', async () => {
-    const column2 = await createColumn(boardId, 'Column 2', 1, 'user1')
+    const column2 = await createColumn(boardId, 'Column 2', 1)
     
-    await createCard(columnId, 'Card in Column 1', 0, 'user1')
-    await createCard(column2.id, 'Card in Column 2', 0, 'user1')
+    await createCard(columnId, 'Card in Column 1', 0)
+    await createCard(column2.id, 'Card in Column 2', 0)
     
     const cards = await getCardsByColumnId(columnId)
     

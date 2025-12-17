@@ -11,7 +11,6 @@ import {
 } from '@/components/ui/dialog'
 import { Input } from '@/components/ui/input'
 import { useColumnsStore } from '@/stores/columns'
-import { useAuthStore } from '@/stores/auth'
 
 interface CreateColumnDialogProps {
   boardId: string
@@ -24,7 +23,6 @@ export function CreateColumnDialog({ boardId, nextOrder }: CreateColumnDialogPro
   const [isSubmitting, setIsSubmitting] = useState(false)
   const createColumn = useColumnsStore((state) => state.createColumn)
   const error = useColumnsStore((state) => state.error)
-  const user = useAuthStore((state) => state.user)
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
@@ -32,8 +30,7 @@ export function CreateColumnDialog({ boardId, nextOrder }: CreateColumnDialogPro
 
     setIsSubmitting(true)
     try {
-      const ownerId = user?.uid || 'anonymous'
-      await createColumn(boardId, title.trim(), nextOrder, ownerId)
+      await createColumn(boardId, title.trim(), nextOrder)
       setTitle('')
       setOpen(false)
     } catch (err) {

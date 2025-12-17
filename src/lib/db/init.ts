@@ -2,9 +2,42 @@ import { createDatabase } from './database'
 import { syncStoresToDatabase } from './sync'
 import { setupFirestoreReplication, cancelReplication, getReplicationStates } from './replication'
 import type { TrelloDatabase } from './database'
+import { useAuthStore } from '@/stores/auth'
 
 let databaseInstance: TrelloDatabase | null = null
 let unsubscribeSync: (() => void) | null = null
+
+/**
+ * Migrate anonymous boards to the authenticated user.
+ * This allows offline-first usage where users can create boards
+ * without logging in, then claim them after authentication.
+ */
+async function migrateAnonymousData(userId: string): Promise<void> {
+  if (!databaseInstance) return
+  
+  // Find all boards owned by "anonymous"
+  const anonymousBoards = await databaseInstance.boards
+    .find({ selector: { ownerId: 'anonymous' } })
+    .exec()
+  
+  if (anonymousBoards.length === 0) return
+  
+  console.log(`🔄 Migrating ${anonymousBoards.length} anonymous board(s) to user ${userId}`)
+  
+  // Update each board to be owned by the authenticated user
+  for (const board of anonymousBoards) {
+    await board.patch({
+      ownerId: userId,
+      updatedAt: new Date().toISOString()
+    })
+  }
+
+    // Clear replication state to force fresh sync
+  // This removes stale checkpoint data from anonymous session
+  cancelReplication()
+  
+  console.log('✅ Anonymous data migration complete')
+}
 
 /**
  * Initialize database and hydrate from IndexedDB.
@@ -49,6 +82,12 @@ export async function attachBackendSubscriptions(): Promise<void> {
   }
 
   try {
+    // Migrate anonymous data to the authenticated user BEFORE starting replication
+    const user = useAuthStore.getState().user
+    if (user?.uid) {
+      await migrateAnonymousData(user.uid)
+    }
+
     const replication = setupFirestoreReplication(databaseInstance)
     console.log('✅ Firestore replication attached:', {
       boards: !!replication.boardsReplication,

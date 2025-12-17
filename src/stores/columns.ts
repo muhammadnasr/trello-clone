@@ -12,7 +12,7 @@ interface ColumnsActions {
   setColumns: (columns: Column[]) => void
   setLoading: (isLoading: boolean) => void
   setError: (error: string | null) => void
-  createColumn: (boardId: string, title: string, order: number, ownerId: string) => Promise<Column>
+  createColumn: (boardId: string, title: string, order: number) => Promise<Column>
   updateColumn: (id: string, updates: { title?: string; order?: number }) => Promise<void>
   deleteColumn: (id: string) => Promise<void>
 }
@@ -28,10 +28,10 @@ export const useColumnsStore = create<ColumnsStore>((set) => ({
   setLoading: (isLoading) => set({ isLoading }),
   setError: (error) => set({ error }),
 
-  createColumn: async (boardId: string, title: string, order: number, ownerId: string) => {
+  createColumn: async (boardId: string, title: string, order: number) => {
     set({ error: null })
     try {
-      const column = await columnsService.createColumn(boardId, title.trim(), order, ownerId)
+      const column = await columnsService.createColumn(boardId, title.trim(), order)
       return column
     } catch (error) {
       const errorMessage = error instanceof Error ? error.message : 'Failed to create column'

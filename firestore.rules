@@ -1,15 +1,52 @@
 rules_version = '2';
 service cloud.firestore {
   match /databases/{database}/documents {
-    match /boards/{document=**} {
-      allow read, write: if true;
+    
+    // Helper: Check if user can access board (owner or editor - same permissions)
+    function canAccessBoard(boardId) {
+      let board = get(/databases/$(database)/documents/boards/$(boardId));
+      return request.auth != null && (
+        request.auth.uid == board.data.ownerId ||
+        request.auth.uid in board.data.editors
+      );
     }
-    match /columns/{document=**} {
-      allow read, write: if true;
+    
+    // Helper: Get boardId from column
+    function getBoardIdFromColumn(columnId) {
+      return get(/databases/$(database)/documents/columns/$(columnId)).data.boardId;
     }
-    match /cards/{document=**} {
-      allow read, write: if true;
+    
+    // Boards
+    match /boards/{boardId} {
+      // Read existing boards
+      allow read: if request.auth != null && (
+        request.auth.uid == resource.data.ownerId ||
+        request.auth.uid in resource.data.editors
+      );
+      // Create new boards - user must be the owner
+      allow create: if request.auth != null && 
+        request.auth.uid == request.resource.data.ownerId;
+      // Update/delete existing boards
+      allow update, delete: if request.auth != null && (
+        request.auth.uid == resource.data.ownerId ||
+        request.auth.uid in resource.data.editors
+      );
+    }
+    
+    // Columns: inherit access from parent board
+    match /columns/{columnId} {
+      // Read: allow any authenticated user (queries require this)
+      allow read: if request.auth != null;
+      allow create: if canAccessBoard(request.resource.data.boardId);
+      allow update, delete: if canAccessBoard(resource.data.boardId);
+    }
+    
+    // Cards: inherit access from parent board (via column)
+    match /cards/{cardId} {
+      // Read: allow any authenticated user (queries require this)
+      allow read: if request.auth != null;
+      allow create: if canAccessBoard(getBoardIdFromColumn(request.resource.data.columnId));
+      allow update, delete: if canAccessBoard(getBoardIdFromColumn(resource.data.columnId));
     }
   }
 }
-

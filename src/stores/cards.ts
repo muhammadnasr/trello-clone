@@ -12,7 +12,7 @@ interface CardsActions {
   setCards: (cards: Card[]) => void
   setLoading: (isLoading: boolean) => void
   setError: (error: string | null) => void
-  createCard: (columnId: string, title: string, order: number, ownerId: string) => Promise<Card>
+  createCard: (columnId: string, title: string, order: number) => Promise<Card>
   updateCard: (id: string, updates: { title?: string; order?: number; columnId?: string }) => Promise<void>
   deleteCard: (id: string) => Promise<void>
 }
@@ -28,10 +28,10 @@ export const useCardsStore = create<CardsStore>((set) => ({
   setLoading: (isLoading) => set({ isLoading }),
   setError: (error) => set({ error }),
 
-  createCard: async (columnId: string, title: string, order: number, ownerId: string) => {
+  createCard: async (columnId: string, title: string, order: number) => {
     set({ error: null })
     try {
-      const card = await cardsService.createCard(columnId, title.trim(), order, ownerId)
+      const card = await cardsService.createCard(columnId, title.trim(), order)
       return card
     } catch (error) {
       const errorMessage = error instanceof Error ? error.message : 'Failed to create card'

@@ -3,14 +3,9 @@ import { useBoardsStore } from '@/stores/boards'
 import { useColumnsStore } from '@/stores/columns'
 import { useCardsStore } from '@/stores/cards'
 import { useAuthStore } from '@/stores/auth'
-
-// Helper to get current ownerId
-const getOwnerId = (): string => {
-  const authState = useAuthStore.getState()
-  return authState.isAuthenticated && authState.user 
-    ? authState.user.uid 
-    : 'anonymous'
-}
+import type { Board } from '@/lib/types/board'
+import type { Column } from '@/lib/types/column'
+import type { Card } from '@/lib/types/card'
 
 export function syncStoresToDatabase(database: TrelloDatabase): () => void {
   let boardsUnsubscribe: (() => void) | null = null
@@ -33,48 +28,33 @@ export function syncStoresToDatabase(database: TrelloDatabase): () => void {
       cardsUnsubscribe = null
     }
 
-    const ownerId = getOwnerId()
-
-    // Set up parallel reactive queries - no dependencies between them
+    // Firestore rules handle access control - sync all replicated data
     // Boards subscription
     const boardsSub = database.boards
-      .find({
-        selector: {
-          ownerId,
-        },
-      })
+      .find()
       .$.subscribe((rxDocuments) => {
-        const boards = rxDocuments.map((doc) => doc.toJSON())
+        const boards = rxDocuments.map((doc) => doc.toJSON() as Board)
         useBoardsStore.getState().setBoards(boards)
       })
 
     boardsUnsubscribe = () => boardsSub.unsubscribe()
 
-    // Columns subscription - independent, filtered by ownerId
+    // Columns subscription
     const columnsSub = database.columns
-      .find({
-        selector: {
-          ownerId,
-        },
-      })
+      .find()
       .$.subscribe((rxDocuments) => {
-        const columns = rxDocuments.map((doc) => doc.toJSON())
+        const columns = rxDocuments.map((doc) => doc.toJSON() as Column)
         useColumnsStore.getState().setColumns(columns)
       })
 
     columnsUnsubscribe = () => columnsSub.unsubscribe()
 
-    // Cards subscription - independent, filtered by ownerId
-    // Check if cards collection exists (for backward compatibility with old databases)
+    // Cards subscription
     if (database.cards) {
       const cardsSub = database.cards
-        .find({
-          selector: {
-            ownerId,
-          },
-        })
+        .find()
         .$.subscribe((rxDocuments) => {
-          const cards = rxDocuments.map((doc) => doc.toJSON())
+          const cards = rxDocuments.map((doc) => doc.toJSON() as Card)
           useCardsStore.getState().setCards(cards)
         })
 
@@ -85,7 +65,7 @@ export function syncStoresToDatabase(database: TrelloDatabase): () => void {
   // Set up initial subscriptions
   setupSubscriptions()
 
-  // Subscribe to auth changes to recreate subscriptions with new ownerId
+  // Subscribe to auth changes to recreate subscriptions when user changes
   authUnsubscribe = useAuthStore.subscribe(() => {
     setupSubscriptions()
   })
@@ -115,4 +95,3 @@ export function syncBoardsToStore(database: TrelloDatabase): () => void {
 export function syncColumnsToStore(database: TrelloDatabase): () => void {
   return syncStoresToDatabase(database)
 }
-

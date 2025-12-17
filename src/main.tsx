@@ -6,7 +6,7 @@ import { cancelReplication } from './lib/db/replication'
 import { initFirebase } from './lib/firebase/config'
 import { initAuthStateListener } from './lib/services/auth'
 import { useAuthStore } from './stores/auth'
-import { initSyncStatusMonitoring } from './stores/syncStatus'
+import { initSyncStatusMonitoring, triggerSyncStatusUpdate } from './stores/syncStatus'
 import './index.css'
 import { routeTree } from './routeTree.gen'
 
@@ -37,10 +37,16 @@ async function bootstrap() {
         // Only sync with Firestore if user is authenticated
         if (state.isAuthenticated && !state.isLoading && !hasAttachedSubscriptions) {
           hasAttachedSubscriptions = true
-          attachBackendSubscriptions().catch((error) => {
-            console.error('Failed to attach backend subscriptions:', error)
-            hasAttachedSubscriptions = false
-          })
+          attachBackendSubscriptions()
+            .then(() => {
+              // Trigger sync status update after replication is established
+              triggerSyncStatusUpdate()
+            })
+            .catch((error) => {
+              console.error('Failed to attach backend subscriptions:', error)
+              hasAttachedSubscriptions = false
+              triggerSyncStatusUpdate()
+            })
         }
 
         // Cancel Firestore replication if user logs out (use IndexedDB only)
@@ -50,8 +56,7 @@ async function bootstrap() {
         }
       })
     }
-    // Step 3: Initialize sync status monitoring (after Firebase is initialized)
-    // or even without Firebase (for offline mode)
+    // Step 3: Initialize sync status monitoring even without Firebase (for offline mode)
     initSyncStatusMonitoring()
 
     createRoot(document.getElementById('root')!).render(

@@ -12,7 +12,7 @@ interface CardProps {
 
 export function Card({ card }: CardProps) {
   const [isEditing, setIsEditing] = useState(false)
-  const [title, setTitle] = useState(card.title)
+  const [editTitle, setEditTitle] = useState('')
   const inputRef = useRef<HTMLInputElement>(null)
   const updateCard = useCardsStore((state) => state.updateCard)
   const deleteCard = useCardsStore((state) => state.deleteCard)
@@ -39,24 +39,20 @@ export function Card({ card }: CardProps) {
     }
   }, [isEditing])
 
-  // Only sync title when card.id changes (different card)
-  // This avoids cascading renders from syncing on every card.title change
-  useEffect(() => {
-    setTitle(card.title)
-  }, [card.id])
+  const startEditing = () => {
+    setEditTitle(card.title)
+    setIsEditing(true)
+  }
 
   const handleSave = async () => {
-    const trimmedTitle = title.trim()
+    const trimmedTitle = editTitle.trim()
     if (trimmedTitle && trimmedTitle !== card.title) {
       await updateCard(card.id, { title: trimmedTitle })
-    } else if (!trimmedTitle) {
-      setTitle(card.title)
     }
     setIsEditing(false)
   }
 
   const handleCancel = () => {
-    setTitle(card.title)
     setIsEditing(false)
   }
 
@@ -84,8 +80,8 @@ export function Card({ card }: CardProps) {
         <input
           ref={inputRef}
           type="text"
-          value={title}
-          onChange={(e) => setTitle(e.target.value)}
+          value={editTitle}
+          onChange={(e) => setEditTitle(e.target.value)}
           onBlur={handleSave}
           onKeyDown={handleKeyDown}
           className="w-full px-2 py-1 text-sm border border-blue-500 rounded focus:outline-none focus:ring-2 focus:ring-blue-500"
@@ -102,8 +98,8 @@ export function Card({ card }: CardProps) {
           </button>
           <p
             className="flex-1 text-sm cursor-text hover:bg-gray-100 dark:hover:bg-gray-600 px-2 py-1 rounded -mx-2 -my-1"
-            onClick={() => setIsEditing(true)}
-            onDoubleClick={() => setIsEditing(true)}
+            onClick={startEditing}
+            onDoubleClick={startEditing}
           >
             {card.title}
           </p>

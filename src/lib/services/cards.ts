@@ -2,7 +2,7 @@ import { getDatabase } from '@/lib/db/init'
 import type { Card } from '@/lib/types/card'
 import { uuidv7 } from 'uuidv7'
 
-export async function createCard(columnId: string, title: string, order: number, ownerId: string): Promise<Card> {
+export async function createCard(columnId: string, title: string, order: number): Promise<Card> {
   const db = getDatabase()
   const now = new Date().toISOString()
 
@@ -11,7 +11,6 @@ export async function createCard(columnId: string, title: string, order: number,
     columnId,
     title,
     order,
-    ownerId,
     createdAt: now,
     updatedAt: now,
   })

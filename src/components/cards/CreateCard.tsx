@@ -2,7 +2,6 @@ import { useState } from 'react'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import { useCardsStore } from '@/stores/cards'
-import { useAuthStore } from '@/stores/auth'
 import { X } from 'lucide-react'
 
 interface CreateCardProps {
@@ -15,7 +14,6 @@ export function CreateCard({ columnId, nextOrder }: CreateCardProps) {
   const [title, setTitle] = useState('')
   const createCard = useCardsStore((state) => state.createCard)
   const error = useCardsStore((state) => state.error)
-  const user = useAuthStore((state) => state.user)
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
@@ -25,8 +23,7 @@ export function CreateCard({ columnId, nextOrder }: CreateCardProps) {
     }
 
     try {
-      const ownerId = user?.uid || 'anonymous'
-      await createCard(columnId, title.trim(), nextOrder, ownerId)
+      await createCard(columnId, title.trim(), nextOrder)
       setTitle('')
       setIsCreating(false)
     } catch (err) {

@@ -69,12 +69,12 @@ describe('Board Service Functions', () => {
     
     // Create a board with columns and cards
     const board = await createBoard('Board with Columns and Cards', 'user1')
-    const column1 = await createColumn(board.id, 'Column 1', 0, 'user1')
-    const column2 = await createColumn(board.id, 'Column 2', 1, 'user1')
+    const column1 = await createColumn(board.id, 'Column 1', 0)
+    const column2 = await createColumn(board.id, 'Column 2', 1)
     
-    const card1 = await createCard(column1.id, 'Card 1', 0, 'user1')
-    const card2 = await createCard(column1.id, 'Card 2', 1, 'user1')
-    const card3 = await createCard(column2.id, 'Card 3', 0, 'user1')
+    const card1 = await createCard(column1.id, 'Card 1', 0)
+    const card2 = await createCard(column1.id, 'Card 2', 1)
+    const card3 = await createCard(column2.id, 'Card 3', 0)
     
     // Verify everything exists before deletion
     const db = getDatabase()

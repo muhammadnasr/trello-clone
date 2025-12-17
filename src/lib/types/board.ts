@@ -4,5 +4,6 @@ export interface Board {
   createdAt: string
   updatedAt: string
   ownerId: string
+  editors: string[]
 }
 

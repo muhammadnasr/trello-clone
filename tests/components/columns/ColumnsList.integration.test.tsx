@@ -82,11 +82,11 @@ describe('ColumnsList Integration - Create Column', () => {
     }
     // Notify subscribers of auth state change
     authSubscribers.forEach((sub) => sub(mockAuthState))
-    
+
     const { createBoard } = await import('../../../src/lib/services/boards')
     const board = await createBoard('Test Board', 'user1')
     boardId = board.id
-    
+
     // Wait for store to sync (RxDB reactive queries update store asynchronously)
     await new Promise((resolve) => setTimeout(resolve, 200))
   })
@@ -133,15 +133,15 @@ describe('ColumnsList Integration - Create Column', () => {
     }
     // Notify subscribers of auth state change
     authSubscribers.forEach((sub) => sub(mockAuthState))
-    
+
     // Wait for sync to update
     await new Promise((resolve) => setTimeout(resolve, 100))
-    
+
     // Create a board with anonymous ownerId for unauthenticated test
     const { createBoard } = await import('../../../src/lib/services/boards')
     const anonymousBoard = await createBoard('Anonymous Board', 'anonymous')
     const anonymousBoardId = anonymousBoard.id
-    
+
     // Wait for store to sync
     await new Promise((resolve) => setTimeout(resolve, 200))
 
@@ -183,7 +183,7 @@ describe('ColumnsList Integration - Update Column', () => {
     }
     // Notify subscribers of auth state change
     authSubscribers.forEach((sub) => sub(mockAuthState))
-    
+
     const testDb = await createTestDatabase()
     await initDatabase(testDb)
     useBoardsStore.setState({
@@ -196,13 +196,13 @@ describe('ColumnsList Integration - Update Column', () => {
       isLoading: false,
       error: null,
     })
-    
+
     const { createBoard } = await import('../../../src/lib/services/boards')
     const { createColumn } = await import('../../../src/lib/services/columns')
     const board = await createBoard('Test Board', 'user1')
     boardId = board.id
-    await createColumn(boardId, 'Original Column', 0, 'user1')
-    
+    await createColumn(boardId, 'Original Column', 0)
+
     // Wait for stores to sync (RxDB reactive queries update store asynchronously)
     await new Promise((resolve) => setTimeout(resolve, 200))
   })
@@ -290,7 +290,7 @@ describe('ColumnsList Integration - Delete Column', () => {
     }
     // Notify subscribers of auth state change
     authSubscribers.forEach((sub) => sub(mockAuthState))
-    
+
     const testDb = await createTestDatabase()
     await initDatabase(testDb)
     useBoardsStore.setState({
@@ -304,13 +304,13 @@ describe('ColumnsList Integration - Delete Column', () => {
       error: null,
     })
     window.confirm = vi.fn(() => true)
-    
+
     const { createBoard } = await import('../../../src/lib/services/boards')
     const { createColumn } = await import('../../../src/lib/services/columns')
     const board = await createBoard('Test Board', 'user1')
     boardId = board.id
-    await createColumn(boardId, 'Column to Delete', 0, 'user1')
-    
+    await createColumn(boardId, 'Column to Delete', 0)
+
     // Wait for stores to sync (RxDB reactive queries update store asynchronously)
     await new Promise((resolve) => setTimeout(resolve, 200))
   })
@@ -395,18 +395,18 @@ describe('ColumnsList Integration - Drag and Drop', () => {
       isAuthenticated: true,
     }
     authSubscribers.forEach((sub) => sub(mockAuthState))
-    
+
     const { createBoard } = await import('../../../src/lib/services/boards')
     const { createColumn } = await import('../../../src/lib/services/columns')
     const board = await createBoard('Test Board', 'user1')
     boardId = board.id
-    
+
     // Create 4 columns with orders 0, 1, 2, 3
-    await createColumn(boardId, 'Column 0', 0, 'user1')
-    await createColumn(boardId, 'Column 1', 1, 'user1')
-    await createColumn(boardId, 'Column 2', 2, 'user1')
-    await createColumn(boardId, 'Column 3', 3, 'user1')
-    
+    await createColumn(boardId, 'Column 0', 0)
+    await createColumn(boardId, 'Column 1', 1)
+    await createColumn(boardId, 'Column 2', 2)
+    await createColumn(boardId, 'Column 3', 3)
+
     await new Promise((resolve) => setTimeout(resolve, 300))
   })
 
@@ -440,13 +440,13 @@ describe('ColumnsList Integration - Drag and Drop', () => {
     const boardColumns = columns
       .filter((col) => col.boardId === boardId)
       .sort((a, b) => a.order - b.order)
-    
+
     const column0Id = boardColumns[0].id // Column 0
     const column2Id = boardColumns[2].id // Column 2
 
     // Now we can test the actual handleColumnReorder function!
     const { handleColumnReorder } = await import('../../../src/lib/utils/column-reorder')
-    
+
     // Simulate drag end event: Column 0 dragged to after Column 2
     const mockDragEndEvent = {
       active: { id: column0Id },
@@ -461,7 +461,7 @@ describe('ColumnsList Integration - Drag and Drop', () => {
       const updatedColumns = useColumnsStore.getState().columns
         .filter((col) => col.boardId === boardId)
         .sort((a, b) => a.order - b.order)
-      
+
       // After dragging Column 0 to after Column 2:
       // Original: [Column 0, Column 1, Column 2, Column 3]
       // Result: [Column 1, Column 2, Column 0, Column 3]

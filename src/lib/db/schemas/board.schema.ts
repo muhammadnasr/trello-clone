@@ -21,6 +21,11 @@ export const boardSchema = {
     ownerId: {
       type: 'string',
     },
+    editors: {
+      type: 'array',
+      items: { type: 'string' },
+      default: [],
+    },
   },
   required: ['id', 'title', 'createdAt', 'updatedAt', 'ownerId'],
 }

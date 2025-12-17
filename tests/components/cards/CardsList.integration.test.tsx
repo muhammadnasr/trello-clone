@@ -92,7 +92,7 @@ describe('CardsList Integration - Create Card', () => {
     const { createColumn } = await import('../../../src/lib/services/columns')
     const board = await createBoard('Test Board', 'user1')
     boardId = board.id
-    const column = await createColumn(boardId, 'Test Column', 0, 'user1')
+    const column = await createColumn(boardId, 'Test Column', 0)
     columnId = column.id
 
     await new Promise((resolve) => setTimeout(resolve, 200))
@@ -107,8 +107,8 @@ describe('CardsList Integration - Create Card', () => {
 
     // Add some existing cards to test with multiple cards present
     const { createCard } = await import('../../../src/lib/services/cards')
-    await createCard(columnId, 'Existing Card 1', 0, 'user1')
-    await createCard(columnId, 'Existing Card 2', 1, 'user1')
+    await createCard(columnId, 'Existing Card 1', 0)
+    await createCard(columnId, 'Existing Card 2', 1)
     await new Promise((resolve) => setTimeout(resolve, 200))
 
     router.history.push(`/boards/${boardId}`)
@@ -147,7 +147,6 @@ describe('CardsList Integration - Create Card', () => {
     expect(cardsInStore.some(c => c.title === 'Existing Card 1')).toBe(true)
     expect(cardsInStore.some(c => c.title === 'Existing Card 2')).toBe(true)
     expect(cardsInStore.find(c => c.title === 'New Card Title')?.columnId).toBe(columnId)
-    expect(cardsInStore.find(c => c.title === 'New Card Title')?.ownerId).toBe('user1')
   })
 
   it('creates card without authentication', async () => {
@@ -160,22 +159,22 @@ describe('CardsList Integration - Create Card', () => {
       isAuthenticated: false,
     }
     authSubscribers.forEach((sub) => sub(mockAuthState))
-    
-    // Create board/column with anonymous ownerId
+
+    // Create board/column
     const { createBoard } = await import('../../../src/lib/services/boards')
     const { createColumn } = await import('../../../src/lib/services/columns')
     const { createCard } = await import('../../../src/lib/services/cards')
     const anonymousBoard = await createBoard('Anonymous Board', 'anonymous')
     const anonymousBoardId = anonymousBoard.id
-    const anonymousColumn = await createColumn(anonymousBoardId, 'Anonymous Column', 0, 'anonymous')
+    const anonymousColumn = await createColumn(anonymousBoardId, 'Anonymous Column', 0)
     const anonymousColumnId = anonymousColumn.id
     // Create multiple cards
-    await createCard(anonymousColumnId, 'Anonymous Existing 1', 0, 'anonymous')
-    await createCard(anonymousColumnId, 'Anonymous Existing 2', 1, 'anonymous')
-    
+    await createCard(anonymousColumnId, 'Anonymous Existing 1', 0)
+    await createCard(anonymousColumnId, 'Anonymous Existing 2', 1)
+
     // Wait for store to sync
     await new Promise((resolve) => setTimeout(resolve, 500))
-    
+
     // Verify cards are synced to store
     await waitFor(() => {
       const cards = useCardsStore.getState().cards
@@ -218,7 +217,6 @@ describe('CardsList Integration - Create Card', () => {
     expect(cardsInStore.some(c => c.title === 'Anonymous Existing 1')).toBe(true)
     expect(cardsInStore.some(c => c.title === 'Anonymous Existing 2')).toBe(true)
     expect(cardsInStore.find(c => c.title === 'Anonymous Card')?.columnId).toBe(anonymousColumnId)
-    expect(cardsInStore.find(c => c.title === 'Anonymous Card')?.ownerId).toBe('anonymous')
   })
 })
 
@@ -258,17 +256,17 @@ describe('CardsList Integration - Update Card', () => {
     const { createCard } = await import('../../../src/lib/services/cards')
     const board = await createBoard('Test Board', 'user1')
     boardId = board.id
-    const column = await createColumn(boardId, 'Test Column', 0, 'user1')
+    const column = await createColumn(boardId, 'Test Column', 0)
     columnId = column.id
     // Create multiple cards to test with multiple cards present
-    await createCard(columnId, 'Other Card 1', 0, 'user1')
-    const card = await createCard(columnId, 'Initial Card Title', 1, 'user1')
+    await createCard(columnId, 'Other Card 1', 0)
+    const card = await createCard(columnId, 'Initial Card Title', 1)
     cardId = card.id
-    await createCard(columnId, 'Other Card 2', 2, 'user1')
+    await createCard(columnId, 'Other Card 2', 2)
 
     // Wait for stores to sync (RxDB reactive queries update store asynchronously)
     await new Promise((resolve) => setTimeout(resolve, 500))
-    
+
     // Verify cards are synced to store
     await waitFor(() => {
       const cards = useCardsStore.getState().cards
@@ -331,26 +329,26 @@ describe('CardsList Integration - Update Card', () => {
       isAuthenticated: false,
     }
     authSubscribers.forEach((sub) => sub(mockAuthState))
-    
+
     // Wait for sync to update
     await new Promise((resolve) => setTimeout(resolve, 100))
-    
-    // Create board/column/card with anonymous ownerId
+
+    // Create board/column/card
     const { createBoard } = await import('../../../src/lib/services/boards')
     const { createColumn } = await import('../../../src/lib/services/columns')
     const { createCard } = await import('../../../src/lib/services/cards')
     const anonymousBoard = await createBoard('Anonymous Board', 'anonymous')
     const anonymousBoardId = anonymousBoard.id
-    const anonymousColumn = await createColumn(anonymousBoardId, 'Anonymous Column', 0, 'anonymous')
+    const anonymousColumn = await createColumn(anonymousBoardId, 'Anonymous Column', 0)
     const anonymousColumnId = anonymousColumn.id
     // Create multiple cards
-    await createCard(anonymousColumnId, 'Anonymous Card 1', 0, 'anonymous')
-    await createCard(anonymousColumnId, 'Initial Card Title', 1, 'anonymous')
-    await createCard(anonymousColumnId, 'Anonymous Card 2', 2, 'anonymous')
-    
+    await createCard(anonymousColumnId, 'Anonymous Card 1', 0)
+    await createCard(anonymousColumnId, 'Initial Card Title', 1)
+    await createCard(anonymousColumnId, 'Anonymous Card 2', 2)
+
     // Wait for store to sync
     await new Promise((resolve) => setTimeout(resolve, 500))
-    
+
     // Verify cards are synced to store
     await waitFor(() => {
       const cards = useCardsStore.getState().cards
@@ -389,12 +387,12 @@ describe('CardsList Integration - Update Card', () => {
     expect(screen.getByText('Anonymous Card 2')).toBeInTheDocument()
 
     const cardsInStore = useCardsStore.getState().cards
-    expect(cardsInStore).toHaveLength(3)
-    expect(cardsInStore.some(c => c.title === 'Anonymous Updated Card')).toBe(true)
-    expect(cardsInStore.some(c => c.title === 'Anonymous Card 1')).toBe(true)
-    expect(cardsInStore.some(c => c.title === 'Anonymous Card 2')).toBe(true)
+    const cardsInColumn = cardsInStore.filter(c => c.columnId === anonymousColumnId)
+    expect(cardsInColumn).toHaveLength(3)
+    expect(cardsInColumn.some(c => c.title === 'Anonymous Updated Card')).toBe(true)
+    expect(cardsInColumn.some(c => c.title === 'Anonymous Card 1')).toBe(true)
+    expect(cardsInColumn.some(c => c.title === 'Anonymous Card 2')).toBe(true)
     expect(cardsInStore.find(c => c.title === 'Anonymous Updated Card')?.columnId).toBe(anonymousColumnId)
-    expect(cardsInStore.find(c => c.title === 'Anonymous Updated Card')?.ownerId).toBe('anonymous')
   })
 })
 
@@ -434,16 +432,16 @@ describe('CardsList Integration - Delete Card', () => {
     const { createCard } = await import('../../../src/lib/services/cards')
     const board = await createBoard('Test Board', 'user1')
     boardId = board.id
-    const column = await createColumn(boardId, 'Test Column', 0, 'user1')
+    const column = await createColumn(boardId, 'Test Column', 0)
     columnId = column.id
     // Create multiple cards to ensure CardsList renders them
-    await createCard(columnId, 'Card 1', 0, 'user1')
-    await createCard(columnId, 'Card to Delete', 1, 'user1')
-    await createCard(columnId, 'Card 2', 2, 'user1')
+    await createCard(columnId, 'Card 1', 0)
+    await createCard(columnId, 'Card to Delete', 1)
+    await createCard(columnId, 'Card 2', 2)
 
     // Wait for stores to sync (RxDB reactive queries update store asynchronously)
     await new Promise((resolve) => setTimeout(resolve, 500))
-    
+
     // Verify cards are in store before test runs
     const cardsInStore = useCardsStore.getState().cards
     console.log('Cards in store before test:', cardsInStore.length, cardsInStore.map(c => c.title))
@@ -468,10 +466,10 @@ describe('CardsList Integration - Delete Card', () => {
     // Use within() to scope the query to the specific card element
     const cardToDeleteElement = screen.getByText('Card to Delete').closest('.group')
     expect(cardToDeleteElement).toBeInTheDocument()
-    
+
     const cardContainer = within(cardToDeleteElement!)
     const deleteButton = cardContainer.getByTitle('Delete card')
-    
+
     await user.click(deleteButton)
 
     expect(window.confirm).toHaveBeenCalledWith(
@@ -503,10 +501,10 @@ describe('CardsList Integration - Delete Card', () => {
     // Use within() to scope the query to the specific card element
     const cardToDeleteElement = screen.getByText('Card to Delete').closest('.group')
     expect(cardToDeleteElement).toBeInTheDocument()
-    
+
     const cardContainer = within(cardToDeleteElement!)
     const deleteButton = cardContainer.getByTitle('Delete card')
-    
+
     await user.click(deleteButton)
 
     expect(window.confirm).toHaveBeenCalledWith(
@@ -533,20 +531,20 @@ describe('CardsList Integration - Delete Card', () => {
       isAuthenticated: false,
     }
     authSubscribers.forEach((sub) => sub(mockAuthState))
-    
+
     // Wait for sync to update
     await new Promise((resolve) => setTimeout(resolve, 100))
-    
-    // Create board/column/card with anonymous ownerId
+
+    // Create board/column/card
     const { createBoard } = await import('../../../src/lib/services/boards')
     const { createColumn } = await import('../../../src/lib/services/columns')
     const { createCard } = await import('../../../src/lib/services/cards')
     const anonymousBoard = await createBoard('Anonymous Board', 'anonymous')
     const anonymousBoardId = anonymousBoard.id
-    const anonymousColumn = await createColumn(anonymousBoardId, 'Anonymous Column', 0, 'anonymous')
+    const anonymousColumn = await createColumn(anonymousBoardId, 'Anonymous Column', 0)
     const anonymousColumnId = anonymousColumn.id
-    await createCard(anonymousColumnId, 'Card to Delete', 0, 'anonymous')
-    
+    await createCard(anonymousColumnId, 'Card to Delete', 0)
+
     // Wait for store to sync
     await new Promise((resolve) => setTimeout(resolve, 200))
 
@@ -561,10 +559,10 @@ describe('CardsList Integration - Delete Card', () => {
     // Use within() to scope the query to the specific card element
     const cardToDeleteElement = screen.getByText('Card to Delete').closest('.group')
     expect(cardToDeleteElement).toBeInTheDocument()
-    
+
     const cardContainer = within(cardToDeleteElement!)
     const deleteButton = cardContainer.getByTitle('Delete card')
-    
+
     await user.click(deleteButton)
 
     expect(window.confirm).toHaveBeenCalledWith(
@@ -606,21 +604,21 @@ describe('CardsList Integration - Drag and Drop', () => {
       isAuthenticated: true,
     }
     authSubscribers.forEach((sub) => sub(mockAuthState))
-    
+
     const { createBoard } = await import('../../../src/lib/services/boards')
     const { createColumn } = await import('../../../src/lib/services/columns')
     const { createCard } = await import('../../../src/lib/services/cards')
     const board = await createBoard('Test Board', 'user1')
     boardId = board.id
-    const column = await createColumn(boardId, 'Test Column', 0, 'user1')
+    const column = await createColumn(boardId, 'Test Column', 0)
     columnId = column.id
-    
+
     // Create 4 cards with orders 0, 1, 2, 3
-    await createCard(columnId, 'Card 0', 0, 'user1')
-    await createCard(columnId, 'Card 1', 1, 'user1')
-    await createCard(columnId, 'Card 2', 2, 'user1')
-    await createCard(columnId, 'Card 3', 3, 'user1')
-    
+    await createCard(columnId, 'Card 0', 0)
+    await createCard(columnId, 'Card 1', 1)
+    await createCard(columnId, 'Card 2', 2)
+    await createCard(columnId, 'Card 3', 3)
+
     await new Promise((resolve) => setTimeout(resolve, 300))
   })
 
@@ -645,18 +643,18 @@ describe('CardsList Integration - Drag and Drop', () => {
     const card1 = screen.getByText('Card 1').closest('.group')
     const card2 = screen.getByText('Card 2').closest('.group')
     const card3 = screen.getByText('Card 3').closest('.group')
-    
+
     expect(card0).toBeInTheDocument()
     expect(card1).toBeInTheDocument()
     expect(card2).toBeInTheDocument()
     expect(card3).toBeInTheDocument()
-    
+
     // Each card should have a drag handle
     const card0Handle = within(card0!).getByLabelText('Drag handle')
     const card1Handle = within(card1!).getByLabelText('Drag handle')
     const card2Handle = within(card2!).getByLabelText('Drag handle')
     const card3Handle = within(card3!).getByLabelText('Drag handle')
-    
+
     expect(card0Handle).toBeInTheDocument()
     expect(card1Handle).toBeInTheDocument()
     expect(card2Handle).toBeInTheDocument()
@@ -678,7 +676,7 @@ describe('CardsList Integration - Drag and Drop', () => {
     const columnCards = cards
       .filter((card) => card.columnId === columnId)
       .sort((a, b) => a.order - b.order)
-    
+
     const card0Id = columnCards[0].id // Card 0
     const card2Id = columnCards[2].id // Card 2
 
@@ -700,7 +698,7 @@ describe('CardsList Integration - Drag and Drop', () => {
       const updatedCards = useCardsStore.getState().cards
         .filter((card) => card.columnId === columnId)
         .sort((a, b) => a.order - b.order)
-      
+
       // After dragging Card 0 to after Card 2:
       // Original: [Card 0, Card 1, Card 2, Card 3]
       // Result: [Card 1, Card 2, Card 0, Card 3]
@@ -724,13 +722,13 @@ describe('CardsList Integration - Drag and Drop', () => {
     const columnCards = cards
       .filter((card) => card.columnId === columnId)
       .sort((a, b) => a.order - b.order)
-    
+
     const card3Id = columnCards[3].id // Card 3
     const card0Id = columnCards[0].id // Card 0
 
     const { handleCardReorder } = await import('../../../src/lib/utils/card-reorder')
     const columns = useColumnsStore.getState().columns
-    
+
     // Simulate drag end event: Card 3 dragged to before Card 0
     const mockDragEndEvent = {
       active: { id: card3Id },
@@ -743,7 +741,7 @@ describe('CardsList Integration - Drag and Drop', () => {
       const updatedCards = useCardsStore.getState().cards
         .filter((card) => card.columnId === columnId)
         .sort((a, b) => a.order - b.order)
-      
+
       // After dragging Card 3 to before Card 0:
       // Original: [Card 0, Card 1, Card 2, Card 3]
       // Result: [Card 3, Card 0, Card 1, Card 2]
@@ -767,13 +765,13 @@ describe('CardsList Integration - Drag and Drop', () => {
     const columnCards = cards
       .filter((card) => card.columnId === columnId)
       .sort((a, b) => a.order - b.order)
-    
+
     const card2Id = columnCards[2].id // Card 2
     const card0Id = columnCards[0].id // Card 0
 
     const { handleCardReorder } = await import('../../../src/lib/utils/card-reorder')
     const columns = useColumnsStore.getState().columns
-    
+
     // Simulate drag end event: Card 2 dragged to before Card 0
     const mockDragEndEvent = {
       active: { id: card2Id },
@@ -786,7 +784,7 @@ describe('CardsList Integration - Drag and Drop', () => {
       const updatedCards = useCardsStore.getState().cards
         .filter((card) => card.columnId === columnId)
         .sort((a, b) => a.order - b.order)
-      
+
       // After dragging Card 2 to before Card 0:
       // Original: [Card 0, Card 1, Card 2, Card 3]
       // Result: [Card 2, Card 0, Card 1, Card 3]
@@ -809,12 +807,12 @@ describe('CardsList Integration - Drag and Drop', () => {
     const columnCards = cards
       .filter((card) => card.columnId === columnId)
       .sort((a, b) => a.order - b.order)
-    
+
     const card1Id = columnCards[1].id // Card 1
 
     const { handleCardReorder } = await import('../../../src/lib/utils/card-reorder')
     const columns = useColumnsStore.getState().columns
-    
+
     // Simulate drag end event: Card 1 dragged to itself
     const mockDragEndEvent = {
       active: { id: card1Id },
@@ -829,7 +827,7 @@ describe('CardsList Integration - Drag and Drop', () => {
     const updatedCards = useCardsStore.getState().cards
       .filter((card) => card.columnId === columnId)
       .sort((a, b) => a.order - b.order)
-    
+
     // Order should remain unchanged
     expect(updatedCards[0].title).toBe('Card 0')
     expect(updatedCards[1].title).toBe('Card 1')
@@ -849,7 +847,7 @@ describe('CardsList Integration - Drag and Drop', () => {
 
     const { handleCardReorder } = await import('../../../src/lib/utils/card-reorder')
     const columns = useColumnsStore.getState().columns
-    
+
     // Simulate drag end event without over target
     const mockDragEndEvent = {
       active: { id: 'card-1' },
@@ -864,7 +862,7 @@ describe('CardsList Integration - Drag and Drop', () => {
     const updatedCards = useCardsStore.getState().cards
       .filter((card) => card.columnId === columnId)
       .sort((a, b) => a.order - b.order)
-    
+
     // Order should remain unchanged
     expect(updatedCards[0].title).toBe('Card 0')
     expect(updatedCards[1].title).toBe('Card 1')
@@ -909,19 +907,19 @@ describe('CardsList Integration - Cross-Column Drag and Drop', () => {
     const { createCard } = await import('../../../src/lib/services/cards')
     const board = await createBoard('Test Board', 'user1')
     boardId = board.id
-    const column1 = await createColumn(boardId, 'Column 1', 0, 'user1')
+    const column1 = await createColumn(boardId, 'Column 1', 0)
     column1Id = column1.id
-    const column2 = await createColumn(boardId, 'Column 2', 1, 'user1')
+    const column2 = await createColumn(boardId, 'Column 2', 1)
     column2Id = column2.id
 
     // Create cards in column 1
-    await createCard(column1Id, 'Card 1-0', 0, 'user1')
-    await createCard(column1Id, 'Card 1-1', 1, 'user1')
-    await createCard(column1Id, 'Card 1-2', 2, 'user1')
+    await createCard(column1Id, 'Card 1-0', 0)
+    await createCard(column1Id, 'Card 1-1', 1)
+    await createCard(column1Id, 'Card 1-2', 2)
 
     // Create cards in column 2
-    await createCard(column2Id, 'Card 2-0', 0, 'user1')
-    await createCard(column2Id, 'Card 2-1', 1, 'user1')
+    await createCard(column2Id, 'Card 2-0', 0)
+    await createCard(column2Id, 'Card 2-1', 1)
 
     await new Promise((resolve) => setTimeout(resolve, 300))
   })
