@@ -1,6 +1,6 @@
 import { describe, it, expect, beforeEach, afterEach, vi } from 'vitest'
 import type { TrelloDatabase } from '../../../src/lib/db/database'
-import { syncBoardsToStore, syncColumnsToStore } from '../../../src/lib/db/sync'
+import { syncBoardsToStore, syncColumnsToStore } from '../../../src/lib/db/localdb-store-sync'
 import { useBoardsStore } from '../../../src/stores/boards'
 import { useColumnsStore } from '../../../src/stores/columns'
 import { createTestDatabase } from './test-helpers'

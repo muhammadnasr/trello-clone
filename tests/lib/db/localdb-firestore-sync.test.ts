@@ -1,6 +1,6 @@
 import { describe, it, expect, beforeEach, afterEach, vi } from 'vitest'
 import type { TrelloDatabase } from '../../../src/lib/db/database'
-import { cancelReplication, getReplicationStates } from '../../../src/lib/db/replication'
+import { cancelReplication, getReplicationStates } from '../../../src/lib/db/localdb-firestore-sync'
 import { createTestDatabase } from './test-helpers'
 
 // Mock Firebase config
@@ -49,6 +49,7 @@ vi.mock('firebase/firestore', () => ({
     type: 'collection',
     firestore: db,
   })),
+  where: vi.fn((field, op, value) => ({ field, op, value, type: 'where' })),
   getFirestore: vi.fn(),
 }))
 
@@ -63,6 +64,18 @@ vi.mock('../../../src/lib/firebase/config', () => ({
     },
     firestore: mockFirestoreDatabase,
   })),
+}))
+
+// Mock auth store to return authenticated user
+vi.mock('@/stores/auth', () => ({
+  useAuthStore: {
+    getState: vi.fn(() => ({
+      user: { uid: 'test-user-123' },
+      isAuthenticated: true,
+      isLoading: false,
+    })),
+    subscribe: vi.fn(() => vi.fn()), // Returns unsubscribe function
+  },
 }))
 
 describe('Firestore Replication', () => {
@@ -82,10 +95,10 @@ describe('Firestore Replication', () => {
   })
 
   describe('setupFirestoreReplication', () => {
-    let setupFirestoreReplication: typeof import('../../../src/lib/db/replication').setupFirestoreReplication
+    let setupFirestoreReplication: typeof import('../../../src/lib/db/localdb-firestore-sync').setupFirestoreReplication
 
     beforeEach(async () => {
-      const module = await import('../../../src/lib/db/replication')
+      const module = await import('../../../src/lib/db/localdb-firestore-sync')
       setupFirestoreReplication = module.setupFirestoreReplication
     })
 
@@ -157,10 +170,10 @@ describe('Firestore Replication', () => {
   })
 
   describe('getReplicationStates', () => {
-    let setupFirestoreReplication: typeof import('../../../src/lib/db/replication').setupFirestoreReplication
+    let setupFirestoreReplication: typeof import('../../../src/lib/db/localdb-firestore-sync').setupFirestoreReplication
 
     beforeEach(async () => {
-      const module = await import('../../../src/lib/db/replication')
+      const module = await import('../../../src/lib/db/localdb-firestore-sync')
       setupFirestoreReplication = module.setupFirestoreReplication
     })
 
@@ -182,10 +195,10 @@ describe('Firestore Replication', () => {
   })
 
   describe('cancelReplication', () => {
-    let setupFirestoreReplication: typeof import('../../../src/lib/db/replication').setupFirestoreReplication
+    let setupFirestoreReplication: typeof import('../../../src/lib/db/localdb-firestore-sync').setupFirestoreReplication
 
     beforeEach(async () => {
-      const module = await import('../../../src/lib/db/replication')
+      const module = await import('../../../src/lib/db/localdb-firestore-sync')
       setupFirestoreReplication = module.setupFirestoreReplication
     })
 
@@ -222,10 +235,10 @@ describe('Firestore Replication', () => {
   })
 
   describe('replication observables', () => {
-    let setupFirestoreReplication: typeof import('../../../src/lib/db/replication').setupFirestoreReplication
+    let setupFirestoreReplication: typeof import('../../../src/lib/db/localdb-firestore-sync').setupFirestoreReplication
 
     beforeEach(async () => {
-      const module = await import('../../../src/lib/db/replication')
+      const module = await import('../../../src/lib/db/localdb-firestore-sync')
       setupFirestoreReplication = module.setupFirestoreReplication
     })
 

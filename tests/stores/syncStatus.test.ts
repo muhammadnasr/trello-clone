@@ -1,9 +1,9 @@
 import { describe, it, expect, beforeEach, afterEach, vi } from 'vitest'
 import { useSyncStatusStore, initSyncStatusMonitoring, SyncStatus } from '../../src/stores/syncStatus'
-import * as replicationModule from '../../src/lib/db/replication'
+import * as replicationModule from '../../src/lib/db/localdb-firestore-sync'
 
 // Mock replication module
-vi.mock('../../src/lib/db/replication', () => ({
+vi.mock('../../src/lib/db/localdb-firestore-sync', () => ({
   getReplicationStates: vi.fn(),
 }))
 

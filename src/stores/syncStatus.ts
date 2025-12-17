@@ -1,5 +1,5 @@
 import { create } from 'zustand'
-import { getReplicationStates } from '@/lib/db/replication'
+import { getReplicationStates } from '@/lib/db/localdb-firestore-sync'
 import { useAuthStore } from './auth'
 
 export const SyncStatus = {
