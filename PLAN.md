@@ -1,8 +1,18 @@
 # Trello Clone - Step-by-Step Implementation Plan (RxDB Version)
 
+## Key Technical Decisions
+
+1. **RxDB** - Local-first database with built-in IndexedDB storage, BroadcastChannel sync, and Firestore replication. ✅ **Verified**: Excellent choice - offline functionality works seamlessly with LWW conflict resolution.
+2. **Firebase Firestore** (not Realtime Database) - RxDB has built-in Firestore replication plugin with LWW conflict resolution
+3. **Last-Write-Wins (LWW)** - RxDB handles conflict resolution automatically using timestamps. ✅ **Tested**: Works correctly in offline scenarios.
+4. **Optimistic Updates** - UI updates immediately via RxDB reactive queries, sync happens in background
+5. **RxDB Collections** - Each entity type (boards, columns, cards) will be an RxDB collection with reactive queries
+6. **Zustand + RxDB** - Zustand for UI state management, RxDB for persistence and sync (connected via reactive queries)
+
+
 ## 📊 Progress Summary
 
-**Completed Phases: 9.5/11**
+**Completed Phases: 9.25/11**
 - ✅ Phase 1: Foundation
 - ✅ Phase 2: RxDB Setup & Data Models (Boards & Columns schemas)
 - ✅ Phase 3: Zustand Store Integration
@@ -12,10 +22,11 @@
 - ✅ Phase 7: Firebase Integration (Firestore Replication ✅ Complete, Offline Support ✅ Verified, Auth ✅ Complete)
 - ✅ Phase 8: Cards (Display + CRUD + Firestore Sync ✅ Complete)
 - ✅ Phase 9: Drag & Drop (Column Reordering ✅ Complete, Card Drag & Drop ✅ Complete, UX Improvements ✅ Complete)
+- ✅ Phase 10.1: Multi-User Support (Users can access their own boards via ownerId ✅ Complete)
 - ✅ Phase 11.1: Offline Indicator (Status Indicator ✅ Complete with enum-based status, comprehensive tests)
 
-**Remaining Phases: 1.5/11**
-- ⏳ Phase 10: Multi-User & Sharing (Sharing UI + Logic + Security Rules)
+**Remaining Phases: 1.75/11**
+- ⏳ Phase 10.2-10.4: Sharing UI + Logic (Multi-User Support ✅ Complete, Sharing UI + Logic ⏳ Not Started)
 - ⏳ Phase 11: Polish & Bonus Features (Offline Indicator ✅ Complete, Animations + Accessibility + PWA + Deployment)
 
 **Core Features Status:**
@@ -25,54 +36,19 @@
 - ✅ Firebase Sync (Firestore Replication ✅ Complete)
 - ✅ Drag & Drop (Column Reordering ✅ Complete, Card Drag & Drop ✅ Complete - Within Column + Cross-Column, UX Improvements ✅ Complete)
 - ✅ Status Indicator (Sync status monitoring with enum-based status, comprehensive tests ✅ Complete)
-- ⏳ Multi-User & Sharing (Not started)
+- ⏳ Multi-User & Sharing (Multi-User Support ✅ Complete - users can access their own boards, Sharing UI + Logic ⏳ Not Started)
 
-**Estimated Progress: ~88%**
+**Estimated Progress: ~91%**
 - Foundation & Infrastructure: ✅ Complete
 - Core Features (Boards/Columns/Cards): ✅ Complete
 - Firebase Sync: ✅ Complete (Firestore Replication + Auth)
 - Drag & Drop: ✅ Complete (Column Reordering + Card Drag & Drop Within Column + Cross-Column + UX Improvements)
 - Status Monitoring: ✅ Complete (Enum-based sync status with comprehensive test coverage)
 - Architecture Improvements: ✅ Parallel sync subscriptions with `ownerId` filtering (Boards, Columns & Cards)
-- Remaining Features: ⏳ Multi-User & Sharing, Additional Polish & Bonus Features
-
-**Next Phase: Phase 10 - Multi-User & Sharing**
+- Remaining Features: ⏳ Sharing UI + Logic (Multi-User Support ✅ Complete - users can access their own boards), Additional Polish & Bonus Features
 
 **Test Coverage**: 214 tests passing (unit + integration, including drag & drop tests and sync status tests)
 
----
-
-## Architecture Overview
-
-The application uses RxDB as the core local-first database layer:
-
-- **UI Layer**: React components with Shadcn-UI and TailwindCSS v4
-- **State Layer**: Zustand stores (synced with RxDB reactive queries)
-- **Database Layer**: RxDB with IndexedDB storage
-- **Sync Layer**: 
-  - Same-device tabs: RxDB BroadcastChannel replication
-  - Cross-device: RxDB Firestore replication plugin
-- **Routing**: TanStack Router
-
----
-
-## 📋 Evaluation Criteria
-
-Please keep in mind that **a shift in mindset is also part of what we are evaluating**.
-
-Using RxDB is acceptable, as long as the solution clearly demonstrates:
-- ✅ **Working with new concepts and approaches**: The implementation should show understanding and effective use of RxDB's reactive programming model, local-first architecture, and multi-tab synchronization
-- ✅ **Well-structured data flow**: Clear separation between database layer (RxDB), state management (Zustand), and UI components
-- ✅ **Maintainable architecture**: Code organization, type safety, and patterns that make the codebase easy to understand and extend
-
-**Key Evaluation Points:**
-- How well the reactive data flow is implemented (RxDB → Zustand → UI)
-- Understanding of local-first principles and offline-first capabilities
-- Proper use of RxDB features (reactive queries, multi-instance sync, schema validation)
-- Code quality, structure, and maintainability
-- Test coverage and quality
-
----
 
 ## Implementation Steps
 
@@ -295,23 +271,31 @@ Using RxDB is acceptable, as long as the solution clearly demonstrates:
 
 ### Phase 10: Multi-User & Sharing
 
-#### Step 10.1: Board Sharing UI
+#### ✅ Step 10.1: Multi-User Support (COMPLETED)
 
-- Add share button to board
-- Create share modal (invite by email/UID)
+- [x] Users can access their own boards via `ownerId` filtering
+- [x] Boards, columns, and cards are filtered by `ownerId` in Firestore replication
+- [x] Each user only sees and can modify their own data
+- [x] **Note**: Multi-user support is complete - users can access their own boards. Sharing functionality (adding other users to boards) is not yet implemented.
+
+#### Step 10.2: Board Sharing UI
+
+- [ ] Add share button to board
+- [ ] Create share modal (invite by email/UID)
+- [ ] Add UI to add/remove users from sharing field
 - **Test**: Verify sharing UI works
 
-#### Step 10.2: Board Sharing Logic
+#### Step 10.3: Board Sharing Logic
 
-- Implement owner/editor roles
-- Store sharedWith in board data (RxDB schema)
-- Enforce permissions (only owner can delete/share)
+- [ ] Implement owner/editor roles
+- [ ] Add service functions to update sharing field
+- [ ] Enforce permissions (only owner can share)
 - **Test**: Verify sharing and permissions work
 
-#### Step 10.3: Firebase Security Rules
+#### Step 10.4: Firebase Security Rules
 
-- Configure Firestore security rules
-- Ensure users can only access shared boards
+- [ ] Configure Firestore security rules to check sharing field
+- [ ] Verify security rules work correctly with sharing operations
 - **Test**: Verify security rules prevent unauthorized access
 
 ### Phase 11: Polish & Bonus Features
@@ -367,64 +351,9 @@ Using RxDB is acceptable, as long as the solution clearly demonstrates:
 
 - **Unit Tests**: Store logic, RxDB operations, validators
 - **Integration Tests**: Zustand-RxDB integration, replication sync
-- **E2E Tests** (optional): Critical user flows (create board, move card)
+- **E2E Tests** 
 - **Manual Testing**: Multi-tab sync, cross-device sync, offline behavior
 
-## File Structure (Proposed)
-
-```
-trello-clone/
-├── src/
-│   ├── components/          # React components
-│   │   ├── ui/             # Shadcn-UI components
-│   │   ├── boards/         # Board-related components
-│   │   ├── columns/        # Column components
-│   │   └── cards/          # Card components
-│   ├── lib/
-│   │   ├── db/             # RxDB database setup and schemas
-│   │   ├── firebase/       # Firebase config
-│   │   └── utils/          # Utility functions
-│   ├── stores/             # Zustand stores
-│   │   ├── boards.ts
-│   │   ├── columns.ts
-│   │   ├── cards.ts
-│   │   └── ui.ts
-│   ├── types/              # TypeScript types
-│   ├── routes/             # TanStack Router routes
-│   └── main.tsx
-├── tests/
-│   ├── unit/               # Unit tests
-│   ├── integration/        # Integration tests
-│   └── setup.ts            # Test setup
-├── public/
-└── README.md
-```
-
-## Key Technical Decisions
-
-1. **RxDB** - Local-first database with built-in IndexedDB storage, BroadcastChannel sync, and Firestore replication. ✅ **Verified**: Excellent choice - offline functionality works seamlessly with LWW conflict resolution.
-2. **Firebase Firestore** (not Realtime Database) - RxDB has built-in Firestore replication plugin with LWW conflict resolution
-3. **Last-Write-Wins (LWW)** - RxDB handles conflict resolution automatically using timestamps. ✅ **Tested**: Works correctly in offline scenarios.
-4. **Optimistic Updates** - UI updates immediately via RxDB reactive queries, sync happens in background
-5. **RxDB Collections** - Each entity type (boards, columns, cards) will be an RxDB collection with reactive queries
-6. **Zustand + RxDB** - Zustand for UI state management, RxDB for persistence and sync (connected via reactive queries)
-
-## Documentation Requirements
-
-- **Architecture Documentation**: Detailed README explaining:
-  - Why RxDB was chosen (local-first, built-in sync, conflict resolution)
-  - How RxDB handles IndexedDB persistence
-  - How BroadcastChannel replication works for multi-tab sync
-  - How Firestore replication works for cross-device sync
-  - LWW conflict resolution strategy and how RxDB implements it
-  - Offline queue mechanism in RxDB
-  - Trade-offs and design decisions
-
-- **Code Comments**: Add comments in key files explaining:
-  - RxDB schema design decisions
-  - How reactive queries keep Zustand in sync
-  - Replication configuration and what it does
-  - Conflict resolution behavior
 
 ## Success Criteria for Each Step
 
@@ -438,160 +367,23 @@ trello-clone/
 
 ## Refactoring & Code Quality Improvements
 
-### ✅ Parallel Sync Subscriptions with `ownerId` Filtering (COMPLETED)
-
-**Goal**: Refactor sync function to use parallel subscriptions instead of chained dependencies, making it more scalable and efficient.
-
-**What Was Done**:
-- Added `ownerId` field to Column schema and TypeScript type
-- Updated `createColumn` service to accept `ownerId` parameter
-- Updated `CreateColumnDialog` to get `ownerId` from auth store
-- Refactored `syncStoresToDatabase` to use parallel subscriptions:
-  - Boards subscription: filters by `ownerId` directly
-  - Columns subscription: filters by `ownerId` directly (independent, no chaining)
-  - Both subscriptions run in parallel with no dependencies
-- Updated all tests to pass `ownerId` when creating columns
-
-**Benefits**:
-- ✅ Simpler sync logic: no dependency chain between boards and columns
-- ✅ Scalable: adding cards will follow the same pattern (filter by `ownerId`)
-- ✅ Better performance: parallel subscriptions instead of sequential
-- ✅ No race conditions: each subscription is independent
-- ✅ Easier to maintain: clear separation of concerns
-
-**Impact**: This refactoring makes the codebase ready for adding cards with minimal changes. Cards will follow the same pattern: add `ownerId` to schema and filter by `ownerId` in a parallel subscription.
-
 ### Consolidate Create/Rename Dialogs
 
-**Goal**: Reduce code duplication by creating a single reusable dialog component for creating and renaming entities (boards, columns, cards).
-
-**Current State**:
-- Separate dialogs for create/rename operations:
-  - `CreateBoardDialog` - creates boards
-  - `RenameColumnDialog` - renames columns
-  - `CreateColumnDialog` - creates columns
-  - Inline rename dialog in `BoardCard` component
-
-**Proposed Solution**:
-- Create a generic `EntityDialog` component that can handle both create and rename modes
-- Accept props: `mode` ('create' | 'rename'), `entityType` ('board' | 'column' | 'card'), `initialValue` (for rename), `onSubmit`, `onCancel`
-- Replace all existing create/rename dialogs with this unified component
-- Benefits:
-  - Single source of truth for dialog UI/UX
-  - Easier to maintain and update
-  - Consistent behavior across all entities
-  - Less code duplication
-
-**Implementation Notes**:
-- Keep existing functionality intact
-- Ensure all tests still pass after refactoring
-- Update component imports across the codebase
+**Goal**: Reduce code duplication by creating a single reusable dialog component for creating and renaming entities (boards, columns).
 
 ### Replace Dynamic Imports with Static Imports in Tests
 
 **Goal**: Simplify test code by using static imports instead of dynamic `await import()` calls.
 
-**Current State**:
-- Test files use `await import('../../../src/lib/services/boards')` inside test functions
-- Dynamic imports are used in:
-  - `tests/components/boards/BoardsList.integration.test.tsx`
-  - `tests/components/columns/ColumnsList.integration.test.tsx`
-  - `tests/lib/db/replication.test.ts`
-
-**Why Dynamic Imports Were Used**:
-- Originally used to ensure mocks are set up before importing modules
-- To avoid circular dependencies in some cases
-
-**Proposed Solution**:
-- Replace `await import()` with static `import` statements at the top of test files
-- Vitest hoists `vi.mock()` calls, so static imports work correctly
-- Benefits:
-  - Cleaner, more readable code
-  - Standard JavaScript/TypeScript import pattern
-  - Better IDE support and autocomplete
-  - Easier to understand and maintain
-
-**Implementation Notes**:
-- Verify all tests still pass after conversion
-- Some dynamic imports may be necessary (e.g., Firebase mocks that need to be set up first)
-- Keep dynamic imports only where truly needed (document why)
-
 ### Component Re-render Optimization
 
 **Goal**: Optimize component re-renders to prevent unnecessary updates when unrelated store values change.
-
-**Current State**:
-- Components re-render whenever any store value changes, even unrelated ones
-- No React.memo or derived state optimization
-- Multiple `useBoardsStore` / `useColumnsStore` calls in same component (e.g., `BoardsList.tsx`, `CreateBoardDialog.tsx`)
-- Components subscribe to entire store slices rather than specific selectors
-
-**Proposed Solution**:
-- Consolidate multiple store selector calls into single selector that returns object of needed values
-- Add `React.memo` to leaf components that receive primitive props (e.g., `BoardCard`, `ColumnCard`)
-- Consider selector memoization for complex derived state
-- Use Zustand's `shallow` equality check when selecting multiple values
-
-**Benefits**:
-- Reduced unnecessary re-renders
-- Better performance, especially as app scales
-- More efficient React rendering cycles
-- Better user experience with smoother UI updates
-
-**Implementation Notes**:
-- Keep current architecture - stores are well-structured
-- This is a performance optimization, not a critical issue for current scale
-- Verify all tests still pass after optimization
-- Measure performance impact before/after if possible
 
 ### Remove Unnecessary setTimeout in Integration Tests
 
 **Goal**: Remove artificial delays (`setTimeout`) from integration tests that were added as workarounds for sync timing issues.
 
-**Current State**:
-- `CardsList.integration.test.tsx` has multiple `await new Promise((resolve) => setTimeout(resolve, 100))` calls
-- These were added to wait for auth state sync, but should be handled with proper `waitFor` assertions instead
-
-**Proposed Solution**:
-- Remove all `setTimeout` calls used for waiting on sync
-- Replace with proper `waitFor` assertions that check for expected state changes
-- Use `waitFor` to verify store state is updated rather than arbitrary delays
-- Benefits:
-  - More reliable tests (wait for actual conditions, not arbitrary time)
-  - Faster test execution
-  - Better test maintainability
-
-**Implementation Notes**:
-- Verify all tests still pass after removing setTimeout
-- Ensure proper waitFor assertions are in place for auth state changes
-
 ### Revise useEffects
 
 **Goal**: Review and optimize `useEffect` hooks across components to ensure they follow best practices and avoid unnecessary re-renders or side effects.
-
-**Current State**:
-- Multiple components use `useEffect` for various purposes (sync state, focus management, etc.)
-- Some effects may have unnecessary dependencies or missing cleanup
-- Need to review for:
-  - Proper dependency arrays
-  - Cleanup functions where needed
-  - Avoiding cascading re-renders
-  - Ensuring effects only run when necessary
-
-**Proposed Solution**:
-- Audit all `useEffect` hooks in card-related components (`Card.tsx`, `CreateCard.tsx`, etc.)
-- Review effects for:
-  - Correct dependency arrays
-  - Proper cleanup (remove event listeners, cancel subscriptions, etc.)
-  - Avoiding unnecessary re-renders (e.g., syncing state only when props actually change)
-  - Using refs where appropriate to avoid dependency issues
-- Benefits:
-  - More predictable component behavior
-  - Better performance
-  - Fewer bugs from stale closures or missing cleanup
-
-**Implementation Notes**:
-- Focus on card components first (Card.tsx, CreateCard.tsx)
-- Verify all tests still pass after revisions
-- Ensure no regressions in component behavior
 
