@@ -12,6 +12,7 @@ export async function createCard(columnId: string, title: string, order: number,
     title,
     order,
     ownerId,
+    accessibleUserIds: [ownerId],
     createdAt: now,
     updatedAt: now,
   })

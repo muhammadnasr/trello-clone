@@ -2,9 +2,62 @@ import { createDatabase } from './database'
 import { syncStoresToDatabase } from './sync'
 import { setupFirestoreReplication, cancelReplication, getReplicationStates } from './replication'
 import type { TrelloDatabase } from './database'
+import { useAuthStore } from '@/stores/auth'
 
 let databaseInstance: TrelloDatabase | null = null
 let unsubscribeSync: (() => void) | null = null
+
+/**
+ * Migrate anonymous data to the authenticated user.
+ * This allows offline-first usage where users can create data
+ * without logging in, then claim it after authentication.
+ */
+async function migrateAnonymousData(userId: string): Promise<void> {
+  if (!databaseInstance) return
+  
+  // Find all boards owned by "anonymous"
+  const anonymousBoards = await databaseInstance.boards
+    .find({ selector: { ownerId: 'anonymous' } })
+    .exec()
+  
+  if (anonymousBoards.length === 0) return
+  
+  console.log(`🔄 Migrating ${anonymousBoards.length} anonymous board(s) to user ${userId}`)
+  
+  // Update boards
+  for (const board of anonymousBoards) {
+    await board.patch({
+      ownerId: userId,
+      updatedAt: new Date().toISOString()
+    })
+  }
+
+  // Find and update anonymous columns
+  const anonymousColumns = await databaseInstance.columns
+    .find({ selector: { ownerId: 'anonymous' } })
+    .exec()
+  
+  for (const column of anonymousColumns) {
+    await column.patch({
+      ownerId: userId,
+      updatedAt: new Date().toISOString()
+    })
+  }
+
+  // Find and update anonymous cards
+  const anonymousCards = await databaseInstance.cards
+    .find({ selector: { ownerId: 'anonymous' } })
+    .exec()
+  
+  for (const card of anonymousCards) {
+    await card.patch({
+      ownerId: userId,
+      updatedAt: new Date().toISOString()
+    })
+  }
+  
+  console.log('✅ Anonymous data migration complete')
+}
 
 /**
  * Initialize database and hydrate from IndexedDB.
@@ -49,6 +102,12 @@ export async function attachBackendSubscriptions(): Promise<void> {
   }
 
   try {
+    // Migrate anonymous data to the authenticated user BEFORE starting replication
+    const user = useAuthStore.getState().user
+    if (user?.uid) {
+      await migrateAnonymousData(user.uid)
+    }
+
     const replication = setupFirestoreReplication(databaseInstance)
     console.log('✅ Firestore replication attached:', {
       boards: !!replication.boardsReplication,

@@ -3,6 +3,9 @@ import { useBoardsStore } from '@/stores/boards'
 import { useColumnsStore } from '@/stores/columns'
 import { useCardsStore } from '@/stores/cards'
 import { useAuthStore } from '@/stores/auth'
+import type { Board } from '../types/board'
+import type { Column } from '../types/column'
+import type { Card } from '../types/card'
 
 // Helper to get current ownerId
 const getOwnerId = (): string => {
@@ -44,7 +47,7 @@ export function syncStoresToDatabase(database: TrelloDatabase): () => void {
         },
       })
       .$.subscribe((rxDocuments) => {
-        const boards = rxDocuments.map((doc) => doc.toJSON())
+        const boards = rxDocuments.map((doc) => doc.toJSON() as Board)
         useBoardsStore.getState().setBoards(boards)
       })
 
@@ -58,7 +61,7 @@ export function syncStoresToDatabase(database: TrelloDatabase): () => void {
         },
       })
       .$.subscribe((rxDocuments) => {
-        const columns = rxDocuments.map((doc) => doc.toJSON())
+        const columns = rxDocuments.map((doc) => doc.toJSON() as Column)
         useColumnsStore.getState().setColumns(columns)
       })
 
@@ -74,7 +77,7 @@ export function syncStoresToDatabase(database: TrelloDatabase): () => void {
           },
         })
         .$.subscribe((rxDocuments) => {
-          const cards = rxDocuments.map((doc) => doc.toJSON())
+          const cards = rxDocuments.map((doc) => doc.toJSON() as Card)
           useCardsStore.getState().setCards(cards)
         })
 

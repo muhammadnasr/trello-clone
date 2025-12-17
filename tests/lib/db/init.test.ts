@@ -77,6 +77,7 @@ describe('Database Initialization', () => {
       createdAt: now,
       updatedAt: now,
       ownerId: 'user1',
+      accessibleUserIds: ['user1'],
     })
     await testDb.boards.insert({
       id: 'board2',
@@ -84,6 +85,7 @@ describe('Database Initialization', () => {
       createdAt: now,
       updatedAt: now,
       ownerId: 'user1',
+      accessibleUserIds: ['user1'],
     })
 
     await initDatabase(testDb)

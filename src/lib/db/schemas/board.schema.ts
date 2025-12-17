@@ -21,7 +21,13 @@ export const boardSchema = {
     ownerId: {
       type: 'string',
     },
+    accessibleUserIds: {
+      type: 'array',
+      items: {
+        type: 'string',
+      },
+    },
   },
-  required: ['id', 'title', 'createdAt', 'updatedAt', 'ownerId'],
+  required: ['id', 'title', 'createdAt', 'updatedAt', 'ownerId', 'accessibleUserIds'],
 }
 

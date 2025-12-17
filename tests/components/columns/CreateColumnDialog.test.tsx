@@ -53,6 +53,7 @@ describe('CreateColumnDialog', () => {
       title: 'New Column',
       order: 0,
       ownerId: 'user1',
+      accessibleUserIds: ['user1'],
       createdAt: new Date().toISOString(),
       updatedAt: new Date().toISOString(),
     }
@@ -80,6 +81,7 @@ describe('CreateColumnDialog', () => {
       title: 'New Column',
       order: 0,
       ownerId: 'user1',
+      accessibleUserIds: ['user1'],
       createdAt: new Date().toISOString(),
       updatedAt: new Date().toISOString(),
     })
@@ -105,7 +107,7 @@ describe('CreateColumnDialog', () => {
     mockCreateColumn.mockRejectedValue(new Error('Failed to create'))
 
     // Suppress console.error for this test since we're intentionally testing error handling
-    const consoleErrorSpy = vi.spyOn(console, 'error').mockImplementation(() => {})
+    const consoleErrorSpy = vi.spyOn(console, 'error').mockImplementation(() => { })
 
     useColumnsStore.setState({ error: 'Failed to create' })
 

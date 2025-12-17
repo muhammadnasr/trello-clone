@@ -33,6 +33,7 @@ describe('Columns Store', () => {
         title: 'Column 1',
         order: 0,
         ownerId: 'user1',
+        accessibleUserIds: ['user1'],
         createdAt: new Date().toISOString(),
         updatedAt: new Date().toISOString(),
       },
@@ -55,6 +56,7 @@ describe('Columns Store', () => {
         title: 'New Column',
         order: 0,
         ownerId: 'user1',
+        accessibleUserIds: ['user1'],
         createdAt: new Date().toISOString(),
         updatedAt: new Date().toISOString(),
       }

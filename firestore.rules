@@ -1,15 +1,36 @@
-rules_version = '2';
-service cloud.firestore {
-  match /databases/{database}/documents {
-    match /boards/{document=**} {
-      allow read, write: if true;
-    }
-    match /columns/{document=**} {
-      allow read, write: if true;
-    }
-    match /cards/{document=**} {
-      allow read, write: if true;
+  rules_version = '2';
+  service cloud.firestore {
+    match /databases/{database}/documents {
+      
+      // Boards: accessible users can read, only accessible users can write
+      match /boards/{boardId} {
+        allow read: if request.auth != null && 
+          request.auth.uid in resource.data.accessibleUserIds;
+        allow create: if request.auth != null && 
+          request.auth.uid in request.resource.data.accessibleUserIds;
+        allow update, delete: if request.auth != null && 
+          request.auth.uid in resource.data.accessibleUserIds;
+      }
+      
+      // Columns: accessible users can read, only accessible users can write
+      match /columns/{columnId} {
+        allow read: if request.auth != null && 
+          request.auth.uid in resource.data.accessibleUserIds;
+        allow create: if request.auth != null && 
+          request.auth.uid in request.resource.data.accessibleUserIds;
+        allow update, delete: if request.auth != null && 
+          request.auth.uid in resource.data.accessibleUserIds;
+      }
+      
+      // Cards: accessible users can read, only accessible users can write
+      match /cards/{cardId} {
+        allow read: if request.auth != null && 
+          request.auth.uid in resource.data.accessibleUserIds;
+        allow create: if request.auth != null && 
+          request.auth.uid in request.resource.data.accessibleUserIds;
+        allow update, delete: if request.auth != null && 
+          request.auth.uid in resource.data.accessibleUserIds;
+      }
     }
   }
-}
 

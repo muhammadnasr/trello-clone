@@ -32,6 +32,7 @@ describe('RxDB Database', () => {
       createdAt: now,
       updatedAt: now,
       ownerId: 'user1',
+      accessibleUserIds: ['user1'],
     })
 
     expect(board.id).toBe('board1')
@@ -46,6 +47,7 @@ describe('RxDB Database', () => {
       createdAt: now,
       updatedAt: now,
       ownerId: 'user1',
+      accessibleUserIds: ['user1'],
     })
 
     const found = await db.boards.find({
@@ -80,7 +82,7 @@ describe('Schema Validation', () => {
       id: 'board1',
       title: 'Test Board',
       createdAt: now,
-      // missing updatedAt and ownerId
+      // missing updatedAt, ownerId, and accessibleUserIds
     }
     
     await expect(db.boards.insert(invalidDoc)).rejects.toThrow()
@@ -94,6 +96,7 @@ describe('Schema Validation', () => {
       createdAt: 'invalid-date',
       updatedAt: new Date().toISOString(),
       ownerId: 'user1',
+      accessibleUserIds: ['user1'],
     }
     
     await expect(db.boards.insert(invalidDoc)).rejects.toThrow()
@@ -109,6 +112,7 @@ describe('Schema Validation', () => {
       createdAt: now,
       updatedAt: now,
       ownerId: 'user1',
+      accessibleUserIds: ['user1'],
     }
     
     await expect(db.boards.insert(invalidDoc)).rejects.toThrow()
@@ -125,6 +129,7 @@ describe('Schema Validation', () => {
         createdAt: now,
         updatedAt: now,
         ownerId: 'user1',
+        accessibleUserIds: ['user1'],
       })
     ).rejects.toThrow()
   })
@@ -138,6 +143,7 @@ describe('Schema Validation', () => {
       createdAt: now,
       updatedAt: now,
       ownerId: 'user1',
+      accessibleUserIds: ['user1'],
     })
 
     expect(board).toBeTruthy()
@@ -152,6 +158,7 @@ describe('Schema Validation', () => {
       createdAt: '2025-12-13T20:30:00.000Z',
       updatedAt: '2025-12-13T20:30:00.000Z',
       ownerId: 'user1',
+      accessibleUserIds: ['user1'],
     })
 
     expect(board.createdAt).toBe('2025-12-13T20:30:00.000Z')

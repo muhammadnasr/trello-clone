@@ -73,6 +73,7 @@ describe('CreateBoardDialog', () => {
       createdAt: new Date().toISOString(),
       updatedAt: new Date().toISOString(),
       ownerId: 'test-user-123',
+      accessibleUserIds: ['test-user-123'],
     })
 
     render(<CreateBoardDialog />)
@@ -141,6 +142,7 @@ describe('CreateBoardDialog', () => {
       createdAt: new Date().toISOString(),
       updatedAt: new Date().toISOString(),
       ownerId: 'test-user-123',
+      accessibleUserIds: ['test-user-123'],
     })
 
     render(<CreateBoardDialog />)
@@ -163,7 +165,7 @@ describe('CreateBoardDialog', () => {
   it('creates board with anonymous ownerId when user is not authenticated', async () => {
     const user = userEvent.setup()
     const mockCreateBoard = vi.mocked(boardsService.createBoard)
-    
+
     // Set unauthenticated state
     mockAuthState = {
       user: null,
@@ -178,6 +180,7 @@ describe('CreateBoardDialog', () => {
       createdAt: new Date().toISOString(),
       updatedAt: new Date().toISOString(),
       ownerId: 'anonymous',
+      accessibleUserIds: ['anonymous'],
     })
 
     render(<CreateBoardDialog />)

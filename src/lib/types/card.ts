@@ -4,6 +4,7 @@ export interface Card {
   title: string
   order: number
   ownerId: string
+  accessibleUserIds: string[]
   createdAt: string
   updatedAt: string
 }

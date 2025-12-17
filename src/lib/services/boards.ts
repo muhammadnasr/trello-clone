@@ -13,6 +13,7 @@ export async function createBoard(title: string, ownerId: string): Promise<Board
     createdAt: now,
     updatedAt: now,
     ownerId,
+    accessibleUserIds: [ownerId],
   })
 
   return board.toJSON() as Board

@@ -35,6 +35,7 @@ describe('Boards Store', () => {
         createdAt: new Date().toISOString(),
         updatedAt: new Date().toISOString(),
         ownerId: 'user1',
+        accessibleUserIds: ['user1'],
       },
     ]
 
@@ -55,6 +56,7 @@ describe('Boards Store', () => {
         createdAt: new Date().toISOString(),
         updatedAt: new Date().toISOString(),
         ownerId: 'user1',
+        accessibleUserIds: ['user1'],
       }
       mockCreateBoard.mockResolvedValue(newBoard)
 

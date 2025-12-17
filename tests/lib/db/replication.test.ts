@@ -49,6 +49,7 @@ vi.mock('firebase/firestore', () => ({
     type: 'collection',
     firestore: db,
   })),
+  where: vi.fn((field, op, value) => ({ field, op, value, type: 'where' })),
   getFirestore: vi.fn(),
 }))
 
@@ -63,6 +64,18 @@ vi.mock('../../../src/lib/firebase/config', () => ({
     },
     firestore: mockFirestoreDatabase,
   })),
+}))
+
+// Mock auth store to return authenticated user
+vi.mock('@/stores/auth', () => ({
+  useAuthStore: {
+    getState: vi.fn(() => ({
+      user: { uid: 'test-user-123' },
+      isAuthenticated: true,
+      isLoading: false,
+    })),
+    subscribe: vi.fn(() => vi.fn()), // Returns unsubscribe function
+  },
 }))
 
 describe('Firestore Replication', () => {

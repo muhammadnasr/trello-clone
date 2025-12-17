@@ -74,6 +74,7 @@ describe('BoardsList', () => {
         createdAt: '2025-01-01T00:00:00.000Z',
         updatedAt: '2025-01-01T00:00:00.000Z',
         ownerId: 'user1',
+        accessibleUserIds: ['user1'],
       },
       {
         id: 'board2',
@@ -81,6 +82,7 @@ describe('BoardsList', () => {
         createdAt: '2025-01-02T00:00:00.000Z',
         updatedAt: '2025-01-02T00:00:00.000Z',
         ownerId: 'user1',
+        accessibleUserIds: ['user1'],
       },
     ]
 
@@ -103,6 +105,7 @@ describe('BoardsList', () => {
         createdAt: '2025-01-01T00:00:00.000Z',
         updatedAt: '2025-01-01T00:00:00.000Z',
         ownerId: 'user1',
+        accessibleUserIds: ['user1'],
       },
     ]
 

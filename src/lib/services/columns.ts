@@ -12,6 +12,7 @@ export async function createColumn(boardId: string, title: string, order: number
     title,
     order,
     ownerId,
+    accessibleUserIds: [ownerId],
     createdAt: now,
     updatedAt: now,
   })

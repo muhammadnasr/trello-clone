@@ -33,6 +33,7 @@ describe('Cards Store', () => {
         title: 'Card 1',
         order: 0,
         ownerId: 'user1',
+        accessibleUserIds: ['user1'],
         createdAt: new Date().toISOString(),
         updatedAt: new Date().toISOString(),
       },
@@ -55,6 +56,7 @@ describe('Cards Store', () => {
         title: 'New Card',
         order: 0,
         ownerId: 'user1',
+        accessibleUserIds: ['user1'],
         createdAt: new Date().toISOString(),
         updatedAt: new Date().toISOString(),
       }

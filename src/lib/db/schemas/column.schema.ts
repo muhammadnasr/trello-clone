@@ -21,6 +21,12 @@ export const columnSchema = {
       type: 'string',
       maxLength: 100,
     },
+    accessibleUserIds: {
+      type: 'array',
+      items: {
+        type: 'string',
+      },
+    },
     createdAt: {
       type: 'string',
       format: 'date-time',
@@ -30,7 +36,7 @@ export const columnSchema = {
       format: 'date-time',
     },
   },
-  required: ['id', 'boardId', 'title', 'order', 'ownerId', 'createdAt', 'updatedAt'],
+  required: ['id', 'boardId', 'title', 'order', 'ownerId', 'accessibleUserIds', 'createdAt', 'updatedAt'],
   indexes: ['boardId', 'ownerId'],
 }
 

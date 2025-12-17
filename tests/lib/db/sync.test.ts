@@ -68,6 +68,7 @@ describe('RxDB-Zustand Sync', () => {
       createdAt: now,
       updatedAt: now,
       ownerId: 'user1',
+      accessibleUserIds: ['user1'],
     })
 
     await new Promise((resolve) => setTimeout(resolve, 100))
@@ -88,6 +89,7 @@ describe('RxDB-Zustand Sync', () => {
       createdAt: now,
       updatedAt: now,
       ownerId: 'user1',
+      accessibleUserIds: ['user1'],
     })
 
     await new Promise((resolve) => setTimeout(resolve, 100))
@@ -113,6 +115,7 @@ describe('RxDB-Zustand Sync', () => {
       createdAt: now,
       updatedAt: now,
       ownerId: 'user1',
+      accessibleUserIds: ['user1'],
     })
 
     await new Promise((resolve) => setTimeout(resolve, 100))
@@ -135,6 +138,7 @@ describe('RxDB-Zustand Sync', () => {
       createdAt: now,
       updatedAt: now,
       ownerId: 'user1',
+      accessibleUserIds: ['user1'],
     })
 
     await new Promise((resolve) => setTimeout(resolve, 100))
@@ -151,6 +155,7 @@ describe('RxDB-Zustand Sync', () => {
       createdAt: now,
       updatedAt: now,
       ownerId: 'user1',
+      accessibleUserIds: ['user1'],
     })
 
     await new Promise((resolve) => setTimeout(resolve, 100))
@@ -183,6 +188,7 @@ describe('RxDB-Zustand Columns Sync', () => {
       createdAt: now,
       updatedAt: now,
       ownerId: 'user1',
+      accessibleUserIds: ['user1'],
     })
   })
 
@@ -205,6 +211,7 @@ describe('RxDB-Zustand Columns Sync', () => {
       title: 'Test Column',
       order: 0,
       ownerId: 'user1',
+      accessibleUserIds: ['user1'],
       createdAt: now,
       updatedAt: now,
     })
@@ -227,6 +234,7 @@ describe('RxDB-Zustand Columns Sync', () => {
       title: 'Original Title',
       order: 0,
       ownerId: 'user1',
+      accessibleUserIds: ['user1'],
       createdAt: now,
       updatedAt: now,
     })
@@ -254,6 +262,7 @@ describe('RxDB-Zustand Columns Sync', () => {
       title: 'Test Column',
       order: 0,
       ownerId: 'user1',
+      accessibleUserIds: ['user1'],
       createdAt: now,
       updatedAt: now,
     })
@@ -278,6 +287,7 @@ describe('RxDB-Zustand Columns Sync', () => {
       title: 'Test Column',
       order: 0,
       ownerId: 'user1',
+      accessibleUserIds: ['user1'],
       createdAt: now,
       updatedAt: now,
     })
@@ -296,6 +306,7 @@ describe('RxDB-Zustand Columns Sync', () => {
       title: 'Column 2',
       order: 1,
       ownerId: 'user1',
+      accessibleUserIds: ['user1'],
       createdAt: now,
       updatedAt: now,
     })

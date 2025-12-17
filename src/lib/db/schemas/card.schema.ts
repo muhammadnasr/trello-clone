@@ -21,6 +21,12 @@ export const cardSchema = {
       type: 'string',
       maxLength: 100,
     },
+    accessibleUserIds: {
+      type: 'array',
+      items: {
+        type: 'string',
+      },
+    },
     createdAt: {
       type: 'string',
       format: 'date-time',
@@ -30,7 +36,7 @@ export const cardSchema = {
       format: 'date-time',
     },
   },
-  required: ['id', 'columnId', 'title', 'order', 'ownerId', 'createdAt', 'updatedAt'],
+  required: ['id', 'columnId', 'title', 'order', 'ownerId', 'accessibleUserIds', 'createdAt', 'updatedAt'],
   indexes: ['columnId', 'ownerId'],
 }
 

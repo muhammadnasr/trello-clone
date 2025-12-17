@@ -28,6 +28,7 @@ describe('Card', () => {
     title: 'Test Card',
     order: 0,
     ownerId: 'user1',
+    accessibleUserIds: ['user1'],
     createdAt: new Date().toISOString(),
     updatedAt: new Date().toISOString(),
   }
@@ -59,10 +60,10 @@ describe('Card', () => {
   it('enters edit mode when title is clicked', async () => {
     const user = userEvent.setup()
     render(<Card card={mockCard} />)
-    
+
     const title = screen.getByText('Test Card')
     await user.click(title)
-    
+
     await waitFor(() => {
       const input = screen.getByDisplayValue('Test Card')
       expect(input).toBeInTheDocument()
@@ -74,23 +75,23 @@ describe('Card', () => {
     mockUpdateCard.mockResolvedValue(undefined)
     const user = userEvent.setup()
     render(<Card card={mockCard} />)
-    
+
     const title = screen.getByText('Test Card')
     await user.click(title)
-    
+
     await waitFor(() => {
       expect(screen.getByDisplayValue('Test Card')).toBeInTheDocument()
     })
-    
+
     const input = screen.getByDisplayValue('Test Card')
     await user.clear(input)
     await user.type(input, 'Updated Card Title')
     await user.keyboard('{Enter}')
-    
+
     await waitFor(() => {
       expect(mockUpdateCard).toHaveBeenCalledWith('card1', { title: 'Updated Card Title' })
     })
-    
+
     // After save, component exits edit mode - check that input is gone
     await waitFor(() => {
       expect(screen.queryByDisplayValue('Updated Card Title')).not.toBeInTheDocument()
@@ -100,19 +101,19 @@ describe('Card', () => {
   it('cancels editing when Escape is pressed', async () => {
     const user = userEvent.setup()
     render(<Card card={mockCard} />)
-    
+
     const title = screen.getByText('Test Card')
     await user.click(title)
-    
+
     await waitFor(() => {
       expect(screen.getByDisplayValue('Test Card')).toBeInTheDocument()
     })
-    
+
     const input = screen.getByDisplayValue('Test Card')
     await user.clear(input)
     await user.type(input, 'Changed Title')
     await user.keyboard('{Escape}')
-    
+
     await waitFor(() => {
       expect(screen.getByText('Test Card')).toBeInTheDocument()
       expect(screen.queryByDisplayValue('Changed Title')).not.toBeInTheDocument()
@@ -124,23 +125,23 @@ describe('Card', () => {
     mockUpdateCard.mockResolvedValue(undefined)
     const user = userEvent.setup()
     render(<Card card={mockCard} />)
-    
+
     const title = screen.getByText('Test Card')
     await user.click(title)
-    
+
     await waitFor(() => {
       expect(screen.getByDisplayValue('Test Card')).toBeInTheDocument()
     })
-    
+
     const input = screen.getByDisplayValue('Test Card')
     await user.clear(input)
     await user.type(input, 'Blurred Title')
     await user.tab() // Blur the input
-    
+
     await waitFor(() => {
       expect(mockUpdateCard).toHaveBeenCalledWith('card1', { title: 'Blurred Title' })
     })
-    
+
     // After blur, component exits edit mode
     await waitFor(() => {
       expect(screen.queryByDisplayValue('Blurred Title')).not.toBeInTheDocument()
@@ -150,18 +151,18 @@ describe('Card', () => {
   it('does not save empty title', async () => {
     const user = userEvent.setup()
     render(<Card card={mockCard} />)
-    
+
     const title = screen.getByText('Test Card')
     await user.click(title)
-    
+
     await waitFor(() => {
       expect(screen.getByDisplayValue('Test Card')).toBeInTheDocument()
     })
-    
+
     const input = screen.getByDisplayValue('Test Card')
     await user.clear(input)
     await user.tab() // Blur the input
-    
+
     await waitFor(() => {
       expect(screen.getByText('Test Card')).toBeInTheDocument()
     })
@@ -171,16 +172,16 @@ describe('Card', () => {
   it('does not save if title did not change', async () => {
     const user = userEvent.setup()
     render(<Card card={mockCard} />)
-    
+
     const title = screen.getByText('Test Card')
     await user.click(title)
-    
+
     await waitFor(() => {
       expect(screen.getByDisplayValue('Test Card')).toBeInTheDocument()
     })
-    
+
     await user.keyboard('{Enter}')
-    
+
     await waitFor(() => {
       expect(screen.getByText('Test Card')).toBeInTheDocument()
     })
@@ -189,10 +190,10 @@ describe('Card', () => {
 
   it('shows delete button on hover', async () => {
     render(<Card card={mockCard} />)
-    
+
     const cardElement = screen.getByText('Test Card').closest('.group')
     expect(cardElement).toBeInTheDocument()
-    
+
     // Delete button should be hidden initially
     const deleteButton = screen.getByTitle('Delete card')
     expect(deleteButton).toHaveClass('opacity-0')
@@ -202,14 +203,14 @@ describe('Card', () => {
     mockDeleteCard.mockResolvedValue(undefined)
     const user = userEvent.setup()
     render(<Card card={mockCard} />)
-    
+
     const deleteButton = screen.getByTitle('Delete card')
     await user.click(deleteButton)
-    
+
     expect(window.confirm).toHaveBeenCalledWith(
       expect.stringContaining('Test Card')
     )
-    
+
     await waitFor(() => {
       expect(mockDeleteCard).toHaveBeenCalledWith('card1')
     })
@@ -219,27 +220,27 @@ describe('Card', () => {
     vi.spyOn(window, 'confirm').mockReturnValue(false)
     const user = userEvent.setup()
     render(<Card card={mockCard} />)
-    
+
     const deleteButton = screen.getByTitle('Delete card')
     await user.click(deleteButton)
-    
+
     expect(window.confirm).toHaveBeenCalled()
     expect(mockDeleteCard).not.toHaveBeenCalled()
   })
 
   it('syncs title when card.id changes', async () => {
     const { rerender } = render(<Card card={mockCard} />)
-    
+
     expect(screen.getByText('Test Card')).toBeInTheDocument()
-    
+
     const newCard = {
       ...mockCard,
       id: 'card2',
       title: 'New Card Title',
     }
-    
+
     rerender(<Card card={newCard} />)
-    
+
     await waitFor(() => {
       expect(screen.getByText('New Card Title')).toBeInTheDocument()
     })
