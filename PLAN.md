@@ -21,7 +21,7 @@
 - ✅ Phase 6: Board Detail & Columns
 - ✅ Phase 7: Firebase Integration (Firestore Replication ✅ Complete, Offline Support ✅ Verified, Auth ✅ Complete)
 - ✅ Phase 8: Cards (Display + CRUD + Firestore Sync ✅ Complete)
-- ✅ Phase 9: Drag & Drop (Column Reordering ✅ Complete, Card Drag & Drop ✅ Complete, UX Improvements ✅ Complete)
+- ✅ Phase 9: Drag & Drop (Column Reordering ✅ Complete, Card Drag & Drop ✅ Complete, UX Improvements ✅ Complete, Polish & Smooth Experience ✅ Complete)
 - ✅ Phase 10.1: Multi-User Support (Users can access their own boards via ownerId ✅ Complete)
 - ✅ Phase 11.1: Offline Indicator (Status Indicator ✅ Complete with enum-based status, comprehensive tests)
 
@@ -34,15 +34,15 @@
 - ✅ Columns CRUD (Create, Read, Update, Delete)
 - ✅ Cards CRUD (Create, Read, Update, Delete ✅ Complete)
 - ✅ Firebase Sync (Firestore Replication ✅ Complete)
-- ✅ Drag & Drop (Column Reordering ✅ Complete, Card Drag & Drop ✅ Complete - Within Column + Cross-Column, UX Improvements ✅ Complete)
+- ✅ Drag & Drop (Column Reordering ✅ Complete, Card Drag & Drop ✅ Complete - Within Column + Cross-Column, UX Improvements ✅ Complete, Polish & Smooth Experience ✅ Complete)
 - ✅ Status Indicator (Sync status monitoring with enum-based status, comprehensive tests ✅ Complete)
 - ⏳ Multi-User & Sharing (Multi-User Support ✅ Complete - users can access their own boards, Sharing UI + Logic ⏳ Not Started)
 
-**Estimated Progress: ~91%**
+**Estimated Progress: ~93%**
 - Foundation & Infrastructure: ✅ Complete
 - Core Features (Boards/Columns/Cards): ✅ Complete
 - Firebase Sync: ✅ Complete (Firestore Replication + Auth)
-- Drag & Drop: ✅ Complete (Column Reordering + Card Drag & Drop Within Column + Cross-Column + UX Improvements)
+- Drag & Drop: ✅ Complete (Column Reordering + Card Drag & Drop Within Column + Cross-Column + UX Improvements + Polish & Smooth Experience)
 - Status Monitoring: ✅ Complete (Enum-based sync status with comprehensive test coverage)
 - Architecture Improvements: ✅ Parallel sync subscriptions with `ownerId` filtering (Boards, Columns & Cards)
 - Remaining Features: ⏳ Sharing UI + Logic (Multi-User Support ✅ Complete - users can access their own boards), Additional Polish & Bonus Features
@@ -268,6 +268,18 @@
 - [x] Filter out dragged cards from CardsList during drag to prevent visual glitches
 - [x] Add optimistic updates for card columnId to prevent bounce-back on drop
 - [x] Improve drag experience with visual feedback (card follows cursor in overlay)
+
+#### ✅ Step 9.5: Drag & Drop Polish - Smooth Experience (COMPLETED)
+
+- [x] **Columns**: Added placeholder in original position when dragging (prevents visual jumps)
+- [x] **Columns**: Highlight target column with blue ring when hovering over it
+- [x] **Columns**: Prevent columns from moving during drag (only move on drop)
+- [x] **Cards**: Added placeholder in original position when dragging (prevents visual jumps)
+- [x] **Cards**: Highlight target card with blue ring when hovering over it
+- [x] **Cards**: Prevent cards from moving during drag (only move on drop)
+- [x] **Both**: Fixed transparency issues - cards/columns return to full opacity immediately after drag
+- [x] **Both**: Smooth drag experience with visual feedback - dragged item follows cursor in DragOverlay
+- [x] **Both**: Improved hover detection - works correctly even when dragging over cards inside columns
 
 ### Phase 10: Multi-User & Sharing
 
