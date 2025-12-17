@@ -35,6 +35,7 @@ export function ColumnsList({ boardId }: ColumnsListProps) {
   const [draggedCardId, setDraggedCardId] = useState<string | null>(null)
   const [draggedColumnId, setDraggedColumnId] = useState<string | null>(null)
   const [overColumnId, setOverColumnId] = useState<string | null>(null)
+  const [overCardId, setOverCardId] = useState<string | null>(null)
 
   const boardColumns = columns
     .filter((col) => col.boardId === boardId)
@@ -68,10 +69,11 @@ export function ColumnsList({ boardId }: ColumnsListProps) {
 
   const handleDragOver = (event: DragOverEvent) => {
     const { active, over } = event
-    // Only track column hover if we're dragging a column
     const isColumnDrag = boardColumns.some((col) => col.id === active.id)
+    const isCardDrag = cards.some((card) => card.id === active.id)
+
     if (isColumnDrag && over) {
-      // Check if hovering over another column directly
+      // Track column hover when dragging a column
       let targetColumn = boardColumns.find((col) => col.id === over.id)
 
       // If not a column, check if hovering over a card - find the column that contains it
@@ -87,6 +89,14 @@ export function ColumnsList({ boardId }: ColumnsListProps) {
       } else {
         setOverColumnId(null)
       }
+    } else if (isCardDrag && over) {
+      // Track card hover when dragging a card
+      const targetCard = cards.find((card) => card.id === over.id)
+      if (targetCard && targetCard.id !== active.id) {
+        setOverCardId(targetCard.id)
+      } else {
+        setOverCardId(null)
+      }
     }
   }
 
@@ -94,6 +104,7 @@ export function ColumnsList({ boardId }: ColumnsListProps) {
     setDraggedColumnId(null)
     setDraggedCardId(null)
     setOverColumnId(null)
+    setOverCardId(null)
   }
 
   const handleDragEnd = async (event: DragEndEvent) => {
@@ -145,6 +156,7 @@ export function ColumnsList({ boardId }: ColumnsListProps) {
 
       // Clear drag state
       setDraggedCardId(null)
+      setOverCardId(null)
 
       // Then handle the actual reorder (which will sync with database)
       await handleCardReorder(event, cards, boardColumns)
@@ -181,6 +193,8 @@ export function ColumnsList({ boardId }: ColumnsListProps) {
                   isDragging={draggedColumnId === column.id}
                   isOver={overColumnId === column.id}
                   isAnyColumnDragging={draggedColumnId !== null}
+                  draggedCardId={draggedCardId}
+                  overCardId={overCardId}
                 />
               ))}
             </div>

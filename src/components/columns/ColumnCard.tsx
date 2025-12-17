@@ -16,9 +16,11 @@ interface ColumnCardProps {
   isDragging?: boolean
   isOver?: boolean
   isAnyColumnDragging?: boolean
+  draggedCardId?: string | null
+  overCardId?: string | null
 }
 
-export function ColumnCard({ column, isDragging = false, isOver = false, isAnyColumnDragging = false }: ColumnCardProps) {
+export function ColumnCard({ column, isDragging = false, isOver = false, isAnyColumnDragging = false, draggedCardId = null, overCardId = null }: ColumnCardProps) {
   const [isRenameOpen, setIsRenameOpen] = useState(false)
   const deleteColumn = useColumnsStore((state) => state.deleteColumn)
   const cards = useCardsStore((state) => state.cards)
@@ -129,7 +131,11 @@ export function ColumnCard({ column, isDragging = false, isOver = false, isAnyCo
               </div>
             </div>
           </div>
-          <CardsList columnId={column.id} />
+          <CardsList
+            columnId={column.id}
+            draggedCardId={draggedCardId}
+            overCardId={overCardId}
+          />
           <div className="mt-2">
             <CreateCard columnId={column.id} nextOrder={nextOrder} />
           </div>
