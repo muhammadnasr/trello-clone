@@ -1,17 +1,7 @@
 import type { DropResult } from '@hello-pangea/dnd'
 import type { Column } from '@/lib/types/column'
 import * as columnsService from '@/lib/services/columns'
-
-/**
- * Reorders an array by moving an item from one index to another.
- * Standard @hello-pangea/dnd pattern - uses destination.index directly.
- */
-function reorder<T>(list: T[], startIndex: number, endIndex: number): T[] {
-  const result = Array.from(list)
-  const [removed] = result.splice(startIndex, 1)
-  result.splice(endIndex, 0, removed)
-  return result
-}
+import { reorder, isValidDrag } from './reorder'
 
 /**
  * Handles column reordering after a drag and drop operation.
@@ -22,10 +12,9 @@ export async function handleColumnReorder(
   columns: Column[],
   boardId: string
 ): Promise<void> {
-  const { source, destination } = result
+  if (!isValidDrag(result)) return
 
-  if (!destination) return
-  if (source.droppableId === destination.droppableId && source.index === destination.index) return
+  const { source, destination } = result
 
   const boardColumns = columns
     .filter((col) => col.boardId === boardId)

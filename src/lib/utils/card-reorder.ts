@@ -1,24 +1,15 @@
 import type { DropResult } from '@hello-pangea/dnd'
 import * as cardsService from '@/lib/services/cards'
-
-/**
- * Reorders an array by moving an item from one index to another.
- */
-function reorder<T>(list: T[], from: number, to: number): T[] {
-  const copy = [...list]
-  const [item] = copy.splice(from, 1)
-  copy.splice(to, 0, item)
-  return copy
-}
+import { reorder, isValidDrag } from './reorder'
 
 /**
  * Handles card reordering within and between columns after a drag and drop.
  * Uses service layer to persist changes.
  */
 export async function handleCardReorder(result: DropResult): Promise<void> {
+  if (!isValidDrag(result)) return
+
   const { source, destination, draggableId } = result
-  if (!destination) return
-  if (source.droppableId === destination.droppableId && source.index === destination.index) return
 
   const sourceColumnId = source.droppableId
   const destinationColumnId = destination.droppableId
