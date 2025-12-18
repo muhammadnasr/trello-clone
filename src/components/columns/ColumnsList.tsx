@@ -2,8 +2,6 @@ import { useState, useMemo } from 'react'
 import { DragDropContext, Droppable, type DropResult } from '@hello-pangea/dnd'
 import { useColumnsStore } from '@/stores/columns'
 import { useCardsStore } from '@/stores/cards'
-import { handleColumnReorder } from '@/lib/utils/column-reorder'
-import { handleCardReorder } from '@/lib/utils/card-reorder'
 import { ColumnCard } from './ColumnCard'
 import { CreateColumnDialog } from './CreateColumnDialog'
 import type { Card } from '@/lib/types/card'
@@ -29,6 +27,8 @@ interface ColumnsListProps {
 export function ColumnsList({ boardId }: ColumnsListProps) {
   const allColumns = useColumnsStore((s) => s.columns)
   const allCards = useCardsStore((s) => s.cards)
+  const updateColumnsOrder = useColumnsStore((s) => s.updateColumnsOrder)
+  const updateCardsOrder = useCardsStore((s) => s.updateCardsOrder)
 
   const [optimisticColumnOrder, setOptimisticColumnOrder] =
     useState<Record<string, number> | null>(null)
@@ -100,7 +100,7 @@ export function ColumnsList({ boardId }: ColumnsListProps) {
     commitColumns(orderMap)
 
     try {
-      await handleColumnReorder(result, allColumns, boardId)
+      await updateColumnsOrder(allColumns, boardId, result.source.index, result.destination!.index)
     } finally {
       setOptimisticColumnOrder(null)
     }
@@ -108,13 +108,13 @@ export function ColumnsList({ boardId }: ColumnsListProps) {
 
   const onCardDrag = async (result: DropResult) => {
     const { source, destination, draggableId } = result
-    if (!destination) return
+    // destination is guaranteed to be non-null by handleDragEnd validation
 
     const dragged = allCards.find((c) => c.id === draggableId)
     if (!dragged) return
 
     const srcCol = source.droppableId
-    const dstCol = destination.droppableId
+    const dstCol = destination!.droppableId
 
     const srcCards = allCards
       .filter((c) => c.columnId === srcCol)
@@ -127,20 +127,20 @@ export function ColumnsList({ boardId }: ColumnsListProps) {
     const updates: Record<string, { order?: number; columnId?: string }> = {}
 
     if (srcCol === dstCol) {
-      const reordered = reorder(cardsByColumn[srcCol], source.index, destination.index)
+      const reordered = reorder(cardsByColumn[srcCol], source.index, destination!.index)
       reordered.forEach((c, i) => {
         if (c.order !== i) updates[c.id] = { order: i }
       })
     } else {
       const newDst = [
-        ...dstCards.slice(0, destination.index),
+        ...dstCards.slice(0, destination!.index),
         dragged,
-        ...dstCards.slice(destination.index),
+        ...dstCards.slice(destination!.index),
       ]
 
       updates[dragged.id] = {
         columnId: dstCol,
-        order: destination.index,
+        order: destination!.index,
       }
 
       srcCards
@@ -159,7 +159,13 @@ export function ColumnsList({ boardId }: ColumnsListProps) {
     commitCards(updates)
 
     try {
-      await handleCardReorder(result)
+      await updateCardsOrder(
+        draggableId,
+        srcCol,
+        source.index,
+        dstCol,
+        destination!.index
+      )
     } finally {
       setOptimisticCards(null)
     }

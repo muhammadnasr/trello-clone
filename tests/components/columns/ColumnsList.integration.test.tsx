@@ -464,8 +464,8 @@ describe('ColumnsList Integration - Drag and Drop', () => {
     const column0Id = boardColumns[0].id // Column 0
     // const column2Id = boardColumns[2].id // Column 2 - unused but kept for reference
 
-    // Now we can test the actual handleColumnReorder function!
-    const { handleColumnReorder } = await import('../../../src/lib/utils/column-reorder')
+    // Now we can test the actual updateColumnsOrder function!
+    const { updateColumnsOrder } = await import('../../../src/lib/services/columns')
 
     // Simulate drag end event: Column 0 dragged to position 2 (before Column 3)
     const column0Index = boardColumns.findIndex((c) => c.id === column0Id)
@@ -478,7 +478,7 @@ describe('ColumnsList Integration - Drag and Drop', () => {
     }
 
     // Call the actual reorder function
-    await handleColumnReorder(mockDropResult, columns, boardId)
+    await updateColumnsOrder(columns, boardId, mockDropResult.source.index, mockDropResult.destination!.index)
 
     // Wait for database updates to sync back to the store
     // RxDB reactive queries update the store asynchronously

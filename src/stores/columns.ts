@@ -15,6 +15,7 @@ interface ColumnsActions {
   createColumn: (boardId: string, title: string, order: number, ownerId: string) => Promise<Column>
   updateColumn: (id: string, updates: { title?: string; order?: number }) => Promise<void>
   deleteColumn: (id: string) => Promise<void>
+  updateColumnsOrder: (columns: Column[], boardId: string, sourceIndex: number, destinationIndex: number) => Promise<void>
 }
 
 export type ColumnsStore = ColumnsState & ColumnsActions
@@ -57,6 +58,17 @@ export const useColumnsStore = create<ColumnsStore>((set) => ({
       await columnsService.deleteColumn(id)
     } catch (error) {
       const errorMessage = error instanceof Error ? error.message : 'Failed to delete column'
+      set({ error: errorMessage })
+      throw error
+    }
+  },
+
+  updateColumnsOrder: async (columns: Column[], boardId: string, sourceIndex: number, destinationIndex: number) => {
+    set({ error: null })
+    try {
+      await columnsService.updateColumnsOrder(columns, boardId, sourceIndex, destinationIndex)
+    } catch (error) {
+      const errorMessage = error instanceof Error ? error.message : 'Failed to update columns order'
       set({ error: errorMessage })
       throw error
     }

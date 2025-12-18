@@ -1,18 +1,17 @@
-import type { DropResult } from '@hello-pangea/dnd'
 import * as cardsService from '@/lib/services/cards'
-import { reorder, isValidDrag } from './reorder'
+import { reorder } from './reorder'
 
 /**
  * Handles card reordering within and between columns after a drag and drop.
  * Uses service layer to persist changes.
  */
-export async function handleCardReorder(result: DropResult): Promise<void> {
-  if (!isValidDrag(result)) return
-
-  const { source, destination, draggableId } = result
-
-  const sourceColumnId = source.droppableId
-  const destinationColumnId = destination.droppableId
+export async function handleCardReorder(
+  cardId: string,
+  sourceColumnId: string,
+  sourceIndex: number,
+  destinationColumnId: string,
+  destinationIndex: number
+): Promise<void> {
 
   // Fetch cards from relevant columns only
   const columnIds = sourceColumnId === destinationColumnId
@@ -20,7 +19,7 @@ export async function handleCardReorder(result: DropResult): Promise<void> {
     : [sourceColumnId, destinationColumnId]
   const cards = await cardsService.getCardsByColumnIds(columnIds)
 
-  const dragged = cards.find(c => c.id === draggableId)
+  const dragged = cards.find(c => c.id === cardId)
   if (!dragged) return
 
   const getSorted = (colId: string) => cards
@@ -32,7 +31,7 @@ export async function handleCardReorder(result: DropResult): Promise<void> {
 
   if (sourceColumnId === destinationColumnId) {
     // Same column - reorder
-    const reordered = reorder(sourceCards, source.index, destination.index)
+    const reordered = reorder(sourceCards, sourceIndex, destinationIndex)
     await Promise.all(
       reordered.map((c, i) => {
         if (c.order !== i) return cardsService.updateCard(c.id, { order: i })
@@ -42,9 +41,9 @@ export async function handleCardReorder(result: DropResult): Promise<void> {
   } else {
     // Cross-column move
     const newDestination = [
-      ...destinationCards.slice(0, destination.index),
+      ...destinationCards.slice(0, destinationIndex),
       dragged,
-      ...destinationCards.slice(destination.index),
+      ...destinationCards.slice(destinationIndex),
     ]
     const newSource = sourceCards.filter(c => c.id !== dragged.id)
 
