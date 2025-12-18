@@ -124,7 +124,7 @@ export function ColumnsList({ boardId }: ColumnsListProps) {
       .filter((c) => c.columnId === dstCol)
       .sort((a, b) => a.order - b.order)
 
-    let updates: Record<string, { order?: number; columnId?: string }> = {}
+    const updates: Record<string, { order?: number; columnId?: string }> = {}
 
     if (srcCol === dstCol) {
       const reordered = reorder(cardsByColumn[srcCol], source.index, destination.index)
@@ -173,9 +173,11 @@ export function ColumnsList({ boardId }: ColumnsListProps) {
     )
       return
 
-    result.type === 'COLUMN'
-      ? onColumnDrag(result)
-      : onCardDrag(result)
+    if (result.type === 'COLUMN') {
+      onColumnDrag(result)
+    } else {
+      onCardDrag(result)
+    }
   }
 
   /* -------------------- render -------------------- */
