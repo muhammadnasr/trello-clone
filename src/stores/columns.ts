@@ -15,7 +15,7 @@ interface ColumnsActions {
   createColumn: (boardId: string, title: string, order: number, ownerId: string) => Promise<Column>
   updateColumn: (id: string, updates: { title?: string; order?: number }) => Promise<void>
   deleteColumn: (id: string) => Promise<void>
-  updateColumnsOrder: (columns: Column[], boardId: string, sourceIndex: number, destinationIndex: number) => Promise<void>
+  updateColumnsOrder: (reorderedColumns: Column[]) => Promise<void>
 }
 
 export type ColumnsStore = ColumnsState & ColumnsActions
@@ -63,10 +63,10 @@ export const useColumnsStore = create<ColumnsStore>((set) => ({
     }
   },
 
-  updateColumnsOrder: async (columns: Column[], boardId: string, sourceIndex: number, destinationIndex: number) => {
+  updateColumnsOrder: async (reorderedColumns: Column[]) => {
     set({ error: null })
     try {
-      await columnsService.updateColumnsOrder(columns, boardId, sourceIndex, destinationIndex)
+      await columnsService.updateColumnsOrder(reorderedColumns)
     } catch (error) {
       const errorMessage = error instanceof Error ? error.message : 'Failed to update columns order'
       set({ error: errorMessage })

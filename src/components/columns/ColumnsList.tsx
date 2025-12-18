@@ -2,23 +2,10 @@ import { useState, useMemo } from 'react'
 import { DragDropContext, Droppable, type DropResult } from '@hello-pangea/dnd'
 import { useColumnsStore } from '@/stores/columns'
 import { useCardsStore } from '@/stores/cards'
+import { reorder } from '@/lib/utils/reorder'
 import { ColumnCard } from './ColumnCard'
 import { CreateColumnDialog } from './CreateColumnDialog'
 import type { Card } from '@/lib/types/card'
-
-/* -------------------- utils -------------------- */
-
-const reorder = <T,>(list: T[], from: number, to: number): T[] => {
-  const copy = [...list]
-  const [item] = copy.splice(from, 1)
-  copy.splice(to, 0, item)
-  return copy
-}
-
-const renumber = <T extends { id: string }>(items: T[]) =>
-  Object.fromEntries(items.map((item, i) => [item.id, i]))
-
-/* -------------------- component -------------------- */
 
 interface ColumnsListProps {
   boardId: string
@@ -67,40 +54,18 @@ export function ColumnsList({ boardId }: ColumnsListProps) {
     return map
   }, [allCards, columns, optimisticCards])
 
-  /* -------------------- optimistic helpers -------------------- */
-
-  const commitCards = (updates: typeof optimisticCards) => {
-    setOptimisticCards(updates)
-    useCardsStore.getState().setCards(
-      allCards.map((c) => ({
-        ...c,
-        ...updates?.[c.id],
-      }))
-    )
-  }
-
-  const commitColumns = (orderMap: Record<string, number>) => {
-    setOptimisticColumnOrder(orderMap)
-
-    const updated = allColumns.map((c) =>
-      c.boardId === boardId
-        ? { ...c, order: orderMap[c.id] }
-        : c
-    )
-
-    useColumnsStore.getState().setColumns(updated)
-  }
-
   /* -------------------- drag handlers -------------------- */
 
   const onColumnDrag = async (result: DropResult) => {
     const reordered = reorder(columns, result.source.index, result.destination!.index)
-    const orderMap = renumber(reordered)
+    // Convert the reordered array to an object with the item id as the key and the index as the value
+    //for example: [{ id: '1', order: 0 }, { id: '2', order: 1 }] -> { '1': 0, '2': 1 }
+    const orderMap = Object.fromEntries(reordered.map((item, i) => [item.id, i]))
 
-    commitColumns(orderMap)
+    setOptimisticColumnOrder(orderMap)
 
     try {
-      await updateColumnsOrder(allColumns, boardId, result.source.index, result.destination!.index)
+      await updateColumnsOrder(reordered)
     } finally {
       setOptimisticColumnOrder(null)
     }
@@ -156,7 +121,7 @@ export function ColumnsList({ boardId }: ColumnsListProps) {
       })
     }
 
-    commitCards(updates)
+    setOptimisticCards(updates)
 
     try {
       await updateCardsOrder(
@@ -185,8 +150,6 @@ export function ColumnsList({ boardId }: ColumnsListProps) {
       onCardDrag(result)
     }
   }
-
-  /* -------------------- render -------------------- */
 
   return (
     <div>

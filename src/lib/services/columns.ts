@@ -1,7 +1,6 @@
 import { getDatabase } from '@/lib/db/init'
 import type { Column } from '@/lib/types/column'
 import { uuidv7 } from 'uuidv7'
-import { reorder } from '@/lib/utils/reorder'
 
 export async function createColumn(boardId: string, title: string, order: number, ownerId: string): Promise<Column> {
   const db = getDatabase()
@@ -67,20 +66,11 @@ export async function getColumnsByBoardId(boardId: string): Promise<Column[]> {
 
 /**
  * Updates column order after a drag and drop operation.
+ * Assumes reorderedColumns is already in the correct order.
  */
 export async function updateColumnsOrder(
-  columns: Column[],
-  boardId: string,
-  sourceIndex: number,
-  destinationIndex: number
+  reorderedColumns: Column[]
 ): Promise<void> {
-  const boardColumns = columns
-    .filter((col) => col.boardId === boardId)
-    .sort((a, b) => a.order - b.order)
-
-  // Reorder columns
-  const reorderedColumns = reorder(boardColumns, sourceIndex, destinationIndex)
-
   // Update order for columns that changed position
   await Promise.all(
     reorderedColumns.map(async (column: Column, index: number) => {
