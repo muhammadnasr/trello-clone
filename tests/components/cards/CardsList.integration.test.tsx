@@ -4,7 +4,7 @@ import { render, screen, waitFor, within } from '@testing-library/react'
 import userEvent from '@testing-library/user-event'
 import { RouterProvider, createRouter } from '@tanstack/react-router'
 import { routeTree } from '../../../src/routeTree.gen'
-import type { DragEndEvent } from '@dnd-kit/core'
+import type { DropResult } from '@hello-pangea/dnd'
 import { useCardsStore } from '../../../src/stores/cards'
 import { useColumnsStore } from '../../../src/stores/columns'
 import { useBoardsStore } from '../../../src/stores/boards'
@@ -160,7 +160,7 @@ describe('CardsList Integration - Create Card', () => {
       isAuthenticated: false,
     }
     authSubscribers.forEach((sub) => sub(mockAuthState))
-    
+
     // Create board/column with anonymous ownerId
     const { createBoard } = await import('../../../src/lib/services/boards')
     const { createColumn } = await import('../../../src/lib/services/columns')
@@ -172,10 +172,10 @@ describe('CardsList Integration - Create Card', () => {
     // Create multiple cards
     await createCard(anonymousColumnId, 'Anonymous Existing 1', 0, 'anonymous')
     await createCard(anonymousColumnId, 'Anonymous Existing 2', 1, 'anonymous')
-    
+
     // Wait for store to sync
     await new Promise((resolve) => setTimeout(resolve, 500))
-    
+
     // Verify cards are synced to store
     await waitFor(() => {
       const cards = useCardsStore.getState().cards
@@ -268,7 +268,7 @@ describe('CardsList Integration - Update Card', () => {
 
     // Wait for stores to sync (RxDB reactive queries update store asynchronously)
     await new Promise((resolve) => setTimeout(resolve, 500))
-    
+
     // Verify cards are synced to store
     await waitFor(() => {
       const cards = useCardsStore.getState().cards
@@ -331,10 +331,10 @@ describe('CardsList Integration - Update Card', () => {
       isAuthenticated: false,
     }
     authSubscribers.forEach((sub) => sub(mockAuthState))
-    
+
     // Wait for sync to update
     await new Promise((resolve) => setTimeout(resolve, 100))
-    
+
     // Create board/column/card with anonymous ownerId
     const { createBoard } = await import('../../../src/lib/services/boards')
     const { createColumn } = await import('../../../src/lib/services/columns')
@@ -347,10 +347,10 @@ describe('CardsList Integration - Update Card', () => {
     await createCard(anonymousColumnId, 'Anonymous Card 1', 0, 'anonymous')
     await createCard(anonymousColumnId, 'Initial Card Title', 1, 'anonymous')
     await createCard(anonymousColumnId, 'Anonymous Card 2', 2, 'anonymous')
-    
+
     // Wait for store to sync
     await new Promise((resolve) => setTimeout(resolve, 500))
-    
+
     // Verify cards are synced to store
     await waitFor(() => {
       const cards = useCardsStore.getState().cards
@@ -427,7 +427,6 @@ describe('CardsList Integration - Delete Card', () => {
       isAuthenticated: true,
     }
     authSubscribers.forEach((sub) => sub(mockAuthState))
-    vi.spyOn(window, 'confirm').mockReturnValue(true)
 
     const { createBoard } = await import('../../../src/lib/services/boards')
     const { createColumn } = await import('../../../src/lib/services/columns')
@@ -443,7 +442,7 @@ describe('CardsList Integration - Delete Card', () => {
 
     // Wait for stores to sync (RxDB reactive queries update store asynchronously)
     await new Promise((resolve) => setTimeout(resolve, 500))
-    
+
     // Verify cards are in store before test runs
     const cardsInStore = useCardsStore.getState().cards
     console.log('Cards in store before test:', cardsInStore.length, cardsInStore.map(c => c.title))
@@ -451,7 +450,6 @@ describe('CardsList Integration - Delete Card', () => {
 
   afterEach(async () => {
     await cleanupDatabase()
-    vi.restoreAllMocks()
   })
 
   it('deletes card when delete button is clicked and confirmed', async () => {
@@ -468,15 +466,21 @@ describe('CardsList Integration - Delete Card', () => {
     // Use within() to scope the query to the specific card element
     const cardToDeleteElement = screen.getByText('Card to Delete').closest('.group')
     expect(cardToDeleteElement).toBeInTheDocument()
-    
+
     const cardContainer = within(cardToDeleteElement!)
     const deleteButton = cardContainer.getByTitle('Delete card')
-    
+
     await user.click(deleteButton)
 
-    expect(window.confirm).toHaveBeenCalledWith(
-      expect.stringContaining('Card to Delete')
-    )
+    // Wait for dialog to appear
+    await waitFor(() => {
+      expect(screen.getByText('Delete Card')).toBeInTheDocument()
+      expect(screen.getByText(/Are you sure you want to delete "Card to Delete"/)).toBeInTheDocument()
+    })
+
+    // Click the Delete button in the dialog
+    const confirmDeleteButton = screen.getByRole('button', { name: 'Delete' })
+    await user.click(confirmDeleteButton)
 
     await waitFor(() => {
       expect(screen.queryByText('Card to Delete')).not.toBeInTheDocument()
@@ -490,7 +494,6 @@ describe('CardsList Integration - Delete Card', () => {
 
   it('does not delete card when confirmation is cancelled', async () => {
     const user = userEvent.setup()
-    vi.spyOn(window, 'confirm').mockReturnValue(false)
 
     router.history.push(`/boards/${boardId}`)
     render(<RouterProvider router={router} />)
@@ -503,15 +506,21 @@ describe('CardsList Integration - Delete Card', () => {
     // Use within() to scope the query to the specific card element
     const cardToDeleteElement = screen.getByText('Card to Delete').closest('.group')
     expect(cardToDeleteElement).toBeInTheDocument()
-    
+
     const cardContainer = within(cardToDeleteElement!)
     const deleteButton = cardContainer.getByTitle('Delete card')
-    
+
     await user.click(deleteButton)
 
-    expect(window.confirm).toHaveBeenCalledWith(
-      expect.stringContaining('Card to Delete')
-    )
+    // Wait for dialog to appear
+    await waitFor(() => {
+      expect(screen.getByText('Delete Card')).toBeInTheDocument()
+      expect(screen.getByText(/Are you sure you want to delete "Card to Delete"/)).toBeInTheDocument()
+    })
+
+    // Click the Cancel button in the dialog
+    const cancelButton = screen.getByRole('button', { name: 'Cancel' })
+    await user.click(cancelButton)
 
     await waitFor(() => {
       expect(screen.getByText('Card to Delete')).toBeInTheDocument()
@@ -533,10 +542,10 @@ describe('CardsList Integration - Delete Card', () => {
       isAuthenticated: false,
     }
     authSubscribers.forEach((sub) => sub(mockAuthState))
-    
+
     // Wait for sync to update
     await new Promise((resolve) => setTimeout(resolve, 100))
-    
+
     // Create board/column/card with anonymous ownerId
     const { createBoard } = await import('../../../src/lib/services/boards')
     const { createColumn } = await import('../../../src/lib/services/columns')
@@ -546,7 +555,7 @@ describe('CardsList Integration - Delete Card', () => {
     const anonymousColumn = await createColumn(anonymousBoardId, 'Anonymous Column', 0, 'anonymous')
     const anonymousColumnId = anonymousColumn.id
     await createCard(anonymousColumnId, 'Card to Delete', 0, 'anonymous')
-    
+
     // Wait for store to sync
     await new Promise((resolve) => setTimeout(resolve, 200))
 
@@ -561,15 +570,21 @@ describe('CardsList Integration - Delete Card', () => {
     // Use within() to scope the query to the specific card element
     const cardToDeleteElement = screen.getByText('Card to Delete').closest('.group')
     expect(cardToDeleteElement).toBeInTheDocument()
-    
+
     const cardContainer = within(cardToDeleteElement!)
     const deleteButton = cardContainer.getByTitle('Delete card')
-    
+
     await user.click(deleteButton)
 
-    expect(window.confirm).toHaveBeenCalledWith(
-      expect.stringContaining('Card to Delete')
-    )
+    // Wait for dialog to appear
+    await waitFor(() => {
+      expect(screen.getByText('Delete Card')).toBeInTheDocument()
+      expect(screen.getByText(/Are you sure you want to delete "Card to Delete"/)).toBeInTheDocument()
+    })
+
+    // Click the Delete button in the dialog
+    const confirmDeleteButton = screen.getByRole('button', { name: 'Delete' })
+    await user.click(confirmDeleteButton)
 
     await waitFor(() => {
       expect(screen.queryByText('Card to Delete')).not.toBeInTheDocument()
@@ -606,7 +621,7 @@ describe('CardsList Integration - Drag and Drop', () => {
       isAuthenticated: true,
     }
     authSubscribers.forEach((sub) => sub(mockAuthState))
-    
+
     const { createBoard } = await import('../../../src/lib/services/boards')
     const { createColumn } = await import('../../../src/lib/services/columns')
     const { createCard } = await import('../../../src/lib/services/cards')
@@ -614,13 +629,13 @@ describe('CardsList Integration - Drag and Drop', () => {
     boardId = board.id
     const column = await createColumn(boardId, 'Test Column', 0, 'user1')
     columnId = column.id
-    
+
     // Create 4 cards with orders 0, 1, 2, 3
     await createCard(columnId, 'Card 0', 0, 'user1')
     await createCard(columnId, 'Card 1', 1, 'user1')
     await createCard(columnId, 'Card 2', 2, 'user1')
     await createCard(columnId, 'Card 3', 3, 'user1')
-    
+
     await new Promise((resolve) => setTimeout(resolve, 300))
   })
 
@@ -645,18 +660,18 @@ describe('CardsList Integration - Drag and Drop', () => {
     const card1 = screen.getByText('Card 1').closest('.group')
     const card2 = screen.getByText('Card 2').closest('.group')
     const card3 = screen.getByText('Card 3').closest('.group')
-    
+
     expect(card0).toBeInTheDocument()
     expect(card1).toBeInTheDocument()
     expect(card2).toBeInTheDocument()
     expect(card3).toBeInTheDocument()
-    
+
     // Each card should have a drag handle
     const card0Handle = within(card0!).getByLabelText('Drag handle')
     const card1Handle = within(card1!).getByLabelText('Drag handle')
     const card2Handle = within(card2!).getByLabelText('Drag handle')
     const card3Handle = within(card3!).getByLabelText('Drag handle')
-    
+
     expect(card0Handle).toBeInTheDocument()
     expect(card1Handle).toBeInTheDocument()
     expect(card2Handle).toBeInTheDocument()
@@ -678,37 +693,45 @@ describe('CardsList Integration - Drag and Drop', () => {
     const columnCards = cards
       .filter((card) => card.columnId === columnId)
       .sort((a, b) => a.order - b.order)
-    
+
     const card0Id = columnCards[0].id // Card 0
     const card2Id = columnCards[2].id // Card 2
 
     // Test the actual handleCardReorder function
     const { handleCardReorder } = await import('../../../src/lib/utils/card-reorder')
-    const columns = useColumnsStore.getState().columns
 
-    // Simulate drag end event: Card 0 dragged to after Card 2
-    const mockDragEndEvent = {
-      active: { id: card0Id },
-      over: { id: card2Id },
-    } as DragEndEvent
+    // Simulate drag end event: Card 0 dragged to third position (index 2)
+    // Find indices
+    const card0Index = columnCards.findIndex((c) => c.id === card0Id)
+
+    const mockDropResult: DropResult = {
+      draggableId: card0Id,
+      source: { droppableId: columnId, index: card0Index },
+      destination: { droppableId: columnId, index: 2 },
+      type: 'CARD',
+    }
 
     // Call the actual reorder function
-    await handleCardReorder(mockDragEndEvent, cards, columns)
+    await handleCardReorder(mockDropResult)
+
+    // Wait for database updates to sync back to the store
+    await new Promise((resolve) => setTimeout(resolve, 300))
 
     // Verify the UI updates to show the new order
     await waitFor(() => {
       const updatedCards = useCardsStore.getState().cards
         .filter((card) => card.columnId === columnId)
         .sort((a, b) => a.order - b.order)
-      
-      // After dragging Card 0 to after Card 2:
-      // Original: [Card 0, Card 1, Card 2, Card 3]
-      // Result: [Card 1, Card 2, Card 0, Card 3]
+
+      // After dragging Card 0 to index 2 (third position):
+      // Original: [Card 0 (0), Card 1 (1), Card 2 (2), Card 3 (3)]
+      // Result: [Card 1 (0), Card 2 (1), Card 0 (2), Card 3 (3)]
+      expect(updatedCards.length).toBe(4)
       expect(updatedCards[0].title).toBe('Card 1')
       expect(updatedCards[1].title).toBe('Card 2')
       expect(updatedCards[2].title).toBe('Card 0')
       expect(updatedCards[3].title).toBe('Card 3')
-    }, { timeout: 2000 })
+    }, { timeout: 3000 })
   })
 
   it('reorders cards when drag ends - move last card to first position', async () => {
@@ -724,26 +747,30 @@ describe('CardsList Integration - Drag and Drop', () => {
     const columnCards = cards
       .filter((card) => card.columnId === columnId)
       .sort((a, b) => a.order - b.order)
-    
+
     const card3Id = columnCards[3].id // Card 3
     const card0Id = columnCards[0].id // Card 0
 
     const { handleCardReorder } = await import('../../../src/lib/utils/card-reorder')
-    const columns = useColumnsStore.getState().columns
-    
-    // Simulate drag end event: Card 3 dragged to before Card 0
-    const mockDragEndEvent = {
-      active: { id: card3Id },
-      over: { id: card0Id },
-    } as DragEndEvent
 
-    await handleCardReorder(mockDragEndEvent, cards, columns)
+    // Simulate drag end event: Card 3 dragged to before Card 0
+    const card3Index = columnCards.findIndex((c) => c.id === card3Id)
+    const card0Index = columnCards.findIndex((c) => c.id === card0Id)
+
+    const mockDropResult: DropResult = {
+      draggableId: card3Id,
+      source: { droppableId: columnId, index: card3Index },
+      destination: { droppableId: columnId, index: card0Index },
+      type: 'CARD',
+    }
+
+    await handleCardReorder(mockDropResult)
 
     await waitFor(() => {
       const updatedCards = useCardsStore.getState().cards
         .filter((card) => card.columnId === columnId)
         .sort((a, b) => a.order - b.order)
-      
+
       // After dragging Card 3 to before Card 0:
       // Original: [Card 0, Card 1, Card 2, Card 3]
       // Result: [Card 3, Card 0, Card 1, Card 2]
@@ -767,26 +794,30 @@ describe('CardsList Integration - Drag and Drop', () => {
     const columnCards = cards
       .filter((card) => card.columnId === columnId)
       .sort((a, b) => a.order - b.order)
-    
+
     const card2Id = columnCards[2].id // Card 2
     const card0Id = columnCards[0].id // Card 0
 
     const { handleCardReorder } = await import('../../../src/lib/utils/card-reorder')
-    const columns = useColumnsStore.getState().columns
-    
-    // Simulate drag end event: Card 2 dragged to before Card 0
-    const mockDragEndEvent = {
-      active: { id: card2Id },
-      over: { id: card0Id },
-    } as DragEndEvent
 
-    await handleCardReorder(mockDragEndEvent, cards, columns)
+    // Simulate drag end event: Card 2 dragged to before Card 0
+    const card2Index = columnCards.findIndex((c) => c.id === card2Id)
+    const card0Index = columnCards.findIndex((c) => c.id === card0Id)
+
+    const mockDropResult: DropResult = {
+      draggableId: card2Id,
+      source: { droppableId: columnId, index: card2Index },
+      destination: { droppableId: columnId, index: card0Index },
+      type: 'CARD',
+    }
+
+    await handleCardReorder(mockDropResult)
 
     await waitFor(() => {
       const updatedCards = useCardsStore.getState().cards
         .filter((card) => card.columnId === columnId)
         .sort((a, b) => a.order - b.order)
-      
+
       // After dragging Card 2 to before Card 0:
       // Original: [Card 0, Card 1, Card 2, Card 3]
       // Result: [Card 2, Card 0, Card 1, Card 3]
@@ -809,19 +840,22 @@ describe('CardsList Integration - Drag and Drop', () => {
     const columnCards = cards
       .filter((card) => card.columnId === columnId)
       .sort((a, b) => a.order - b.order)
-    
+
     const card1Id = columnCards[1].id // Card 1
 
     const { handleCardReorder } = await import('../../../src/lib/utils/card-reorder')
-    const columns = useColumnsStore.getState().columns
-    
-    // Simulate drag end event: Card 1 dragged to itself
-    const mockDragEndEvent = {
-      active: { id: card1Id },
-      over: { id: card1Id },
-    } as DragEndEvent
 
-    await handleCardReorder(mockDragEndEvent, cards, columns)
+    // Simulate drag end event: Card 1 dragged to itself
+    const card1Index = columnCards.findIndex((c) => c.id === card1Id)
+
+    const mockDropResult: DropResult = {
+      draggableId: card1Id,
+      source: { droppableId: columnId, index: card1Index },
+      destination: { droppableId: columnId, index: card1Index },
+      type: 'CARD',
+    }
+
+    await handleCardReorder(mockDropResult)
 
     // Wait a bit to ensure no updates happened
     await new Promise((resolve) => setTimeout(resolve, 200))
@@ -829,7 +863,7 @@ describe('CardsList Integration - Drag and Drop', () => {
     const updatedCards = useCardsStore.getState().cards
       .filter((card) => card.columnId === columnId)
       .sort((a, b) => a.order - b.order)
-    
+
     // Order should remain unchanged
     expect(updatedCards[0].title).toBe('Card 0')
     expect(updatedCards[1].title).toBe('Card 1')
@@ -848,15 +882,16 @@ describe('CardsList Integration - Drag and Drop', () => {
     const cards = useCardsStore.getState().cards
 
     const { handleCardReorder } = await import('../../../src/lib/utils/card-reorder')
-    const columns = useColumnsStore.getState().columns
-    
-    // Simulate drag end event without over target
-    const mockDragEndEvent = {
-      active: { id: 'card-1' },
-      over: null,
-    } as DragEndEvent
 
-    await handleCardReorder(mockDragEndEvent, cards, columns)
+    // Simulate drag end event without destination
+    const mockDropResult: DropResult = {
+      draggableId: 'card-1',
+      source: { droppableId: columnId, index: 0 },
+      destination: null,
+      type: 'CARD',
+    }
+
+    await handleCardReorder(mockDropResult)
 
     // Wait a bit to ensure no updates happened
     await new Promise((resolve) => setTimeout(resolve, 200))
@@ -864,7 +899,7 @@ describe('CardsList Integration - Drag and Drop', () => {
     const updatedCards = useCardsStore.getState().cards
       .filter((card) => card.columnId === columnId)
       .sort((a, b) => a.order - b.order)
-    
+
     // Order should remain unchanged
     expect(updatedCards[0].title).toBe('Card 0')
     expect(updatedCards[1].title).toBe('Card 1')
@@ -950,12 +985,19 @@ describe('CardsList Integration - Cross-Column Drag and Drop', () => {
     const { handleCardReorder } = await import('../../../src/lib/utils/card-reorder')
 
     // Simulate drag end event: Card 1-0 dragged to Column 2
-    const mockDragEndEvent = {
-      active: { id: cardToMove.id },
-      over: { id: column2Id },
-    } as DragEndEvent
+    const cardIndex = column1Cards.findIndex((c) => c.id === cardToMove.id)
+    const column2Cards = cards
+      .filter((card) => card.columnId === column2Id)
+      .sort((a, b) => a.order - b.order)
 
-    await handleCardReorder(mockDragEndEvent, cards, columns)
+    const mockDropResult: DropResult = {
+      draggableId: cardToMove.id,
+      source: { droppableId: column1Id, index: cardIndex },
+      destination: { droppableId: column2Id, index: column2Cards.length },
+      type: 'CARD',
+    }
+
+    await handleCardReorder(mockDropResult)
 
     await waitFor(() => {
       const updatedCards = useCardsStore.getState().cards
@@ -1004,12 +1046,17 @@ describe('CardsList Integration - Cross-Column Drag and Drop', () => {
     const { handleCardReorder } = await import('../../../src/lib/utils/card-reorder')
 
     // Simulate drag end event: Card 1-0 dragged to Card 2-0 (insert before it)
-    const mockDragEndEvent = {
-      active: { id: cardToMove.id },
-      over: { id: targetCard.id },
-    } as DragEndEvent
+    const cardIndex = column1Cards.findIndex((c) => c.id === cardToMove.id)
+    const targetIndex = column2Cards.findIndex((c) => c.id === targetCard.id)
 
-    await handleCardReorder(mockDragEndEvent, cards, columns)
+    const mockDropResult: DropResult = {
+      draggableId: cardToMove.id,
+      source: { droppableId: column1Id, index: cardIndex },
+      destination: { droppableId: column2Id, index: targetIndex },
+      type: 'CARD',
+    }
+
+    await handleCardReorder(mockDropResult)
 
     await waitFor(() => {
       const updatedCards = useCardsStore.getState().cards
@@ -1053,12 +1100,19 @@ describe('CardsList Integration - Cross-Column Drag and Drop', () => {
     const { handleCardReorder } = await import('../../../src/lib/utils/card-reorder')
 
     // Simulate drag end event: Card 1-1 dragged to Column 2
-    const mockDragEndEvent = {
-      active: { id: cardToMove.id },
-      over: { id: column2Id },
-    } as DragEndEvent
+    const cardIndex = column1Cards.findIndex((c) => c.id === cardToMove.id)
+    const column2Cards = cards
+      .filter((card) => card.columnId === column2Id)
+      .sort((a, b) => a.order - b.order)
 
-    await handleCardReorder(mockDragEndEvent, cards, columns)
+    const mockDropResult: DropResult = {
+      draggableId: cardToMove.id,
+      source: { droppableId: column1Id, index: cardIndex },
+      destination: { droppableId: column2Id, index: column2Cards.length },
+      type: 'CARD',
+    }
+
+    await handleCardReorder(mockDropResult)
 
     await waitFor(() => {
       const updatedCards = useCardsStore.getState().cards
