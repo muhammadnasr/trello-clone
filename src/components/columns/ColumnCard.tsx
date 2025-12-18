@@ -3,6 +3,7 @@ import { Draggable, Droppable } from '@hello-pangea/dnd'
 import type { CSSProperties } from 'react'
 import type { Column } from '@/lib/types/column'
 import { CardsList } from '@/components/cards/CardsList'
+import { CreateCard } from '@/components/cards/CreateCard'
 import { GripVertical, Edit2, Trash2 } from 'lucide-react'
 import { Button } from '@/components/ui/button'
 import {
@@ -109,11 +110,14 @@ export function ColumnCard({ column, index, cards }: ColumnCardProps) {
                   className={`min-h-[100px] ${snapshot.isDraggingOver ? 'bg-blue-50 dark:bg-blue-900/20 rounded' : ''
                     }`}
                 >
-                  <CardsList cards={cards} columnId={column.id} />
+                  <CardsList cards={cards} />
                   {provided.placeholder}
                 </div>
               )}
             </Droppable>
+            <div className="mt-2">
+              <CreateCard columnId={column.id} nextOrder={cards.length} />
+            </div>
           </div>
         )}
       </Draggable>
