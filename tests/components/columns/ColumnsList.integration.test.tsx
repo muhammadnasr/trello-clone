@@ -462,7 +462,7 @@ describe('ColumnsList Integration - Drag and Drop', () => {
       .sort((a, b) => a.order - b.order)
 
     const column0Id = boardColumns[0].id // Column 0
-    const column2Id = boardColumns[2].id // Column 2
+    // const column2Id = boardColumns[2].id // Column 2 - unused but kept for reference
 
     // Now we can test the actual handleColumnReorder function!
     const { handleColumnReorder } = await import('../../../src/lib/utils/column-reorder')

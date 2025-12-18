@@ -695,7 +695,7 @@ describe('CardsList Integration - Drag and Drop', () => {
       .sort((a, b) => a.order - b.order)
 
     const card0Id = columnCards[0].id // Card 0
-    const card2Id = columnCards[2].id // Card 2
+    // const card2Id = columnCards[2].id // Card 2 - unused but kept for reference
 
     // Test the actual handleCardReorder function
     const { handleCardReorder } = await import('../../../src/lib/utils/card-reorder')
@@ -879,8 +879,6 @@ describe('CardsList Integration - Drag and Drop', () => {
       expect(screen.getByText('Card 0')).toBeInTheDocument()
     })
 
-    const cards = useCardsStore.getState().cards
-
     const { handleCardReorder } = await import('../../../src/lib/utils/card-reorder')
 
     // Simulate drag end event without destination
@@ -975,7 +973,6 @@ describe('CardsList Integration - Cross-Column Drag and Drop', () => {
     })
 
     const cards = useCardsStore.getState().cards
-    const columns = useColumnsStore.getState().columns
 
     const column1Cards = cards
       .filter((card) => card.columnId === column1Id)
@@ -1031,7 +1028,6 @@ describe('CardsList Integration - Cross-Column Drag and Drop', () => {
     })
 
     const cards = useCardsStore.getState().cards
-    const columns = useColumnsStore.getState().columns
 
     const column1Cards = cards
       .filter((card) => card.columnId === column1Id)
@@ -1090,7 +1086,6 @@ describe('CardsList Integration - Cross-Column Drag and Drop', () => {
     })
 
     const cards = useCardsStore.getState().cards
-    const columns = useColumnsStore.getState().columns
 
     const column1Cards = cards
       .filter((card) => card.columnId === column1Id)

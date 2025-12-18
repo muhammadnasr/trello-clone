@@ -56,3 +56,15 @@ export async function getCardsByColumnId(columnId: string): Promise<Card[]> {
   return cards.map((doc) => doc.toJSON() as Card)
 }
 
+export async function getCardsByColumnIds(columnIds: string[]): Promise<Card[]> {
+  const db = getDatabase()
+  const cards = await db.cards.find({
+    selector: {
+      columnId: { $in: columnIds }
+    },
+    sort: [{ order: 'asc' }],
+  }).exec()
+
+  return cards.map((doc) => doc.toJSON() as Card)
+}
+

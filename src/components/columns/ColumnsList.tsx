@@ -8,113 +8,192 @@ import { ColumnCard } from './ColumnCard'
 import { CreateColumnDialog } from './CreateColumnDialog'
 import type { Card } from '@/lib/types/card'
 
-function reorder<T>(list: T[], startIndex: number, endIndex: number): T[] {
-  const result = Array.from(list)
-  const [removed] = result.splice(startIndex, 1)
-  result.splice(endIndex, 0, removed)
-  return result
+/* -------------------- utils -------------------- */
+
+const reorder = <T,>(list: T[], from: number, to: number): T[] => {
+  const copy = [...list]
+  const [item] = copy.splice(from, 1)
+  copy.splice(to, 0, item)
+  return copy
 }
+
+const renumber = <T extends { id: string }>(items: T[]) =>
+  Object.fromEntries(items.map((item, i) => [item.id, i]))
+
+/* -------------------- component -------------------- */
 
 interface ColumnsListProps {
   boardId: string
 }
 
 export function ColumnsList({ boardId }: ColumnsListProps) {
-  // Use dynamic columns from store
-  const allColumns = useColumnsStore((state) => state.columns)
+  const allColumns = useColumnsStore((s) => s.columns)
+  const allCards = useCardsStore((s) => s.cards)
 
-  // Track optimistic column order updates to prevent flicker
-  const [optimisticOrder, setOptimisticOrder] = useState<Record<string, number> | null>(null)
+  const [optimisticColumnOrder, setOptimisticColumnOrder] =
+    useState<Record<string, number> | null>(null)
 
-  // Derive columns from store, applying optimistic order if present
+  const [optimisticCards, setOptimisticCards] =
+    useState<Record<string, { order?: number; columnId?: string }> | null>(null)
+
+  /* -------------------- derived state -------------------- */
+
   const columns = useMemo(() => {
-    const boardColumns = allColumns
-      .filter((col) => col.boardId === boardId)
-      .map((col) => ({
-        ...col,
-        order: optimisticOrder?.[col.id] ?? col.order,
+    return allColumns
+      .filter((c) => c.boardId === boardId)
+      .map((c) => ({
+        ...c,
+        order: optimisticColumnOrder?.[c.id] ?? c.order,
       }))
       .sort((a, b) => a.order - b.order)
+  }, [allColumns, boardId, optimisticColumnOrder])
 
-    return boardColumns
-  }, [allColumns, boardId, optimisticOrder])
-
-  // Use dynamic cards from store
-  const allCards = useCardsStore((state) => state.cards)
-
-  // Get cards for each column, sorted by order
   const cardsByColumn = useMemo(() => {
-    const cardsMap: Record<string, Card[]> = {}
-    columns.forEach((column) => {
-      cardsMap[column.id] = allCards
-        .filter((card) => card.columnId === column.id)
+    const map: Record<string, Card[]> = {}
+
+    for (const column of columns) {
+      map[column.id] = allCards
+        .filter((card) => {
+          const colId = optimisticCards?.[card.id]?.columnId ?? card.columnId
+          return colId === column.id
+        })
+        .map((card) => ({
+          ...card,
+          ...optimisticCards?.[card.id],
+        }))
         .sort((a, b) => a.order - b.order)
-    })
-    return cardsMap
-  }, [allCards, columns])
+    }
 
-  const handleDragEnd = async (result: DropResult) => {
-    const { source, destination, type } = result
+    return map
+  }, [allCards, columns, optimisticCards])
 
-    if (!destination) return
-    if (source.droppableId === destination.droppableId && source.index === destination.index) return
+  /* -------------------- optimistic helpers -------------------- */
 
-    if (type === 'COLUMN') {
-      // Optimistically update order immediately (no flicker)
-      const reorderedColumns = reorder(columns, source.index, destination.index)
-      const newOrder: Record<string, number> = {}
-      reorderedColumns.forEach((col, index) => {
-        newOrder[col.id] = index
-      })
-
-      // Update optimistic order immediately
-      setOptimisticOrder(newOrder)
-
-      // Update store optimistically
-      const updatedColumns = reorderedColumns.map((col, index) => ({
-        ...col,
-        order: index,
+  const commitCards = (updates: typeof optimisticCards) => {
+    setOptimisticCards(updates)
+    useCardsStore.getState().setCards(
+      allCards.map((c) => ({
+        ...c,
+        ...updates?.[c.id],
       }))
-      const otherColumns = allColumns.filter((col) => col.boardId !== boardId)
-      useColumnsStore.getState().setColumns([...otherColumns, ...updatedColumns])
+    )
+  }
 
-      // Then sync to database in background
-      handleColumnReorder(result, allColumns, boardId)
-        .then(() => {
-          // Clear optimistic order after successful DB update
-          setOptimisticOrder(null)
-        })
-        .catch((error) => {
-          console.error('Failed to update column order:', error)
-          // Revert optimistic order on error
-          setOptimisticOrder(null)
-        })
-    } else if (type === 'CARD') {
-      // Handle card reordering using the utility function
-      await handleCardReorder(result)
+  const commitColumns = (orderMap: Record<string, number>) => {
+    setOptimisticColumnOrder(orderMap)
+
+    const updated = allColumns.map((c) =>
+      c.boardId === boardId
+        ? { ...c, order: orderMap[c.id] }
+        : c
+    )
+
+    useColumnsStore.getState().setColumns(updated)
+  }
+
+  /* -------------------- drag handlers -------------------- */
+
+  const onColumnDrag = async (result: DropResult) => {
+    const reordered = reorder(columns, result.source.index, result.destination!.index)
+    const orderMap = renumber(reordered)
+
+    commitColumns(orderMap)
+
+    try {
+      await handleColumnReorder(result, allColumns, boardId)
+    } finally {
+      setOptimisticColumnOrder(null)
     }
   }
 
-  // Calculate next order for new column
-  const nextOrder = columns.length
+  const onCardDrag = async (result: DropResult) => {
+    const { source, destination, draggableId } = result
+    if (!destination) return
+
+    const dragged = allCards.find((c) => c.id === draggableId)
+    if (!dragged) return
+
+    const srcCol = source.droppableId
+    const dstCol = destination.droppableId
+
+    const srcCards = allCards
+      .filter((c) => c.columnId === srcCol)
+      .sort((a, b) => a.order - b.order)
+
+    const dstCards = allCards
+      .filter((c) => c.columnId === dstCol)
+      .sort((a, b) => a.order - b.order)
+
+    let updates: Record<string, { order?: number; columnId?: string }> = {}
+
+    if (srcCol === dstCol) {
+      const reordered = reorder(cardsByColumn[srcCol], source.index, destination.index)
+      reordered.forEach((c, i) => {
+        if (c.order !== i) updates[c.id] = { order: i }
+      })
+    } else {
+      const newDst = [
+        ...dstCards.slice(0, destination.index),
+        dragged,
+        ...dstCards.slice(destination.index),
+      ]
+
+      updates[dragged.id] = {
+        columnId: dstCol,
+        order: destination.index,
+      }
+
+      srcCards
+        .filter((c) => c.id !== dragged.id)
+        .forEach((c, i) => {
+          if (c.order !== i) updates[c.id] = { order: i }
+        })
+
+      newDst.forEach((c, i) => {
+        if (c.id !== dragged.id && c.order !== i) {
+          updates[c.id] = { order: i }
+        }
+      })
+    }
+
+    commitCards(updates)
+
+    try {
+      await handleCardReorder(result)
+    } finally {
+      setOptimisticCards(null)
+    }
+  }
+
+  const handleDragEnd = (result: DropResult) => {
+    if (!result.destination) return
+    if (
+      result.source.droppableId === result.destination.droppableId &&
+      result.source.index === result.destination.index
+    )
+      return
+
+    result.type === 'COLUMN'
+      ? onColumnDrag(result)
+      : onCardDrag(result)
+  }
+
+  /* -------------------- render -------------------- */
 
   return (
     <div>
       <div className="flex items-center justify-between mb-6">
         <h2 className="text-xl font-semibold">Columns</h2>
-        <CreateColumnDialog boardId={boardId} nextOrder={nextOrder} />
+        <CreateColumnDialog boardId={boardId} nextOrder={columns.length} />
       </div>
+
       <DragDropContext onDragEnd={handleDragEnd}>
         <Droppable droppableId="columns" direction="horizontal" type="COLUMN">
           {(provided) => (
             <div
               ref={provided.innerRef}
               {...provided.droppableProps}
-              style={{
-                display: 'flex',
-                overflow: 'auto',
-                paddingBottom: '1rem',
-              }}
+              className="flex overflow-auto pb-4"
             >
               {columns.map((column, index) => (
                 <ColumnCard
@@ -132,4 +211,3 @@ export function ColumnsList({ boardId }: ColumnsListProps) {
     </div>
   )
 }
-

@@ -1,6 +1,5 @@
 import type { DropResult } from '@hello-pangea/dnd'
 import type { Card } from '@/lib/types/card'
-import { useCardsStore } from '@/stores/cards'
 import * as cardsService from '@/lib/services/cards'
 
 /**
@@ -92,14 +91,20 @@ export async function handleCardReorder(
   if (!destination) return
   if (source.droppableId === destination.droppableId && source.index === destination.index) return
 
-  const cards = useCardsStore.getState().cards
+  const sourceColumnId = source.droppableId
+  const destinationColumnId = destination.droppableId
+
+  // Only fetch cards from the columns we actually need (optimization)
+  // Get fresh cards from database via service layer to avoid conflicts with optimistic updates
+  const columnIds = sourceColumnId === destinationColumnId 
+    ? [sourceColumnId]  // Same column - only need one column's cards
+    : [sourceColumnId, destinationColumnId]  // Different columns - need both
+
+  const cards = await cardsService.getCardsByColumnIds(columnIds)
 
   // Find the dragged card
   const draggedCard = cards.find((card) => card.id === draggableId)
   if (!draggedCard) return
-
-  const sourceColumnId = source.droppableId
-  const destinationColumnId = destination.droppableId
 
   const sourceColumnCards = getColumnCardsSorted(cards, sourceColumnId)
   const destinationColumnCards = getColumnCardsSorted(cards, destinationColumnId)
