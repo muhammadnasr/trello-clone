@@ -699,10 +699,12 @@ describe('CardsList Integration - Drag and Drop', () => {
 
     // Test the actual updateCardsOrder function
     const { updateCardsOrder } = await import('../../../src/lib/services/cards')
+    const { calculateCardUpdates } = await import('../../../src/lib/utils/card-updates')
 
     // Simulate drag end event: Card 0 dragged to third position (index 2)
     // Find indices
     const card0Index = columnCards.findIndex((c) => c.id === card0Id)
+    const draggedCard = columnCards[card0Index]
 
     const mockDropResult: DropResult = {
       draggableId: card0Id,
@@ -711,14 +713,19 @@ describe('CardsList Integration - Drag and Drop', () => {
       type: 'CARD',
     }
 
-    // Call the actual reorder function
-    await updateCardsOrder(
-      mockDropResult.draggableId,
-      mockDropResult.source.droppableId,
+    // Calculate updates map using shared utility
+    const updates = calculateCardUpdates(
+      draggedCard,
+      columnCards,
+      columnCards,
       mockDropResult.source.index,
-      mockDropResult.destination!.droppableId,
-      mockDropResult.destination!.index
+      mockDropResult.destination!.index,
+      columnId,
+      columnId
     )
+
+    // Call the actual reorder function
+    await updateCardsOrder(updates)
 
     // Wait for database updates to sync back to the store
     await new Promise((resolve) => setTimeout(resolve, 300))
@@ -758,10 +765,12 @@ describe('CardsList Integration - Drag and Drop', () => {
     const card0Id = columnCards[0].id // Card 0
 
     const { updateCardsOrder } = await import('../../../src/lib/services/cards')
+    const { calculateCardUpdates } = await import('../../../src/lib/utils/card-updates')
 
     // Simulate drag end event: Card 3 dragged to before Card 0
     const card3Index = columnCards.findIndex((c) => c.id === card3Id)
     const card0Index = columnCards.findIndex((c) => c.id === card0Id)
+    const draggedCard = columnCards[card3Index]
 
     const mockDropResult: DropResult = {
       draggableId: card3Id,
@@ -770,13 +779,18 @@ describe('CardsList Integration - Drag and Drop', () => {
       type: 'CARD',
     }
 
-    await updateCardsOrder(
-      mockDropResult.draggableId,
-      mockDropResult.source.droppableId,
+    // Calculate updates map using shared utility
+    const updates = calculateCardUpdates(
+      draggedCard,
+      columnCards,
+      columnCards,
       mockDropResult.source.index,
-      mockDropResult.destination!.droppableId,
-      mockDropResult.destination!.index
+      mockDropResult.destination!.index,
+      columnId,
+      columnId
     )
+
+    await updateCardsOrder(updates)
 
     await waitFor(() => {
       const updatedCards = useCardsStore.getState().cards
@@ -811,10 +825,12 @@ describe('CardsList Integration - Drag and Drop', () => {
     const card0Id = columnCards[0].id // Card 0
 
     const { updateCardsOrder } = await import('../../../src/lib/services/cards')
+    const { calculateCardUpdates } = await import('../../../src/lib/utils/card-updates')
 
     // Simulate drag end event: Card 2 dragged to before Card 0
     const card2Index = columnCards.findIndex((c) => c.id === card2Id)
     const card0Index = columnCards.findIndex((c) => c.id === card0Id)
+    const draggedCard = columnCards[card2Index]
 
     const mockDropResult: DropResult = {
       draggableId: card2Id,
@@ -823,13 +839,18 @@ describe('CardsList Integration - Drag and Drop', () => {
       type: 'CARD',
     }
 
-    await updateCardsOrder(
-      mockDropResult.draggableId,
-      mockDropResult.source.droppableId,
+    // Calculate updates map using shared utility
+    const updates = calculateCardUpdates(
+      draggedCard,
+      columnCards,
+      columnCards,
       mockDropResult.source.index,
-      mockDropResult.destination!.droppableId,
-      mockDropResult.destination!.index
+      mockDropResult.destination!.index,
+      columnId,
+      columnId
     )
+
+    await updateCardsOrder(updates)
 
     await waitFor(() => {
       const updatedCards = useCardsStore.getState().cards
@@ -862,9 +883,11 @@ describe('CardsList Integration - Drag and Drop', () => {
     const card1Id = columnCards[1].id // Card 1
 
     const { updateCardsOrder } = await import('../../../src/lib/services/cards')
+    const { calculateCardUpdates } = await import('../../../src/lib/utils/card-updates')
 
     // Simulate drag end event: Card 1 dragged to itself
     const card1Index = columnCards.findIndex((c) => c.id === card1Id)
+    const draggedCard = columnCards[card1Index]
 
     const mockDropResult: DropResult = {
       draggableId: card1Id,
@@ -873,13 +896,18 @@ describe('CardsList Integration - Drag and Drop', () => {
       type: 'CARD',
     }
 
-    await updateCardsOrder(
-      mockDropResult.draggableId,
-      mockDropResult.source.droppableId,
+    // Calculate updates map using shared utility - no updates since same position
+    const updates = calculateCardUpdates(
+      draggedCard,
+      columnCards,
+      columnCards,
       mockDropResult.source.index,
-      mockDropResult.destination!.droppableId,
-      mockDropResult.destination!.index
+      mockDropResult.destination!.index,
+      columnId,
+      columnId
     )
+
+    await updateCardsOrder(updates)
 
     // Wait a bit to ensure no updates happened
     await new Promise((resolve) => setTimeout(resolve, 200))
@@ -903,8 +931,6 @@ describe('CardsList Integration - Drag and Drop', () => {
       expect(screen.getByText('Card 0')).toBeInTheDocument()
     })
 
-    const { updateCardsOrder } = await import('../../../src/lib/services/cards')
-
     // Simulate drag end event without destination
     // Note: Validation is now handled in UI layer, so this function should not be called
     // when destination is null. This test verifies that the UI layer prevents invalid calls.
@@ -918,13 +944,25 @@ describe('CardsList Integration - Drag and Drop', () => {
     // Skip calling updateCardsOrder when destination is null (UI layer validation)
     // In real usage, handleDragEnd in ColumnsList would return early before calling this
     if (mockDropResult.destination) {
-      await updateCardsOrder(
-        mockDropResult.draggableId,
-        mockDropResult.source.droppableId,
+      const { updateCardsOrder } = await import('../../../src/lib/services/cards')
+      const { calculateCardUpdates } = await import('../../../src/lib/utils/card-updates')
+      const cards = useCardsStore.getState().cards
+      const columnCards = cards
+        .filter((card) => card.columnId === columnId)
+        .sort((a, b) => a.order - b.order)
+
+      const draggedCard = columnCards[mockDropResult.source.index]
+      const updates = calculateCardUpdates(
+        draggedCard,
+        columnCards,
+        columnCards,
         mockDropResult.source.index,
-        mockDropResult.destination.droppableId,
-        mockDropResult.destination.index
+        mockDropResult.destination.index,
+        columnId,
+        columnId
       )
+
+      await updateCardsOrder(updates)
     }
 
     // Wait a bit to ensure no updates happened
@@ -1016,6 +1054,7 @@ describe('CardsList Integration - Cross-Column Drag and Drop', () => {
     const cardToMove = column1Cards[0] // Card 1-0
 
     const { updateCardsOrder } = await import('../../../src/lib/services/cards')
+    const { calculateCardUpdates } = await import('../../../src/lib/utils/card-updates')
 
     // Simulate drag end event: Card 1-0 dragged to Column 2
     const cardIndex = column1Cards.findIndex((c) => c.id === cardToMove.id)
@@ -1030,13 +1069,18 @@ describe('CardsList Integration - Cross-Column Drag and Drop', () => {
       type: 'CARD',
     }
 
-    await updateCardsOrder(
-      mockDropResult.draggableId,
-      mockDropResult.source.droppableId,
+    // Calculate updates map using shared utility (cross-column move)
+    const updates = calculateCardUpdates(
+      cardToMove,
+      column1Cards,
+      column2Cards,
       mockDropResult.source.index,
-      mockDropResult.destination!.droppableId,
-      mockDropResult.destination!.index
+      mockDropResult.destination!.index,
+      column1Id,
+      column2Id
     )
+
+    await updateCardsOrder(updates)
 
     await waitFor(() => {
       const updatedCards = useCardsStore.getState().cards
@@ -1082,6 +1126,7 @@ describe('CardsList Integration - Cross-Column Drag and Drop', () => {
     const targetCard = column2Cards[0] // Card 2-0
 
     const { updateCardsOrder } = await import('../../../src/lib/services/cards')
+    const { calculateCardUpdates } = await import('../../../src/lib/utils/card-updates')
 
     // Simulate drag end event: Card 1-0 dragged to Card 2-0 (insert before it)
     const cardIndex = column1Cards.findIndex((c) => c.id === cardToMove.id)
@@ -1094,13 +1139,18 @@ describe('CardsList Integration - Cross-Column Drag and Drop', () => {
       type: 'CARD',
     }
 
-    await updateCardsOrder(
-      mockDropResult.draggableId,
-      mockDropResult.source.droppableId,
+    // Calculate updates map using shared utility (cross-column move)
+    const updates = calculateCardUpdates(
+      cardToMove,
+      column1Cards,
+      column2Cards,
       mockDropResult.source.index,
-      mockDropResult.destination!.droppableId,
-      mockDropResult.destination!.index
+      mockDropResult.destination!.index,
+      column1Id,
+      column2Id
     )
+
+    await updateCardsOrder(updates)
 
     await waitFor(() => {
       const updatedCards = useCardsStore.getState().cards
@@ -1141,6 +1191,7 @@ describe('CardsList Integration - Cross-Column Drag and Drop', () => {
     const cardToMove = column1Cards[1] // Card 1-1 (middle card)
 
     const { updateCardsOrder } = await import('../../../src/lib/services/cards')
+    const { calculateCardUpdates } = await import('../../../src/lib/utils/card-updates')
 
     // Simulate drag end event: Card 1-1 dragged to Column 2
     const cardIndex = column1Cards.findIndex((c) => c.id === cardToMove.id)
@@ -1155,13 +1206,18 @@ describe('CardsList Integration - Cross-Column Drag and Drop', () => {
       type: 'CARD',
     }
 
-    await updateCardsOrder(
-      mockDropResult.draggableId,
-      mockDropResult.source.droppableId,
+    // Calculate updates map using shared utility (cross-column move)
+    const updates = calculateCardUpdates(
+      cardToMove,
+      column1Cards,
+      column2Cards,
       mockDropResult.source.index,
-      mockDropResult.destination!.droppableId,
-      mockDropResult.destination!.index
+      mockDropResult.destination!.index,
+      column1Id,
+      column2Id
     )
+
+    await updateCardsOrder(updates)
 
     await waitFor(() => {
       const updatedCards = useCardsStore.getState().cards

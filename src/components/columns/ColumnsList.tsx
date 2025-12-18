@@ -3,6 +3,7 @@ import { DragDropContext, Droppable, type DropResult } from '@hello-pangea/dnd'
 import { useColumnsStore } from '@/stores/columns'
 import { useCardsStore } from '@/stores/cards'
 import { reorder } from '@/lib/utils/reorder'
+import { calculateCardUpdates } from '@/lib/utils/card-updates'
 import { ColumnCard } from './ColumnCard'
 import { CreateColumnDialog } from './CreateColumnDialog'
 import type { Card } from '@/lib/types/card'
@@ -80,57 +81,23 @@ export function ColumnsList({ boardId }: ColumnsListProps) {
 
     const srcCol = source.droppableId
     const dstCol = destination!.droppableId
+    const srcCards = cardsByColumn[srcCol]
+    const dstCards = cardsByColumn[dstCol]
 
-    const srcCards = allCards
-      .filter((c) => c.columnId === srcCol)
-      .sort((a, b) => a.order - b.order)
-
-    const dstCards = allCards
-      .filter((c) => c.columnId === dstCol)
-      .sort((a, b) => a.order - b.order)
-
-    const updates: Record<string, { order?: number; columnId?: string }> = {}
-
-    if (srcCol === dstCol) {
-      const reordered = reorder(cardsByColumn[srcCol], source.index, destination!.index)
-      reordered.forEach((c, i) => {
-        if (c.order !== i) updates[c.id] = { order: i }
-      })
-    } else {
-      const newDst = [
-        ...dstCards.slice(0, destination!.index),
-        dragged,
-        ...dstCards.slice(destination!.index),
-      ]
-
-      updates[dragged.id] = {
-        columnId: dstCol,
-        order: destination!.index,
-      }
-
-      srcCards
-        .filter((c) => c.id !== dragged.id)
-        .forEach((c, i) => {
-          if (c.order !== i) updates[c.id] = { order: i }
-        })
-
-      newDst.forEach((c, i) => {
-        if (c.id !== dragged.id && c.order !== i) {
-          updates[c.id] = { order: i }
-        }
-      })
-    }
+    const updates = calculateCardUpdates(
+      dragged,
+      srcCards,
+      dstCards,
+      source.index,
+      destination!.index,
+      srcCol,
+      dstCol
+    )
 
     setOptimisticCards(updates)
 
     try {
-      await updateCardsOrder(
-        draggableId,
-        srcCol,
-        source.index,
-        dstCol,
-        destination!.index
-      )
+      await updateCardsOrder(updates)
     } finally {
       setOptimisticCards(null)
     }

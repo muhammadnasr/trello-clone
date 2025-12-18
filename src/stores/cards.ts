@@ -15,7 +15,7 @@ interface CardsActions {
   createCard: (columnId: string, title: string, order: number, ownerId: string) => Promise<Card>
   updateCard: (id: string, updates: { title?: string; order?: number; columnId?: string }) => Promise<void>
   deleteCard: (id: string) => Promise<void>
-  updateCardsOrder: (cardId: string, sourceColumnId: string, sourceIndex: number, destinationColumnId: string, destinationIndex: number) => Promise<void>
+  updateCardsOrder: (updates: Record<string, { order?: number; columnId?: string }>) => Promise<void>
 }
 
 export type CardsStore = CardsState & CardsActions
@@ -63,10 +63,10 @@ export const useCardsStore = create<CardsStore>((set) => ({
     }
   },
 
-  updateCardsOrder: async (cardId: string, sourceColumnId: string, sourceIndex: number, destinationColumnId: string, destinationIndex: number) => {
+  updateCardsOrder: async (updates: Record<string, { order?: number; columnId?: string }>) => {
     set({ error: null })
     try {
-      await cardsService.updateCardsOrder(cardId, sourceColumnId, sourceIndex, destinationColumnId, destinationIndex)
+      await cardsService.updateCardsOrder(updates)
     } catch (error) {
       const errorMessage = error instanceof Error ? error.message : 'Failed to update cards order'
       set({ error: errorMessage })
