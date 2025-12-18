@@ -26,8 +26,9 @@ const grid = 8
 
 const getItemStyle = (_isDragging: boolean, draggableStyle: CSSProperties | undefined) => ({
   userSelect: 'none' as const,
-  padding: grid * 2,
+  padding: grid * 1,
   marginBottom: grid,
+  overflow: 'visible',
   ...(draggableStyle || {}),
 })
 
@@ -83,7 +84,7 @@ export function Card({ card, index }: CardProps) {
             ref={provided.innerRef}
             {...provided.draggableProps}
             style={getItemStyle(snapshot.isDragging, provided.draggableProps.style)}
-            className="bg-white dark:bg-gray-700 rounded-md shadow-sm"
+            className="bg-white dark:bg-gray-700 rounded-md shadow-sm border border-gray-200 dark:border-gray-600"
           >
             {isEditing ? (
               <form
@@ -114,7 +115,7 @@ export function Card({ card, index }: CardProps) {
               <div className="flex items-start justify-between gap-2 group">
                 <button
                   {...provided.dragHandleProps}
-                  className="cursor-grab active:cursor-grabbing text-gray-400 hover:text-gray-600 mr-1"
+                  className="cursor-grab active:cursor-grabbing text-gray-400 hover:text-gray-600 mr-1 mt-0.5"
                   aria-label="Drag handle"
                 >
                   <GripVertical className="h-4 w-4" />

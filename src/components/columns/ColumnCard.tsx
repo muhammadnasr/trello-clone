@@ -33,6 +33,7 @@ const getItemStyle = (_isDragging: boolean, draggableStyle: CSSProperties | unde
   margin: `0 ${grid}px 0 0`,
   width: '280px',
   flexShrink: 0,
+  overflow: 'visible',
   ...(draggableStyle || {}),
 })
 
@@ -62,7 +63,7 @@ export function ColumnCard({ column, index, cards }: ColumnCardProps) {
             ref={provided.innerRef}
             {...provided.draggableProps}
             style={getItemStyle(snapshot.isDragging, provided.draggableProps.style)}
-            className="bg-white dark:bg-gray-800 rounded-lg shadow"
+            className="bg-white dark:bg-gray-800 rounded-lg shadow border border-gray-200 dark:border-gray-700"
           >
             <div className="relative flex items-center justify-between mb-2 group">
               <div className="flex items-center gap-2 flex-1">
