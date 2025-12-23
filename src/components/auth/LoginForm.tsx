@@ -1,25 +1,16 @@
-import { useState, useEffect } from 'react'
+import { useState } from 'react'
 import { useNavigate } from '@tanstack/react-router'
 import { signIn, signUp } from '@/lib/services/auth'
-import { useAuthStore } from '@/stores/auth'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 
 export function LoginForm() {
   const navigate = useNavigate()
-  const isAuthenticated = useAuthStore((state) => state.isAuthenticated)
   const [email, setEmail] = useState('')
   const [password, setPassword] = useState('')
   const [isSignUp, setIsSignUp] = useState(false)
   const [error, setError] = useState<string | null>(null)
   const [isLoading, setIsLoading] = useState(false)
-
-  // Redirect to home when authenticated
-  useEffect(() => {
-    if (isAuthenticated) {
-      navigate({ to: '/' })
-    }
-  }, [isAuthenticated, navigate])
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
@@ -32,6 +23,8 @@ export function LoginForm() {
       } else {
         await signIn(email, password)
       }
+      // Navigate to home after successful authentication
+      navigate({ to: '/' })
     } catch (err) {
       let errorMessage = 'Authentication failed'
       if (err instanceof Error) {
