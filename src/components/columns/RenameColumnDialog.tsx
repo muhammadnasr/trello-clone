@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react'
+import { useState } from 'react'
 import { Button } from '@/components/ui/button'
 import {
   Dialog,
@@ -19,16 +19,10 @@ interface RenameColumnDialogProps {
 }
 
 export function RenameColumnDialog({ column, open, onOpenChange }: RenameColumnDialogProps) {
-  const [title, setTitle] = useState('')
+  const [title, setTitle] = useState(column?.title ?? '')
   const [isSubmitting, setIsSubmitting] = useState(false)
   const updateColumn = useColumnsStore((state) => state.updateColumn)
   const error = useColumnsStore((state) => state.error)
-
-  useEffect(() => {
-    if (column) {
-      setTitle(column.title)
-    }
-  }, [column])
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
@@ -51,7 +45,7 @@ export function RenameColumnDialog({ column, open, onOpenChange }: RenameColumnD
   if (!column) return null
 
   return (
-    <Dialog open={open} onOpenChange={onOpenChange}>
+    <Dialog key={column.id} open={open} onOpenChange={onOpenChange}>
       <DialogContent>
         <DialogHeader>
           <DialogTitle>Rename Column</DialogTitle>
