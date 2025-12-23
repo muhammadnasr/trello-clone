@@ -408,7 +408,11 @@
 
 **Goal**: Remove artificial delays (`setTimeout`) from integration tests that were added as workarounds for sync timing issues.
 
-### Revise useEffects
+### ✅ Revise useEffects
 
 **Goal**: Review and optimize `useEffect` hooks across components to ensure they follow best practices and avoid unnecessary re-renders or side effects.
+
+**Progress**:
+- ✅ Removed `useEffect` from `RenameColumnDialog` - replaced with React key-based remounting for form reset
+- ✅ Removed `useEffect` from `LoginForm` - replaced with direct navigation after successful authentication
 
