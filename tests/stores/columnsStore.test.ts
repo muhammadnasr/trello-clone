@@ -7,6 +7,7 @@ vi.mock('../../src/lib/services/columns', () => ({
   createColumn: vi.fn(),
   updateColumn: vi.fn(),
   deleteColumn: vi.fn(),
+  updateColumnsOrder: vi.fn(),
 }))
 
 describe('Columns Store', () => {
@@ -47,7 +48,7 @@ describe('Columns Store', () => {
       vi.clearAllMocks()
     })
 
-    it('createColumn calls service and clears error on success', async () => {
+    it('createColumn calls service and updates store state on success', async () => {
       const mockCreateColumn = vi.mocked(columnsService.createColumn)
       const newColumn: Column = {
         id: 'column-new',
@@ -68,6 +69,9 @@ describe('Columns Store', () => {
       expect(mockCreateColumn).toHaveBeenCalledWith('board1', 'New Column', 0, 'user1')
       expect(result).toEqual(newColumn)
       expect(useColumnsStore.getState().error).toBeNull()
+      // Verify store state was updated
+      expect(useColumnsStore.getState().columns).toHaveLength(1)
+      expect(useColumnsStore.getState().columns[0]).toEqual(newColumn)
     })
 
     it('createColumn sets error on failure', async () => {
@@ -80,10 +84,20 @@ describe('Columns Store', () => {
       expect(useColumnsStore.getState().error).toBe('Service error')
     })
 
-    it('updateColumn calls service and clears error on success', async () => {
+    it('updateColumn calls service and updates store state on success', async () => {
       const mockUpdateColumn = vi.mocked(columnsService.updateColumn)
       mockUpdateColumn.mockResolvedValue(undefined)
 
+      const existingColumn: Column = {
+        id: 'column1',
+        boardId: 'board1',
+        title: 'Original Title',
+        order: 0,
+        ownerId: 'user1',
+        createdAt: new Date().toISOString(),
+        updatedAt: new Date().toISOString(),
+      }
+      useColumnsStore.getState().setColumns([existingColumn])
       useColumnsStore.getState().setError('Previous error')
 
       const updateColumn = useColumnsStore.getState().updateColumn
@@ -91,6 +105,10 @@ describe('Columns Store', () => {
 
       expect(mockUpdateColumn).toHaveBeenCalledWith('column1', { title: 'Updated Title' })
       expect(useColumnsStore.getState().error).toBeNull()
+      // Verify store state was updated
+      const updatedColumn = useColumnsStore.getState().columns.find(c => c.id === 'column1')
+      expect(updatedColumn?.title).toBe('Updated Title')
+      expect(updatedColumn?.updatedAt).toBeDefined()
     })
 
     it('updateColumn sets error on failure', async () => {
@@ -103,10 +121,20 @@ describe('Columns Store', () => {
       expect(useColumnsStore.getState().error).toBe('Service error')
     })
 
-    it('deleteColumn calls service and clears error on success', async () => {
+    it('deleteColumn calls service and updates store state on success', async () => {
       const mockDeleteColumn = vi.mocked(columnsService.deleteColumn)
       mockDeleteColumn.mockResolvedValue(undefined)
 
+      const existingColumn: Column = {
+        id: 'column1',
+        boardId: 'board1',
+        title: 'Column to Delete',
+        order: 0,
+        ownerId: 'user1',
+        createdAt: new Date().toISOString(),
+        updatedAt: new Date().toISOString(),
+      }
+      useColumnsStore.getState().setColumns([existingColumn])
       useColumnsStore.getState().setError('Previous error')
 
       const deleteColumn = useColumnsStore.getState().deleteColumn
@@ -114,6 +142,9 @@ describe('Columns Store', () => {
 
       expect(mockDeleteColumn).toHaveBeenCalledWith('column1')
       expect(useColumnsStore.getState().error).toBeNull()
+      // Verify store state was updated
+      expect(useColumnsStore.getState().columns).toHaveLength(0)
+      expect(useColumnsStore.getState().columns.find(c => c.id === 'column1')).toBeUndefined()
     })
 
     it('deleteColumn sets error on failure', async () => {
@@ -124,6 +155,48 @@ describe('Columns Store', () => {
 
       await expect(deleteColumn('column1')).rejects.toThrow('Service error')
       expect(useColumnsStore.getState().error).toBe('Service error')
+    })
+
+    it('updateColumnsOrder calls service and updates store state on success', async () => {
+      const mockUpdateColumnsOrder = vi.mocked(columnsService.updateColumnsOrder)
+      mockUpdateColumnsOrder.mockResolvedValue(undefined)
+
+      const columns: Column[] = [
+        {
+          id: 'column1',
+          boardId: 'board1',
+          title: 'Column 1',
+          order: 0,
+          ownerId: 'user1',
+          createdAt: new Date().toISOString(),
+          updatedAt: new Date().toISOString(),
+        },
+        {
+          id: 'column2',
+          boardId: 'board1',
+          title: 'Column 2',
+          order: 1,
+          ownerId: 'user1',
+          createdAt: new Date().toISOString(),
+          updatedAt: new Date().toISOString(),
+        },
+      ]
+      useColumnsStore.getState().setColumns(columns)
+
+      const reorderedColumns: Column[] = [
+        { ...columns[1], order: 0 },
+        { ...columns[0], order: 1 },
+      ]
+
+      const updateColumnsOrder = useColumnsStore.getState().updateColumnsOrder
+      await updateColumnsOrder(reorderedColumns)
+
+      expect(mockUpdateColumnsOrder).toHaveBeenCalledWith(reorderedColumns)
+      // Verify store state was updated
+      const stateColumns = useColumnsStore.getState().columns
+      expect(stateColumns).toEqual(reorderedColumns)
+      expect(stateColumns[0].id).toBe('column2')
+      expect(stateColumns[1].id).toBe('column1')
     })
   })
 

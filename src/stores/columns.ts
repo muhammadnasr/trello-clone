@@ -20,7 +20,7 @@ interface ColumnsActions {
 
 export type ColumnsStore = ColumnsState & ColumnsActions
 
-export const useColumnsStore = create<ColumnsStore>((set) => ({
+export const useColumnsStore = create<ColumnsStore>((set, get) => ({
   columns: [],
   isLoading: false,
   error: null,
@@ -33,6 +33,12 @@ export const useColumnsStore = create<ColumnsStore>((set) => ({
     set({ error: null })
     try {
       const column = await columnsService.createColumn(boardId, title.trim(), order, ownerId)
+      // Update store state directly (single data flow)
+      // Check if column already exists to avoid duplicates from RxDB subscription
+      const currentColumns = get().columns
+      if (!currentColumns.find((c) => c.id === column.id)) {
+        set({ columns: [...currentColumns, column] })
+      }
       return column
     } catch (error) {
       const errorMessage = error instanceof Error ? error.message : 'Failed to create column'
@@ -45,6 +51,12 @@ export const useColumnsStore = create<ColumnsStore>((set) => ({
     set({ error: null })
     try {
       await columnsService.updateColumn(id, updates)
+      // Update store state directly (single data flow)
+      set({
+        columns: get().columns.map((column) =>
+          column.id === id ? { ...column, ...updates, updatedAt: new Date().toISOString() } : column
+        ),
+      })
     } catch (error) {
       const errorMessage = error instanceof Error ? error.message : 'Failed to update column'
       set({ error: errorMessage })
@@ -56,6 +68,8 @@ export const useColumnsStore = create<ColumnsStore>((set) => ({
     set({ error: null })
     try {
       await columnsService.deleteColumn(id)
+      // Update store state directly (single data flow)
+      set({ columns: get().columns.filter((column) => column.id !== id) })
     } catch (error) {
       const errorMessage = error instanceof Error ? error.message : 'Failed to delete column'
       set({ error: errorMessage })
@@ -67,6 +81,8 @@ export const useColumnsStore = create<ColumnsStore>((set) => ({
     set({ error: null })
     try {
       await columnsService.updateColumnsOrder(reorderedColumns)
+      // Update store state directly (single data flow)
+      set({ columns: reorderedColumns })
     } catch (error) {
       const errorMessage = error instanceof Error ? error.message : 'Failed to update columns order'
       set({ error: errorMessage })

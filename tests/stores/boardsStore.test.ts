@@ -47,7 +47,7 @@ describe('Boards Store', () => {
       vi.clearAllMocks()
     })
 
-    it('createBoard calls service and clears error on success', async () => {
+    it('createBoard calls service and updates store state on success', async () => {
       const mockCreateBoard = vi.mocked(boardsService.createBoard)
       const newBoard: Board = {
         id: 'board-new',
@@ -68,6 +68,9 @@ describe('Boards Store', () => {
       expect(result).toEqual(newBoard)
       // Error should be cleared on success
       expect(useBoardsStore.getState().error).toBeNull()
+      // Verify store state was updated
+      expect(useBoardsStore.getState().boards).toHaveLength(1)
+      expect(useBoardsStore.getState().boards[0]).toEqual(newBoard)
     })
 
     it('createBoard sets error on failure', async () => {
@@ -80,10 +83,18 @@ describe('Boards Store', () => {
       expect(useBoardsStore.getState().error).toBe('Service error')
     })
 
-    it('updateBoard calls service and clears error on success', async () => {
+    it('updateBoard calls service and updates store state on success', async () => {
       const mockUpdateBoard = vi.mocked(boardsService.updateBoard)
       mockUpdateBoard.mockResolvedValue(undefined)
 
+      const existingBoard: Board = {
+        id: 'board1',
+        title: 'Original Title',
+        createdAt: new Date().toISOString(),
+        updatedAt: new Date().toISOString(),
+        ownerId: 'user1',
+      }
+      useBoardsStore.getState().setBoards([existingBoard])
       // Set an error first
       useBoardsStore.getState().setError('Previous error')
 
@@ -93,6 +104,10 @@ describe('Boards Store', () => {
       expect(mockUpdateBoard).toHaveBeenCalledWith('board1', { title: 'Updated Title' })
       // Error should be cleared on success
       expect(useBoardsStore.getState().error).toBeNull()
+      // Verify store state was updated
+      const updatedBoard = useBoardsStore.getState().boards.find(b => b.id === 'board1')
+      expect(updatedBoard?.title).toBe('Updated Title')
+      expect(updatedBoard?.updatedAt).toBeDefined()
     })
 
     it('updateBoard sets error on failure', async () => {
@@ -105,10 +120,18 @@ describe('Boards Store', () => {
       expect(useBoardsStore.getState().error).toBe('Service error')
     })
 
-    it('deleteBoard calls service and clears error on success', async () => {
+    it('deleteBoard calls service and updates store state on success', async () => {
       const mockDeleteBoard = vi.mocked(boardsService.deleteBoard)
       mockDeleteBoard.mockResolvedValue(undefined)
 
+      const existingBoard: Board = {
+        id: 'board1',
+        title: 'Board to Delete',
+        createdAt: new Date().toISOString(),
+        updatedAt: new Date().toISOString(),
+        ownerId: 'user1',
+      }
+      useBoardsStore.getState().setBoards([existingBoard])
       // Set an error first
       useBoardsStore.getState().setError('Previous error')
 
@@ -118,6 +141,9 @@ describe('Boards Store', () => {
       expect(mockDeleteBoard).toHaveBeenCalledWith('board1')
       // Error should be cleared on success
       expect(useBoardsStore.getState().error).toBeNull()
+      // Verify store state was updated
+      expect(useBoardsStore.getState().boards).toHaveLength(0)
+      expect(useBoardsStore.getState().boards.find(b => b.id === 'board1')).toBeUndefined()
     })
 
     it('deleteBoard sets error on failure', async () => {

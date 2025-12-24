@@ -22,7 +22,7 @@ interface BoardsActions {
 
 export type BoardsStore = BoardsState & BoardsActions
 
-export const useBoardsStore = create<BoardsStore>((set) => ({
+export const useBoardsStore = create<BoardsStore>((set, get) => ({
   boards: [],
   isLoading: false,
   error: null,
@@ -35,6 +35,12 @@ export const useBoardsStore = create<BoardsStore>((set) => ({
     set({ error: null })
     try {
       const board = await boardsService.createBoard(title.trim(), ownerId)
+      // Update store state directly (single data flow)
+      // Check if board already exists to avoid duplicates from RxDB subscription
+      const currentBoards = get().boards
+      if (!currentBoards.find((b) => b.id === board.id)) {
+        set({ boards: [...currentBoards, board] })
+      }
       return board
     } catch (error) {
       const errorMessage = error instanceof Error ? error.message : 'Failed to create board'
@@ -47,6 +53,12 @@ export const useBoardsStore = create<BoardsStore>((set) => ({
     set({ error: null })
     try {
       await boardsService.updateBoard(id, updates)
+      // Update store state directly (single data flow)
+      set({
+        boards: get().boards.map((board) =>
+          board.id === id ? { ...board, ...updates, updatedAt: new Date().toISOString() } : board
+        ),
+      })
     } catch (error) {
       const errorMessage = error instanceof Error ? error.message : 'Failed to update board'
       set({ error: errorMessage })
@@ -58,6 +70,8 @@ export const useBoardsStore = create<BoardsStore>((set) => ({
     set({ error: null })
     try {
       await boardsService.deleteBoard(id)
+      // Update store state directly (single data flow)
+      set({ boards: get().boards.filter((board) => board.id !== id) })
     } catch (error) {
       const errorMessage = error instanceof Error ? error.message : 'Failed to delete board'
       set({ error: errorMessage })

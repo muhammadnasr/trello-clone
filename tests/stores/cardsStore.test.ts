@@ -7,6 +7,7 @@ vi.mock('../../src/lib/services/cards', () => ({
   createCard: vi.fn(),
   updateCard: vi.fn(),
   deleteCard: vi.fn(),
+  updateCardsOrder: vi.fn(),
 }))
 
 describe('Cards Store', () => {
@@ -47,7 +48,7 @@ describe('Cards Store', () => {
       vi.clearAllMocks()
     })
 
-    it('createCard calls service and clears error on success', async () => {
+    it('createCard calls service and updates store state on success', async () => {
       const mockCreateCard = vi.mocked(cardsService.createCard)
       const newCard: Card = {
         id: 'card-new',
@@ -68,6 +69,9 @@ describe('Cards Store', () => {
       expect(mockCreateCard).toHaveBeenCalledWith('column1', 'New Card', 0, 'user1')
       expect(result).toEqual(newCard)
       expect(useCardsStore.getState().error).toBeNull()
+      // Verify store state was updated
+      expect(useCardsStore.getState().cards).toHaveLength(1)
+      expect(useCardsStore.getState().cards[0]).toEqual(newCard)
     })
 
     it('createCard sets error on failure', async () => {
@@ -80,10 +84,20 @@ describe('Cards Store', () => {
       expect(useCardsStore.getState().error).toBe('Service error')
     })
 
-    it('updateCard calls service and clears error on success', async () => {
+    it('updateCard calls service and updates store state on success', async () => {
       const mockUpdateCard = vi.mocked(cardsService.updateCard)
       mockUpdateCard.mockResolvedValue(undefined)
 
+      const existingCard: Card = {
+        id: 'card1',
+        columnId: 'column1',
+        title: 'Original Title',
+        order: 0,
+        ownerId: 'user1',
+        createdAt: new Date().toISOString(),
+        updatedAt: new Date().toISOString(),
+      }
+      useCardsStore.getState().setCards([existingCard])
       useCardsStore.getState().setError('Previous error')
 
       const updateCard = useCardsStore.getState().updateCard
@@ -91,6 +105,10 @@ describe('Cards Store', () => {
 
       expect(mockUpdateCard).toHaveBeenCalledWith('card1', { title: 'Updated Title' })
       expect(useCardsStore.getState().error).toBeNull()
+      // Verify store state was updated
+      const updatedCard = useCardsStore.getState().cards.find(c => c.id === 'card1')
+      expect(updatedCard?.title).toBe('Updated Title')
+      expect(updatedCard?.updatedAt).toBeDefined()
     })
 
     it('updateCard sets error on failure', async () => {
@@ -103,10 +121,20 @@ describe('Cards Store', () => {
       expect(useCardsStore.getState().error).toBe('Service error')
     })
 
-    it('deleteCard calls service and clears error on success', async () => {
+    it('deleteCard calls service and updates store state on success', async () => {
       const mockDeleteCard = vi.mocked(cardsService.deleteCard)
       mockDeleteCard.mockResolvedValue(undefined)
 
+      const existingCard: Card = {
+        id: 'card1',
+        columnId: 'column1',
+        title: 'Card to Delete',
+        order: 0,
+        ownerId: 'user1',
+        createdAt: new Date().toISOString(),
+        updatedAt: new Date().toISOString(),
+      }
+      useCardsStore.getState().setCards([existingCard])
       useCardsStore.getState().setError('Previous error')
 
       const deleteCard = useCardsStore.getState().deleteCard
@@ -114,6 +142,9 @@ describe('Cards Store', () => {
 
       expect(mockDeleteCard).toHaveBeenCalledWith('card1')
       expect(useCardsStore.getState().error).toBeNull()
+      // Verify store state was updated
+      expect(useCardsStore.getState().cards).toHaveLength(0)
+      expect(useCardsStore.getState().cards.find(c => c.id === 'card1')).toBeUndefined()
     })
 
     it('deleteCard sets error on failure', async () => {
@@ -124,6 +155,47 @@ describe('Cards Store', () => {
 
       await expect(deleteCard('card1')).rejects.toThrow('Service error')
       expect(useCardsStore.getState().error).toBe('Service error')
+    })
+
+    it('updateCardsOrder calls service and updates store state on success', async () => {
+      const mockUpdateCardsOrder = vi.mocked(cardsService.updateCardsOrder)
+      mockUpdateCardsOrder.mockResolvedValue(undefined)
+
+      const cards: Card[] = [
+        {
+          id: 'card1',
+          columnId: 'column1',
+          title: 'Card 1',
+          order: 0,
+          ownerId: 'user1',
+          createdAt: new Date().toISOString(),
+          updatedAt: new Date().toISOString(),
+        },
+        {
+          id: 'card2',
+          columnId: 'column1',
+          title: 'Card 2',
+          order: 1,
+          ownerId: 'user1',
+          createdAt: new Date().toISOString(),
+          updatedAt: new Date().toISOString(),
+        },
+      ]
+      useCardsStore.getState().setCards(cards)
+
+      const updates = {
+        card1: { order: 1 },
+        card2: { order: 0 },
+      }
+
+      const updateCardsOrder = useCardsStore.getState().updateCardsOrder
+      await updateCardsOrder(updates)
+
+      expect(mockUpdateCardsOrder).toHaveBeenCalledWith(updates)
+      // Verify store state was updated
+      const stateCards = useCardsStore.getState().cards
+      expect(stateCards.find(c => c.id === 'card1')?.order).toBe(1)
+      expect(stateCards.find(c => c.id === 'card2')?.order).toBe(0)
     })
   })
 

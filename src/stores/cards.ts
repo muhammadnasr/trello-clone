@@ -2,6 +2,7 @@ import { create } from 'zustand'
 import type { Card } from '@/lib/types/card'
 import * as cardsService from '@/lib/services/cards'
 
+
 interface CardsState {
   cards: Card[]
   isLoading: boolean
@@ -20,7 +21,7 @@ interface CardsActions {
 
 export type CardsStore = CardsState & CardsActions
 
-export const useCardsStore = create<CardsStore>((set) => ({
+export const useCardsStore = create<CardsStore>((set, get) => ({
   cards: [],
   isLoading: false,
   error: null,
@@ -33,6 +34,12 @@ export const useCardsStore = create<CardsStore>((set) => ({
     set({ error: null })
     try {
       const card = await cardsService.createCard(columnId, title.trim(), order, ownerId)
+      // Update store state directly (single data flow)
+      // Check if card already exists to avoid duplicates from RxDB subscription
+      const currentCards = get().cards
+      if (!currentCards.find((c) => c.id === card.id)) {
+        set({ cards: [...currentCards, card] })
+      }
       return card
     } catch (error) {
       const errorMessage = error instanceof Error ? error.message : 'Failed to create card'
@@ -45,6 +52,12 @@ export const useCardsStore = create<CardsStore>((set) => ({
     set({ error: null })
     try {
       await cardsService.updateCard(id, updates)
+      // Update store state directly (single data flow)
+      set({
+        cards: get().cards.map((card) =>
+          card.id === id ? { ...card, ...updates, updatedAt: new Date().toISOString() } : card
+        ),
+      })
     } catch (error) {
       const errorMessage = error instanceof Error ? error.message : 'Failed to update card'
       set({ error: errorMessage })
@@ -56,6 +69,8 @@ export const useCardsStore = create<CardsStore>((set) => ({
     set({ error: null })
     try {
       await cardsService.deleteCard(id)
+      // Update store state directly (single data flow)
+      set({ cards: get().cards.filter((card) => card.id !== id) })
     } catch (error) {
       const errorMessage = error instanceof Error ? error.message : 'Failed to delete card'
       set({ error: errorMessage })
@@ -67,6 +82,16 @@ export const useCardsStore = create<CardsStore>((set) => ({
     set({ error: null })
     try {
       await cardsService.updateCardsOrder(updates)
+      // Update store state directly (single data flow)
+      set({
+        cards: get().cards.map((card) => {
+          const update = updates[card.id]
+          if (update) {
+            return { ...card, ...update, updatedAt: new Date().toISOString() }
+          }
+          return card
+        }),
+      })
     } catch (error) {
       const errorMessage = error instanceof Error ? error.message : 'Failed to update cards order'
       set({ error: errorMessage })
